@@ -1,0 +1,109 @@
+package handler
+
+import (
+	"encoding/json"
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/mathalama/founders-backend/internal/middleware"
+	"github.com/mathalama/founders-backend/internal/model"
+	"github.com/mathalama/founders-backend/internal/repository"
+)
+
+type ProjectHandler struct {
+	repo *repository.ProjectRepo
+}
+
+func NewProjectHandler(repo *repository.ProjectRepo) *ProjectHandler {
+	return &ProjectHandler{repo: repo}
+}
+
+func (h *ProjectHandler) ListProjects(w http.ResponseWriter, r *http.Request) {
+	category := r.URL.Query().Get("category")
+	stage := r.URL.Query().Get("stage")
+	city := r.URL.Query().Get("city")
+	role := r.URL.Query().Get("role")
+	search := r.URL.Query().Get("search")
+
+	projects, err := h.repo.GetAll(r.Context(), category, stage, city, role, search)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if projects == nil {
+		projects = []model.Project{} // Return [] instead of null
+	}
+	json.NewEncoder(w).Encode(projects)
+}
+
+func (h *ProjectHandler) GetProject(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		http.Error(w, "Missing project ID", http.StatusBadRequest)
+		return
+	}
+
+	project, err := h.repo.GetByID(r.Context(), id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if project == nil {
+		http.Error(w, "Project not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(project)
+}
+
+func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(middleware.UserIDKey).(string)
+
+	var p model.Project
+	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	p.OwnerID = userID
+
+	if err := h.repo.Create(r.Context(), &p); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(p)
+}
+
+func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(middleware.UserIDKey).(string)
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		http.Error(w, "Missing project ID", http.StatusBadRequest)
+		return
+	}
+
+	var p model.Project
+	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	p.ID = id
+
+	if err := h.repo.Update(r.Context(), &p, userID); err != nil {
+		if err.Error() == "forbidden" {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(p)
+}
