@@ -24,7 +24,7 @@ func NewAuthHandler(userRepo *repository.UserRepo) *AuthHandler {
 	conf := &oauth2.Config{
 		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-		RedirectURL:  "http://localhost:8080/api/auth/google/callback",
+		RedirectURL:  getRedirectURL(),
 		Scopes: []string{
 			"https://www.googleapis.com/auth/userinfo.email",
 			"https://www.googleapis.com/auth/userinfo.profile",
@@ -38,6 +38,13 @@ func NewAuthHandler(userRepo *repository.UserRepo) *AuthHandler {
 	}
 }
 
+func getRedirectURL() string {
+	domain := os.Getenv("BACKEND_DOMAIN")
+	if domain != "" {
+		return "https://" + domain + "/api/auth/google/callback"
+	}
+	return "http://localhost:8080/api/auth/google/callback"
+}
 func (h *AuthHandler) GoogleLogin(w http.ResponseWriter, r *http.Request) {
 	// Typically you'd generate a random state string and store it in a cookie to prevent CSRF
 	state := "random-state-string"
