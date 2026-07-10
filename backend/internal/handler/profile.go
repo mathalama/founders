@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/mathalama/founders-backend/internal/middleware"
-	"github.com/mathalama/founders-backend/internal/model"
-	"github.com/mathalama/founders-backend/internal/repository"
+	"github.com/mathalama/nucla-backend/internal/middleware"
+	"github.com/mathalama/nucla-backend/internal/model"
+	"github.com/mathalama/nucla-backend/internal/repository"
 )
 
 type ProfileHandler struct {

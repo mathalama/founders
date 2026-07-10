@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/mathalama/founders-backend/internal/model"
+	"github.com/mathalama/nucla-backend/internal/model"
 )
 
 type BookmarkRepo struct {

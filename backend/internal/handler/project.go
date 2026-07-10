@@ -3,11 +3,12 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/mathalama/founders-backend/internal/middleware"
-	"github.com/mathalama/founders-backend/internal/model"
-	"github.com/mathalama/founders-backend/internal/repository"
+	"github.com/mathalama/nucla-backend/internal/middleware"
+	"github.com/mathalama/nucla-backend/internal/model"
+	"github.com/mathalama/nucla-backend/internal/repository"
 )
 
 type ProjectHandler struct {
@@ -24,8 +25,20 @@ func (h *ProjectHandler) ListProjects(w http.ResponseWriter, r *http.Request) {
 	city := r.URL.Query().Get("city")
 	role := r.URL.Query().Get("role")
 	search := r.URL.Query().Get("search")
+	pageStr := r.URL.Query().Get("page")
+	limitStr := r.URL.Query().Get("limit")
 
-	projects, err := h.repo.GetAll(r.Context(), category, stage, city, role, search)
+	page := 1
+	limit := 10 // Default limit
+
+	if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+		page = p
+	}
+	if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+		limit = l
+	}
+
+	projects, err := h.repo.GetAll(r.Context(), category, stage, city, role, search, page, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

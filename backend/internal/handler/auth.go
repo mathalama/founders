@@ -9,8 +9,8 @@ import (
 	"fmt"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/mathalama/founders-backend/internal/middleware"
-	"github.com/mathalama/founders-backend/internal/repository"
+	"github.com/mathalama/nucla-backend/internal/middleware"
+	"github.com/mathalama/nucla-backend/internal/repository"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )

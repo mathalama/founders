@@ -5,22 +5,24 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/mathalama/founders-backend/internal/middleware"
-	"github.com/mathalama/founders-backend/internal/repository"
-	"github.com/mathalama/founders-backend/internal/service"
+	"github.com/mathalama/nucla-backend/internal/middleware"
+	"github.com/mathalama/nucla-backend/internal/repository"
+	"github.com/mathalama/nucla-backend/internal/service"
 )
 
 type ApplicationHandler struct {
 	appRepo  *repository.ApplicationRepo
 	userRepo *repository.UserRepo
 	emailSvc *service.EmailService
+	notifRepo *repository.NotificationRepo
 }
 
-func NewApplicationHandler(appRepo *repository.ApplicationRepo, userRepo *repository.UserRepo, emailSvc *service.EmailService) *ApplicationHandler {
+func NewApplicationHandler(appRepo *repository.ApplicationRepo, userRepo *repository.UserRepo, emailSvc *service.EmailService, notifRepo *repository.NotificationRepo) *ApplicationHandler {
 	return &ApplicationHandler{
-		appRepo:  appRepo,
-		userRepo: userRepo,
-		emailSvc: emailSvc,
+		appRepo:   appRepo,
+		userRepo:  userRepo,
+		emailSvc:  emailSvc,
+		notifRepo: notifRepo,
 	}
 }
 
@@ -44,7 +46,7 @@ func (h *ApplicationHandler) ApplyToRole(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Fetch details for email notification
-	roleTitle, projectName, ownerEmail, _, err := h.appRepo.GetRoleDetails(r.Context(), roleID)
+	roleTitle, projectName, ownerEmail, _, ownerID, projectID, err := h.appRepo.GetRoleDetails(r.Context(), roleID)
 	if err != nil {
 		http.Error(w, "Failed to get role details for notification", http.StatusInternalServerError)
 		return
@@ -61,6 +63,11 @@ func (h *ApplicationHandler) ApplyToRole(w http.ResponseWriter, r *http.Request)
 		// Log error but don't fail the request since application is saved
 		// log.Printf("Failed to send email: %v", err)
 	}
+
+	// Create In-App Notification for Project Owner
+	notifMsg := "Новый отклик от " + applicant.Name + " на роль: " + roleTitle + " (Проект: " + projectName + ")"
+	notifLink := "/project/" + projectID
+	h.notifRepo.Create(r.Context(), ownerID, "new_application", notifMsg, &notifLink)
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(`{"status":"success"}`))

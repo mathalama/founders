@@ -6,18 +6,24 @@ import ProjectPage from './pages/ProjectPage';
 import NewProjectPage from './pages/NewProjectPage';
 import EditProjectPage from './pages/EditProjectPage';
 import ProfilePage from './pages/ProfilePage';
+import UserPage from './pages/UserPage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import MyApplicationsPage from './pages/MyApplicationsPage';
 import BookmarksPage from './pages/BookmarksPage';
+import NotificationsPage from './pages/NotificationsPage';
+import MessagesPage from './pages/MessagesPage';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ProtectedRoute from './components/ProtectedRoute';
-import { FiMenu } from 'react-icons/fi';
+import { FiMenu, FiSun, FiMoon } from 'react-icons/fi';
 
 // Mobile top bar with burger button
 function MobileTopBar({ onOpen }) {
   const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
   const titles = {
     '/': 'Лента',
     '/dashboard': 'Мои проекты',
@@ -27,7 +33,7 @@ function MobileTopBar({ onOpen }) {
     '/new': 'Новый проект',
     '/login': 'Вход',
   };
-  const title = titles[location.pathname] ?? 'Qoldau';
+  const title = titles[location.pathname] ?? 'Nucla';
 
   return (
     <div style={{
@@ -63,7 +69,20 @@ function MobileTopBar({ onOpen }) {
       >
         <FiMenu size={22} />
       </button>
-      <span style={{ fontWeight: 700, fontSize: '1.1rem', letterSpacing: '-0.02em' }}>{title}</span>
+      <span style={{ fontWeight: 700, fontSize: '1.1rem', letterSpacing: '-0.02em', flex: 1 }}>{title}</span>
+      <button
+        onClick={toggleTheme}
+        style={{
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          color: 'var(--text-primary)',
+          display: 'flex',
+          padding: '0.25rem',
+        }}
+      >
+        {theme === 'light' ? <FiMoon size={22} /> : <FiSun size={22} />}
+      </button>
     </div>
   );
 }
@@ -147,6 +166,16 @@ function Layout() {
             <Route path="/applications" element={
               <ProtectedRoute><MyApplicationsPage /></ProtectedRoute>
             } />
+            <Route path="/notifications" element={
+              <ProtectedRoute><NotificationsPage /></ProtectedRoute>
+            } />
+            <Route path="/messages" element={
+              <ProtectedRoute><MessagesPage /></ProtectedRoute>
+            } />
+            <Route path="/messages/:id" element={
+              <ProtectedRoute><MessagesPage /></ProtectedRoute>
+            } />
+            <Route path="/user/:id" element={<UserPage />} />
             <Route path="/bookmarks" element={
               <ProtectedRoute><BookmarksPage /></ProtectedRoute>
             } />
@@ -158,15 +187,29 @@ function Layout() {
   );
 }
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: false,
+      staleTime: 5 * 60 * 1000,
+    },
+  },
+});
+
 function App() {
   return (
-    <AuthProvider>
-      <ToastProvider>
-        <BrowserRouter>
-          <Layout />
-        </BrowserRouter>
-      </ToastProvider>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <BrowserRouter>
+              <Layout />
+            </BrowserRouter>
+          </ToastProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 

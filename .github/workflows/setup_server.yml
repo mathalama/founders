@@ -1,0 +1,32 @@
+name: Setup Production Server (Ansible)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup-server:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Ansible
+        run: |
+          sudo apt update
+          sudo apt install -y ansible sshpass
+
+      - name: Run Ansible Playbook
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+        run: |
+          echo "$SERVER_SSH_KEY" > private_key
+          chmod 600 private_key
+          
+          export ANSIBLE_HOST_KEY_CHECKING=False
+          
+          ansible-playbook -i "$SERVER_HOST," ansible/setup.yml -u "$SERVER_USER" --private-key private_key
+          
+          rm private_key

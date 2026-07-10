@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"time"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -22,17 +24,17 @@ func (r *ApplicationRepo) CreateApplication(ctx context.Context, roleID, userID,
 	return err
 }
 
-func (r *ApplicationRepo) GetRoleDetails(ctx context.Context, roleID string) (string, string, string, string, error) {
+func (r *ApplicationRepo) GetRoleDetails(ctx context.Context, roleID string) (string, string, string, string, string, string, error) {
 	query := `
-		SELECT ro.title, p.title, u.email, u.name
+		SELECT ro.title, p.title, u.email, u.name, u.id, p.id
 		FROM open_roles ro
 		JOIN projects p ON ro.project_id = p.id
 		JOIN users u ON p.owner_id = u.id
 		WHERE ro.id = $1
 	`
-	var roleTitle, projectName, ownerEmail, ownerName string
-	err := r.db.QueryRow(ctx, query, roleID).Scan(&roleTitle, &projectName, &ownerEmail, &ownerName)
-	return roleTitle, projectName, ownerEmail, ownerName, err
+	var roleTitle, projectName, ownerEmail, ownerName, ownerID, projectID string
+	err := r.db.QueryRow(ctx, query, roleID).Scan(&roleTitle, &projectName, &ownerEmail, &ownerName, &ownerID, &projectID)
+	return roleTitle, projectName, ownerEmail, ownerName, ownerID, projectID, err
 }
 
 type UserApplication struct {
@@ -43,7 +45,7 @@ type UserApplication struct {
 	ProjectTitle string `json:"project_title"`
 	Message     string `json:"message"`
 	Status      string `json:"status"`
-	CreatedAt   string `json:"created_at"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 func (r *ApplicationRepo) GetMyApplications(ctx context.Context, userID string) ([]UserApplication, error) {

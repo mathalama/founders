@@ -1,4 +1,4 @@
-module github.com/mathalama/founders-backend
+module github.com/mathalama/nucla-backend
 
 go 1.25.0
 

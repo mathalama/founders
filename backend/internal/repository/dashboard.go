@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/mathalama/founders-backend/internal/model"
+	"github.com/mathalama/nucla-backend/internal/model"
 )
 
 type DashboardRepo struct {
@@ -104,8 +104,7 @@ func (r *DashboardRepo) UpdateRoleStatus(ctx context.Context, ownerID, roleID, s
 	return err
 }
 
-func (r *DashboardRepo) UpdateApplicationStatus(ctx context.Context, ownerID, appID, status string) error {
-	// First ensure the user owns the project this application belongs to
+func (r *DashboardRepo) UpdateApplicationStatus(ctx context.Context, ownerID, appID, status string) (string, string, string, error) {
 	query := `
 		UPDATE applications
 		SET status = $1
@@ -114,7 +113,9 @@ func (r *DashboardRepo) UpdateApplicationStatus(ctx context.Context, ownerID, ap
 		WHERE applications.role_id = ro.id
 		  AND applications.id = $2
 		  AND p.owner_id = $3
+		RETURNING applications.user_id, p.id, p.title
 	`
-	_, err := r.db.Exec(ctx, query, status, appID, ownerID)
-	return err
+	var applicantID, projectID, projectTitle string
+	err := r.db.QueryRow(ctx, query, status, appID, ownerID).Scan(&applicantID, &projectID, &projectTitle)
+	return applicantID, projectID, projectTitle, err
 }

@@ -14,10 +14,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 
-	mymiddleware "github.com/mathalama/founders-backend/internal/middleware"
-	"github.com/mathalama/founders-backend/internal/handler"
-	"github.com/mathalama/founders-backend/internal/repository"
-	"github.com/mathalama/founders-backend/internal/service"
+	mymiddleware "github.com/mathalama/nucla-backend/internal/middleware"
+	"github.com/mathalama/nucla-backend/internal/handler"
+	"github.com/mathalama/nucla-backend/internal/repository"
+	"github.com/mathalama/nucla-backend/internal/service"
 )
 
 func main() {
@@ -28,7 +28,7 @@ func main() {
 
 	dbUrl := os.Getenv("DATABASE_URL")
 	if dbUrl == "" {
-		dbUrl = "postgres://founders:founders@localhost:5432/founders" // Default for local dev
+		dbUrl = "postgres://nucla:nucla@localhost:5432/nucla" // Default for local dev
 	}
 
 	pool, err := pgxpool.New(context.Background(), dbUrl)
@@ -43,6 +43,8 @@ func main() {
 	appRepo := repository.NewApplicationRepo(pool)
 	dashboardRepo := repository.NewDashboardRepo(pool)
 	bookmarkRepo := repository.NewBookmarkRepo(pool)
+	notifRepo := repository.NewNotificationRepo(pool)
+	messageRepo := repository.NewMessageRepo(pool)
 	
 	// Init Services
 	emailSvc := service.NewEmailService()
@@ -51,9 +53,12 @@ func main() {
 	authHandler := handler.NewAuthHandler(userRepo)
 	projectHandler := handler.NewProjectHandler(projectRepo)
 	profileHandler := handler.NewProfileHandler(userRepo)
-	applicationHandler := handler.NewApplicationHandler(appRepo, userRepo, emailSvc)
-	dashboardHandler := handler.NewDashboardHandler(dashboardRepo)
+	applicationHandler := handler.NewApplicationHandler(appRepo, userRepo, emailSvc, notifRepo)
+	dashboardHandler := handler.NewDashboardHandler(dashboardRepo, notifRepo)
 	bookmarkHandler := handler.NewBookmarkHandler(bookmarkRepo)
+	userHandler := handler.NewUserHandler(userRepo, projectRepo)
+	notifHandler := handler.NewNotificationHandler(notifRepo)
+	messageHandler := handler.NewMessageHandler(messageRepo)
 
 	r := chi.NewRouter()
 
@@ -94,11 +99,21 @@ func main() {
 		r.Put("/api/dashboard/applications/{appId}/status", dashboardHandler.UpdateApplicationStatus)
 		r.Get("/api/applications/my", applicationHandler.GetMyApplications)
 		
+		
 		r.Get("/api/bookmarks", bookmarkHandler.GetMyBookmarks)
 		r.Post("/api/projects/{id}/bookmark", bookmarkHandler.ToggleBookmark)
+
+		r.Get("/api/notifications", notifHandler.GetMyNotifications)
+		r.Put("/api/notifications/{id}/read", notifHandler.MarkAsRead)
+		r.Put("/api/notifications/read-all", notifHandler.MarkAllAsRead)
+
+		r.Get("/api/messages", messageHandler.GetConversations)
+		r.Get("/api/messages/{userId}", messageHandler.GetChatHistory)
+		r.Post("/api/messages/{userId}", messageHandler.SendMessage)
 	})
 
 	// Public routes
+	r.Get("/api/users/{id}", userHandler.GetPublicProfile)
 	r.Get("/api/projects", projectHandler.ListProjects)
 	r.Get("/api/projects/{id}", projectHandler.GetProject)
 

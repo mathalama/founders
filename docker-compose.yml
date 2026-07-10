@@ -4,27 +4,27 @@ services:
   db:
     image: postgres:15
     environment:
-      POSTGRES_DB: founders
-      POSTGRES_USER: founders
-      POSTGRES_PASSWORD: founders
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - ./backend/migrations:/docker-entrypoint-initdb.d
+      - db_data:/var/lib/postgresql/data
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
     environment:
-      - DATABASE_URL=postgres://founders:founders@db:5432/founders
-      - PORT=8080
-      - JWT_SECRET=super-secret-dev-key
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - PORT=${PORT}
+      - JWT_SECRET=${JWT_SECRET}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-      - FRONTEND_URL=http://localhost
+      - FRONTEND_URL=${FRONTEND_URL}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
     depends_on:
       - db
 
@@ -32,7 +32,29 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    ports:
-      - "80:80"
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8080}
     depends_on:
       - backend
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - FRONTEND_DOMAIN=${FRONTEND_DOMAIN:-localhost}
+      - BACKEND_DOMAIN=${BACKEND_DOMAIN:-api.localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - backend
+
+volumes:
+  db_data:
+  caddy_data:
+  caddy_config:
