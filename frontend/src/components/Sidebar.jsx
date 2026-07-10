@@ -45,8 +45,10 @@ function Sidebar({ collapsed, mobileOpen, onToggle }) {
   const navItems = user ? NAV_ITEMS_AUTH : NAV_ITEMS_GUEST;
 
   const handleLogout = () => {
-    logout();
-    navigate('/');
+    if (window.confirm("Вы уверены, что хотите выйти из аккаунта?")) {
+      logout();
+      navigate('/');
+    }
   };
 
   return (

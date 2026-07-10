@@ -196,11 +196,11 @@ function MessagesPage() {
                           borderBottomRightRadius: isMine ? '0' : '1rem',
                           borderBottomLeftRadius: isMine ? '1rem' : '0',
                           background: isMine ? 'var(--primary)' : 'var(--surface)',
-                          color: isMine ? 'white' : 'var(--text-primary)',
+                          color: isMine ? 'var(--primary-content)' : 'var(--text-primary)',
                           boxShadow: 'var(--shadow-sm)',
                         }}>
                           <div style={{ lineHeight: 1.5, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{msg.content}</div>
-                          <div style={{ fontSize: '10px', textAlign: 'right', marginTop: '4px', opacity: 0.7, color: isMine ? 'rgba(255,255,255,0.8)' : 'var(--text-muted)' }}>
+                          <div style={{ fontSize: '10px', textAlign: 'right', marginTop: '4px', opacity: 0.7, color: isMine ? 'var(--primary-content)' : 'var(--text-muted)' }}>
                             {new Date(msg.createdAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
                           </div>
                         </div>
