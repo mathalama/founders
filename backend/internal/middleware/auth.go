@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -29,7 +30,7 @@ func RequireAuth(next http.Handler) http.Handler {
 		tokenString := parts[1]
 		secret := []byte(os.Getenv("JWT_SECRET"))
 		if len(secret) == 0 {
-			secret = []byte("super-secret-dev-key")
+			log.Fatal("Missing required environment variable: JWT_SECRET")
 		}
 
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {

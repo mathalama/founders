@@ -28,7 +28,7 @@ func main() {
 
 	dbUrl := os.Getenv("DATABASE_URL")
 	if dbUrl == "" {
-		dbUrl = "postgres://nucla:nucla@localhost:5432/nucla" // Default for local dev
+		log.Fatal("Missing required environment variable: DATABASE_URL")
 	}
 
 	pool, err := pgxpool.New(context.Background(), dbUrl)
@@ -64,9 +64,11 @@ func main() {
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	allowedOrigins := []string{"http://localhost:5173", "http://localhost:8080", "http://localhost"}
+	var allowedOrigins []string
 	if envOrigins := os.Getenv("ALLOWED_ORIGINS"); envOrigins != "" {
 		allowedOrigins = strings.Split(envOrigins, ",")
+	} else {
+		log.Fatal("Missing required environment variable: ALLOWED_ORIGINS")
 	}
 
 	r.Use(cors.Handler(cors.Options{

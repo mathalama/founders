@@ -3,10 +3,11 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
-	"fmt"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/mathalama/nucla-backend/internal/middleware"
@@ -40,10 +41,10 @@ func NewAuthHandler(userRepo *repository.UserRepo) *AuthHandler {
 
 func getRedirectURL() string {
 	domain := os.Getenv("BACKEND_DOMAIN")
-	if domain != "" {
-		return "https://" + domain + "/api/auth/google/callback"
+	if domain == "" {
+		log.Fatal("Missing required environment variable: BACKEND_DOMAIN")
 	}
-	return "http://localhost:8080/api/auth/google/callback"
+	return "https://" + domain + "/api/auth/google/callback"
 }
 func (h *AuthHandler) GoogleLogin(w http.ResponseWriter, r *http.Request) {
 	// Typically you'd generate a random state string and store it in a cookie to prevent CSRF
@@ -92,7 +93,7 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	secret := []byte(os.Getenv("JWT_SECRET"))
 	if len(secret) == 0 {
-		secret = []byte("super-secret-dev-key")
+		log.Fatal("Missing required environment variable: JWT_SECRET")
 	}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -109,7 +110,7 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	// Redirect to frontend with token (or set as cookie)
 	frontendURL := os.Getenv("FRONTEND_URL")
 	if frontendURL == "" {
-		frontendURL = "http://localhost:5173"
+		log.Fatal("Missing required environment variable: FRONTEND_URL")
 	}
 	http.Redirect(w, r, fmt.Sprintf("%s/login?token=%s", frontendURL, tokenString), http.StatusTemporaryRedirect)
 }

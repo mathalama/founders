@@ -22,15 +22,13 @@ func NewEmailService() *EmailService {
 	pass := os.Getenv("SMTP_PASS")
 	from := os.Getenv("SMTP_FROM")
 
-	if host == "" {
-		host = "smtp.mathalama.dev"
+	if host == "" || portStr == "" || user == "" || pass == "" || from == "" {
+		log.Fatal("Missing required SMTP environment variables (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM)")
 	}
-	port := 465
-	if portStr != "" {
-		port, _ = strconv.Atoi(portStr)
-	}
-	if from == "" {
-		from = "no-reply@mathalama.dev"
+
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		log.Fatalf("Invalid SMTP_PORT: %v", err)
 	}
 
 	d := gomail.NewDialer(host, port, user, pass)
