@@ -1,6 +1,6 @@
 ---
 - name: Setup clean Ubuntu server for Nucla project
-  hosts: prod
+  hosts: all
   become: yes
   tasks:
     - name: Update apt cache
