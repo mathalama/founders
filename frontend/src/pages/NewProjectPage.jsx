@@ -94,13 +94,44 @@ function NewProjectPage() {
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Город *</label>
           <input required list="city-suggestions" name="city" value={formData.city} onChange={handleChange} className="input" placeholder="Выберите или введите свой..." autoComplete="off" />
           <datalist id="city-suggestions">
+            <option value="Remote" />
             <option value="Astana" />
             <option value="Almaty" />
             <option value="Shymkent" />
-            <option value="Remote" />
-            <option value="Global" />
-            <option value="Moscow" />
-            <option value="Dubai" />
+            <option value="Aktau" />
+            <option value="Aktobe" />
+            <option value="Atyrau" />
+            <option value="Karaganda" />
+            <option value="Kokshetau" />
+            <option value="Kostanay" />
+            <option value="Kyzylorda" />
+            <option value="Pavlodar" />
+            <option value="Petropavl" />
+            <option value="Semey" />
+            <option value="Taldykorgan" />
+            <option value="Taraz" />
+            <option value="Turkestan" />
+            <option value="Uralsk" />
+            <option value="Oskemen" />
+            <option value="Jezkazgan" />
+            <option value="Konaev" />
+            <option value="Abai Region" />
+            <option value="Akmola Region" />
+            <option value="Aktobe Region" />
+            <option value="Almaty Region" />
+            <option value="Atyrau Region" />
+            <option value="East Kazakhstan Region" />
+            <option value="Jambyl Region" />
+            <option value="Jetisu Region" />
+            <option value="Karaganda Region" />
+            <option value="Kostanay Region" />
+            <option value="Kyzylorda Region" />
+            <option value="Mangystau Region" />
+            <option value="North Kazakhstan Region" />
+            <option value="Pavlodar Region" />
+            <option value="Turkestan Region" />
+            <option value="Ulytau Region" />
+            <option value="West Kazakhstan Region" />
           </datalist>
         </div>
 
