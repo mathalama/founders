@@ -58,11 +58,13 @@ func (h *ApplicationHandler) ApplyToRole(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Send email
-	if err := h.emailSvc.SendApplicationNotification(ownerEmail, projectName, roleTitle, applicant.Name, req.Message); err != nil {
-		// Log error but don't fail the request since application is saved
-		// log.Printf("Failed to send email: %v", err)
-	}
+	// Send email in background
+	go func() {
+		if err := h.emailSvc.SendApplicationNotification(ownerEmail, projectName, roleTitle, applicant.Name, req.Message); err != nil {
+			// Log error but don't fail the request since application is saved
+			// log.Printf("Failed to send email: %v", err)
+		}
+	}()
 
 	// Create In-App Notification for Project Owner
 	notifMsg := "Новый отклик от " + applicant.Name + " на роль: " + roleTitle + " (Проект: " + projectName + ")"
