@@ -78,6 +78,19 @@ function ProjectPage() {
   });
 
   const [bookmarked, setBookmarked] = useState(false);
+  const { data: myApps = [] } = useQuery({
+    queryKey: ['myApplications'],
+    queryFn: async () => {
+      const res = await fetchWithAuth('/api/applications/my');
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data || [];
+    },
+    enabled: !!user
+  });
+
+  const appliedRoleIds = new Set(myApps.map(app => app.role_id));
+
   useEffect(() => {
     // Only way to initialize bookmarked right now, though ideally it should come from backend
   }, [project]);
@@ -266,7 +279,7 @@ function ProjectPage() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <RoleStatusBadge status={role.status} />
-                {role.status !== 'closed' && !isOwner && (
+                {role.status !== 'closed' && !isOwner && !appliedRoleIds.has(role.id) && (
                   <button
                     className="btn btn-primary btn-sm"
                     style={{ animation: 'pulse-ring 2s ease infinite' }}
@@ -281,6 +294,11 @@ function ProjectPage() {
                   >
                     Откликнуться
                   </button>
+                )}
+                {appliedRoleIds.has(role.id) && (
+                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <FiCheck size={14} /> Отклик отправлен
+                  </span>
                 )}
               </div>
             </div>

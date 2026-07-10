@@ -288,6 +288,12 @@ function DashboardPage() {
                                 </button>
                               </>
                             )}
+                            {app.status === 'accepted' && (
+                              <button onClick={() => updateAppStatus(app.id, 'rejected')} className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }}>Отменить (Отклонить)</button>
+                            )}
+                            {app.status === 'rejected' && (
+                              <button onClick={() => updateAppStatus(app.id, 'accepted')} className="btn btn-ghost btn-sm" style={{ color: 'var(--success)' }}>Отменить (Принять)</button>
+                            )}
                           </div>
                         </div>
                         <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '0.75rem', lineHeight: 1.6 }}>
