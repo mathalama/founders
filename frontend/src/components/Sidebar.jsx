@@ -15,11 +15,13 @@ const NAV_ITEMS_GUEST = [
 import { fetchWithAuth } from '../api/client';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import LogoutModal from './LogoutModal';
 
 function Sidebar({ collapsed, mobileOpen, onToggle }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications'],
     queryFn: async () => {
@@ -43,11 +45,10 @@ function Sidebar({ collapsed, mobileOpen, onToggle }) {
 
   const navItems = user ? NAV_ITEMS_AUTH : NAV_ITEMS_GUEST;
 
-  const handleLogout = () => {
-    if (window.confirm("Вы уверены, что хотите выйти из аккаунта?")) {
-      logout();
-      navigate('/');
-    }
+  const confirmLogout = () => {
+    logout();
+    setShowLogoutModal(false);
+    navigate('/');
   };
 
   return (
@@ -125,7 +126,7 @@ function Sidebar({ collapsed, mobileOpen, onToggle }) {
             </NavLink>
             <button
               className={`${styles.navItem} ${styles.logoutBtn} ${collapsed ? styles.navItemCollapsed : ''}`}
-              onClick={handleLogout}
+              onClick={() => setShowLogoutModal(true)}
               title={collapsed ? 'Выйти' : undefined}
             >
               <span className={styles.navIcon}><FiLogOut size={18} /></span>
@@ -154,6 +155,11 @@ function Sidebar({ collapsed, mobileOpen, onToggle }) {
           {!collapsed && <span className={styles.navLabel}>{theme === 'light' ? 'Темная тема' : 'Светлая тема'}</span>}
         </button>
       </div>
+      <LogoutModal 
+        isOpen={showLogoutModal} 
+        onClose={() => setShowLogoutModal(false)} 
+        onConfirm={confirmLogout} 
+      />
     </aside>
   );
 }

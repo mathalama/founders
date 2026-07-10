@@ -1,21 +1,22 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
 import { useAuth } from '../context/AuthContext';
-import { FiMenu, FiX, FiPlus, FiHome, FiFolder, FiFileText, FiBookmark, FiUser } from 'react-icons/fi';
+import { FiMenu, FiX, FiPlus, FiHome, FiFolder, FiFileText, FiBookmark, FiUser, FiLogOut } from 'react-icons/fi';
+import LogoutModal from './LogoutModal';
 
 function Header() {
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const drawerRef = useRef(null);
 
-  const handleLogout = () => {
-    if (window.confirm("Вы уверены, что хотите выйти из аккаунта?")) {
-      logout();
-      navigate('/');
-    }
+  const confirmLogout = () => {
+    logout();
+    setShowLogoutModal(false);
+    navigate('/');
   };
 
   // Close menu on route change
@@ -56,7 +57,7 @@ function Header() {
                 <Link to="/applications" className={styles.navLink}>Мои отклики</Link>
                 <Link to="/bookmarks" className={styles.navLink}>Сохраненное</Link>
                 <Link to="/profile" className={`btn btn-outline btn-sm`}>{user.name}</Link>
-                <button onClick={handleLogout} className="btn btn-ghost btn-sm">Выйти</button>
+                <button onClick={() => setShowLogoutModal(true)} className="btn btn-ghost btn-sm">Выйти</button>
                 <Link to="/new" className="btn btn-primary btn-sm">
                   <FiPlus size={14} /> Создать проект
                 </Link>
@@ -79,6 +80,12 @@ function Header() {
           </button>
         </div>
       </header>
+
+      <LogoutModal 
+        isOpen={showLogoutModal} 
+        onClose={() => setShowLogoutModal(false)} 
+        onConfirm={confirmLogout} 
+      />
 
       {/* Mobile drawer overlay */}
       {menuOpen && (
