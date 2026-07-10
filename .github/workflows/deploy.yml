@@ -20,7 +20,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           source: "."
-          target: "/opt/nucla"
+          target: "nucla"
 
       - name: Deploy and build on server
         uses: appleboy/ssh-action@v1.0.0
@@ -29,6 +29,6 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            cd /opt/nucla
+            cd nucla
             
             docker compose up -d --build

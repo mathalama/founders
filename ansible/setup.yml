@@ -42,12 +42,6 @@
         state: started
         enabled: yes
 
-    - name: Create project directory
-      file:
-        path: /opt/nucla
-        state: directory
-        mode: '0755'
-
     - name: Setup UFW firewall (allow SSH, HTTP, HTTPS)
       ufw:
         rule: allow
