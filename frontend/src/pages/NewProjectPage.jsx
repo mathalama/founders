@@ -61,35 +61,47 @@ function NewProjectPage() {
         <div style={{ display: 'flex', gap: '1rem' }}>
           <div style={{ flex: 1 }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Категория *</label>
-            <select required name="category" value={formData.category} onChange={handleChange} className="select">
-              <option value="">Выберите...</option>
-              <option value="AI">AI</option>
-              <option value="SaaS">SaaS</option>
-              <option value="EdTech">EdTech</option>
-              <option value="FinTech">FinTech</option>
-              <option value="E-commerce">E-commerce</option>
-            </select>
+            <input required list="category-suggestions" name="category" value={formData.category} onChange={handleChange} className="input" placeholder="Выберите или введите..." autoComplete="off" />
+            <datalist id="category-suggestions">
+              <option value="AI" />
+              <option value="SaaS" />
+              <option value="EdTech" />
+              <option value="FinTech" />
+              <option value="E-commerce" />
+              <option value="HealthTech" />
+              <option value="GameDev" />
+              <option value="Web3" />
+              <option value="Mobile" />
+              <option value="Marketplace" />
+              <option value="Social" />
+            </datalist>
           </div>
           <div style={{ flex: 1 }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Стадия *</label>
-            <select required name="stage" value={formData.stage} onChange={handleChange} className="select">
-              <option value="">Выберите...</option>
-              <option value="Идея">Идея</option>
-              <option value="MVP">MVP</option>
-              <option value="Есть пользователи">Есть пользователи</option>
-              <option value="Есть выручка">Есть выручка</option>
-            </select>
+            <input required list="stage-suggestions" name="stage" value={formData.stage} onChange={handleChange} className="input" placeholder="Выберите или введите..." autoComplete="off" />
+            <datalist id="stage-suggestions">
+              <option value="Идея" />
+              <option value="Прототип" />
+              <option value="MVP" />
+              <option value="Есть первые пользователи" />
+              <option value="Есть выручка" />
+              <option value="Масштабирование" />
+            </datalist>
           </div>
         </div>
 
         <div>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Город *</label>
-          <select required name="city" value={formData.city} onChange={handleChange} className="select">
-            <option value="">Выберите...</option>
-            <option value="Astana">Astana</option>
-            <option value="Almaty">Almaty</option>
-            <option value="Remote">Remote</option>
-          </select>
+          <input required list="city-suggestions" name="city" value={formData.city} onChange={handleChange} className="input" placeholder="Выберите или введите свой..." autoComplete="off" />
+          <datalist id="city-suggestions">
+            <option value="Astana" />
+            <option value="Almaty" />
+            <option value="Shymkent" />
+            <option value="Remote" />
+            <option value="Global" />
+            <option value="Moscow" />
+            <option value="Dubai" />
+          </datalist>
         </div>
 
         <div style={{ display: 'flex', gap: '1rem' }}>
