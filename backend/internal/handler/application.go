@@ -46,7 +46,7 @@ func (h *ApplicationHandler) ApplyToRole(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Fetch details for email notification
-	roleTitle, projectName, ownerEmail, _, ownerID, projectID, err := h.appRepo.GetRoleDetails(r.Context(), roleID)
+	roleTitle, projectName, ownerEmail, _, ownerID, _, err := h.appRepo.GetRoleDetails(r.Context(), roleID)
 	if err != nil {
 		http.Error(w, "Failed to get role details for notification", http.StatusInternalServerError)
 		return
