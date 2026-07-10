@@ -17,6 +17,7 @@
           - software-properties-common
           - git
           - rsync
+          - ufw
         state: present
 
     - name: Add Docker GPG apt Key
