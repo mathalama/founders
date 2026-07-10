@@ -3,17 +3,21 @@ import { Link } from 'react-router-dom';
 import { fetchWithAuth } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import { FiUsers, FiMessageSquare, FiEdit, FiPlus, FiFolder, FiClock } from 'react-icons/fi';
+import { motion } from 'framer-motion';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import EmptyState from '../components/EmptyState';
+import Badge from '../components/ui/Badge';
 
 // Status badge with color coding
 function AppStatusBadge({ status }) {
-  if (status === 'accepted') return <span className="badge badge--success">Принят ✓</span>;
-  if (status === 'rejected') return <span className="badge">Отклонён</span>;
-  return <span className="badge badge--warning">На рассмотрении</span>;
+  if (status === 'accepted') return <Badge type="success">Принят ✓</Badge>;
+  if (status === 'rejected') return <Badge>Отклонён</Badge>;
+  return <Badge type="warning">На рассмотрении</Badge>;
 }
 
 function RoleStatusBadge({ status }) {
-  if (status === 'closed') return <span className="badge">Закрыта</span>;
-  return <span className="badge badge--success">Открыта</span>;
+  if (status === 'closed') return <Badge>Закрыта</Badge>;
+  return <Badge type="success">Открыта</Badge>;
 }
 
 // Stats widget
@@ -39,64 +43,67 @@ function StatCard({ label, value, sub, icon, accent = false }) {
 }
 
 function DashboardPage() {
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        const res = await fetchWithAuth('/api/dashboard/projects');
-        if (res.ok) {
-          const data = await res.json();
-          setProjects(data || []);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-      setLoading(false);
-    };
-    fetchDashboard();
-  }, []);
+  const { data: projects = [], isLoading } = useQuery({
+    queryKey: ['dashboardProjects'],
+    queryFn: async () => {
+      const res = await fetchWithAuth('/api/dashboard/projects');
+      if (!res.ok) throw new Error('Failed to fetch dashboard');
+      return res.json();
+    }
+  });
 
-  const updateRoleStatus = async (roleId, newStatus) => {
-    try {
+  const updateRoleMutation = useMutation({
+    mutationFn: async ({ roleId, status }) => {
       const res = await fetchWithAuth(`/api/dashboard/roles/${roleId}/status`, {
         method: 'PUT',
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ status }),
       });
-      if (res.ok) {
-        setProjects(projects.map(p => ({
+      if (!res.ok) throw new Error('Failed to update role');
+      return { roleId, status };
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(['dashboardProjects'], (old) => {
+        if (!old) return old;
+        return old.map(p => ({
           ...p,
-          roles: p.roles?.map(r => r.id === roleId ? { ...r, status: newStatus } : r),
-        })));
-        showToast(newStatus === 'closed' ? 'Роль закрыта' : 'Роль открыта снова', 'success');
-      }
-    } catch (err) {
-      showToast('Ошибка при обновлении роли', 'error');
-    }
-  };
+          roles: p.roles?.map(r => r.id === data.roleId ? { ...r, status: data.status } : r)
+        }));
+      });
+      showToast(data.status === 'closed' ? 'Роль закрыта' : 'Роль открыта снова', 'success');
+    },
+    onError: () => showToast('Ошибка при обновлении роли', 'error')
+  });
 
-  const updateAppStatus = async (appId, newStatus) => {
-    try {
+  const updateAppMutation = useMutation({
+    mutationFn: async ({ appId, status }) => {
       const res = await fetchWithAuth(`/api/dashboard/applications/${appId}/status`, {
         method: 'PUT',
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ status }),
       });
-      if (res.ok) {
-        setProjects(projects.map(p => ({
+      if (!res.ok) throw new Error('Failed to update status');
+      return { appId, status };
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(['dashboardProjects'], (old) => {
+        if (!old) return old;
+        return old.map(p => ({
           ...p,
-          applications: p.applications?.map(a => a.id === appId ? { ...a, status: newStatus } : a),
-        })));
-        showToast(
-          newStatus === 'accepted' ? 'Отклик одобрен! 🎉' : 'Отклик отклонён',
-          newStatus === 'accepted' ? 'success' : 'info'
-        );
-      }
-    } catch (err) {
-      showToast('Ошибка при обновлении статуса', 'error');
-    }
-  };
+          applications: p.applications?.map(a => a.id === data.appId ? { ...a, status: data.status } : a)
+        }));
+      });
+      showToast(
+        data.status === 'accepted' ? 'Отклик одобрен!' : 'Отклик отклонён',
+        data.status === 'accepted' ? 'success' : 'info'
+      );
+    },
+    onError: () => showToast('Ошибка при обновлении статуса', 'error')
+  });
+
+  const updateRoleStatus = (roleId, newStatus) => updateRoleMutation.mutate({ roleId, status: newStatus });
+  const updateAppStatus = (appId, newStatus) => updateAppMutation.mutate({ appId, status: newStatus });
 
   // Computed stats
   const totalProjects = projects.length;
@@ -104,7 +111,7 @@ function DashboardPage() {
   const totalApplications = allApplications.length;
   const pendingApplications = allApplications.filter(a => a.status === 'pending').length;
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div style={{ maxWidth: '860px', margin: '0 auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
@@ -125,7 +132,13 @@ function DashboardPage() {
   }
 
   return (
-    <div style={{ maxWidth: '860px', margin: '0 auto' }}>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.3 }}
+      style={{ maxWidth: '860px', margin: '0 auto' }}
+    >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h1>Мои проекты</h1>
         <Link to="/new" className="btn btn-primary btn-sm">
@@ -157,18 +170,12 @@ function DashboardPage() {
       {/* Projects list */}
       {projects.length === 0 ? (
         <div className="bento-card">
-          <div className="empty-state">
-            <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-              <rect x="8" y="16" width="48" height="36" rx="4" stroke="currentColor" strokeWidth="2" />
-              <path d="M20 8h24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              <path d="M24 32h16M24 40h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-            <h3>Нет проектов</h3>
-            <p>Создайте свой первый проект, чтобы найти команду.</p>
-            <Link to="/new" className="btn btn-primary" style={{ marginTop: '0.5rem' }}>
-              <FiPlus size={14} /> Создать проект
-            </Link>
-          </div>
+          <EmptyState 
+            title="Нет проектов"
+            description="Создайте свой первый проект, чтобы найти команду."
+            actionText="Создать проект"
+            actionTo="/new"
+          />
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }} className="animate-stagger">
@@ -182,7 +189,7 @@ function DashboardPage() {
                     <h2 style={{ marginBottom: '0.375rem' }}>
                       <Link to={`/project/${p.id}`} style={{ color: 'inherit' }}>{p.title}</Link>
                     </h2>
-                    <span className="badge">{p.stage}</span>
+                    <Badge>{p.stage}</Badge>
                   </div>
                   <Link to={`/project/${p.id}/edit`} className="btn btn-outline btn-sm">
                     <FiEdit size={13} /> Редактировать
@@ -254,7 +261,11 @@ function DashboardPage() {
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                           <div>
-                            <strong style={{ fontSize: 'var(--text-sm)' }}>{app.applicant?.name}</strong>
+                            <strong style={{ fontSize: 'var(--text-sm)' }}>
+                              <Link to={`/user/${app.user_id}`} style={{ color: 'inherit', textDecoration: 'underline' }}>
+                                {app.applicant?.name}
+                              </Link>
+                            </strong>
                             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
                               на роль: {app.role_title}
                             </div>
@@ -308,7 +319,7 @@ function DashboardPage() {
           })}
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
 

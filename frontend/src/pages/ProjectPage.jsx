@@ -8,39 +8,53 @@ import {
   FiGlobe, FiGithub, FiSend, FiUsers, FiCheckSquare,
   FiEdit, FiX, FiCheck
 } from 'react-icons/fi';
+import { motion } from 'framer-motion';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import EmptyState from '../components/EmptyState';
+import Avatar from '../components/ui/Avatar';
+import Badge from '../components/ui/Badge';
 
 // Role status badge
 function RoleStatusBadge({ status, applications = 0 }) {
   if (status === 'closed') {
-    return <span className="badge">Закрыта</span>;
+    return <Badge>Закрыта</Badge>;
   }
   if (applications > 0) {
-    return <span className="badge badge--warning">Есть отклики: {applications}</span>;
+    return <Badge type="warning">Есть отклики: {applications}</Badge>;
   }
-  return <span className="badge badge--success">Открыта</span>;
+  return <Badge type="success">Открыта</Badge>;
 }
 
-// Team member card
 function TeamMemberCard({ member }) {
-  const initials = member.name
-    ? member.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
-    : '?';
-  return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.75rem',
-      padding: '0.75rem',
-      background: 'var(--bg)',
-      borderRadius: 'var(--radius-md)',
-    }}>
-      <div className="avatar">{initials}</div>
+  const content = (
+    <>
+      <Avatar name={member.name} />
       <div>
-        <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{member.name}</div>
+        <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--text-primary)' }}>{member.name}</div>
         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{member.role}</div>
       </div>
-    </div>
+    </>
   );
+
+  const style = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    padding: '0.75rem',
+    background: 'var(--bg)',
+    borderRadius: 'var(--radius-md)',
+    textDecoration: 'none',
+  };
+
+  if (member.userId) {
+    return (
+      <Link to={`/user/${member.userId}`} style={style} className="bento-card--link">
+        {content}
+      </Link>
+    );
+  }
+
+  return <div style={style}>{content}</div>;
 }
 
 function ProjectPage() {
@@ -48,31 +62,44 @@ function ProjectPage() {
   const { user } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
-  const [project, setProject] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
   const [showModal, setShowModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
   const [applicationMsg, setApplicationMsg] = useState('');
+  
+  const { data: project, isLoading } = useQuery({
+    queryKey: ['project', id],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE_URL}/api/projects/${id}`);
+      if (!res.ok) throw new Error('Failed to fetch project');
+      return res.json();
+    }
+  });
+
   const [bookmarked, setBookmarked] = useState(false);
-  const [applying, setApplying] = useState(false);
-
   useEffect(() => {
-    const fetchProject = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/projects/${id}`);
-        if (res.ok) {
-          const data = await res.json();
-          setProject(data);
-        }
-      } catch (err) {
-        console.error('Failed to load project', err);
-      }
-      setLoading(false);
-    };
-    fetchProject();
-  }, [id]);
+    // Only way to initialize bookmarked right now, though ideally it should come from backend
+  }, [project]);
 
-  const handleApply = async () => {
+  const applyMutation = useMutation({
+    mutationFn: async ({ roleId, message }) => {
+      const res = await fetchWithAuth(`/api/projects/${id}/roles/${roleId}/apply`, {
+        method: 'POST',
+        body: JSON.stringify({ message }),
+      });
+      if (!res.ok) throw new Error('Failed to apply');
+      return res.json();
+    },
+    onSuccess: () => {
+      showToast('Отклик отправлен!', 'success');
+      setShowModal(false);
+      setApplicationMsg('');
+    },
+    onError: () => showToast('Ошибка при отправке отклика', 'error')
+  });
+
+  const handleApply = () => {
     if (!user) {
       showToast('Войдите в систему, чтобы откликнуться', 'info');
       return;
@@ -81,23 +108,7 @@ function ProjectPage() {
       showToast('Напишите сопроводительное сообщение', 'error');
       return;
     }
-    setApplying(true);
-    try {
-      const res = await fetchWithAuth(`/api/projects/${id}/roles/${selectedRole.id}/apply`, {
-        method: 'POST',
-        body: JSON.stringify({ message: applicationMsg }),
-      });
-      if (res.ok) {
-        showToast('Отклик отправлен! 🎉', 'success');
-        setShowModal(false);
-        setApplicationMsg('');
-      } else {
-        showToast('Ошибка при отправке отклика', 'error');
-      }
-    } catch (err) {
-      showToast('Ошибка соединения', 'error');
-    }
-    setApplying(false);
+    applyMutation.mutate({ roleId: selectedRole.id, message: applicationMsg });
   };
 
   const toggleBookmark = async () => {
@@ -120,7 +131,7 @@ function ProjectPage() {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div style={{ maxWidth: '720px', margin: '0 auto' }}>
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
@@ -139,10 +150,13 @@ function ProjectPage() {
 
   if (!project) {
     return (
-      <div className="empty-state" style={{ marginTop: '4rem' }}>
-        <h3>Проект не найден</h3>
-        <p>Возможно, он был удалён или ссылка устарела.</p>
-        <Link to="/" className="btn btn-primary" style={{ marginTop: '1rem' }}>На главную</Link>
+      <div style={{ marginTop: '4rem' }}>
+        <EmptyState 
+          title="Проект не найден"
+          description="Возможно, он был удалён или ссылка устарела."
+          actionText="На главную"
+          actionTo="/"
+        />
       </div>
     );
   }
@@ -153,7 +167,13 @@ function ProjectPage() {
   const roadmapPct = roadmapTotal > 0 ? Math.round((roadmapDone / roadmapTotal) * 100) : 0;
 
   return (
-    <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.3 }}
+      style={{ maxWidth: '720px', margin: '0 auto' }}
+    >
       {/* Top nav */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <Link to="/" className="btn btn-ghost btn-sm">
@@ -178,14 +198,16 @@ function ProjectPage() {
       {/* Title */}
       <h1 style={{ marginBottom: '0.375rem' }}>{project.title}</h1>
       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
-        <span className="badge">{project.category}</span>
-        <span className="badge">{project.city}</span>
-        <span className="badge">{project.stage}</span>
+        <Badge>{project.category}</Badge>
+        <Badge>{project.city}</Badge>
+        <Badge>{project.stage}</Badge>
       </div>
 
-      <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-        {project.description}
-      </p>
+      <div 
+        style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)', lineHeight: 1.7 }}
+        className="tiptap-editor"
+        dangerouslySetInnerHTML={{ __html: project.description }}
+      />
 
       {/* Links */}
       {(project.website || project.github) && (
@@ -211,7 +233,7 @@ function ProjectPage() {
       </h3>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.5rem', marginBottom: '2rem' }}>
         {project.owner && (
-          <TeamMemberCard member={{ name: project.owner.name, role: 'Founder' }} />
+          <TeamMemberCard member={{ name: project.owner.name, role: 'Founder', userId: project.ownerId }} />
         )}
         {project.team?.map(member => (
           <TeamMemberCard key={member.id} member={member} />
@@ -343,7 +365,7 @@ function ProjectPage() {
             <textarea
               className="textarea"
               rows={4}
-              placeholder="Расскажи немного о себе — почему ты подходишь для этой роли? 🚀"
+              placeholder="Расскажи немного о себе — почему ты подходишь для этой роли?"
               value={applicationMsg}
               onChange={e => setApplicationMsg(e.target.value)}
               style={{ marginBottom: '1rem' }}
@@ -353,15 +375,15 @@ function ProjectPage() {
               <button
                 className="btn btn-primary"
                 onClick={handleApply}
-                disabled={applying || !applicationMsg.trim()}
+                disabled={applyMutation.isPending || !applicationMsg.trim()}
               >
-                {applying ? 'Отправляю...' : 'Отправить отклик'}
+                {applyMutation.isPending ? 'Отправляю...' : 'Отправить отклик'}
               </button>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
 

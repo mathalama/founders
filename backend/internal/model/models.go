@@ -61,3 +61,22 @@ type RoadmapItem struct {
 	Done      bool   `json:"done"`
 	SortOrder int    `json:"sortOrder"`
 }
+
+type Notification struct {
+	ID        string    `json:"id"`
+	UserID    string    `json:"userId"`
+	Type      string    `json:"type"`
+	Message   string    `json:"message"`
+	Link      *string   `json:"link,omitempty"`
+	IsRead    bool      `json:"isRead"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+type Message struct {
+	ID         string    `json:"id"`
+	SenderID   string    `json:"senderId"`
+	ReceiverID string    `json:"receiverId"`
+	Content    string    `json:"content"`
+	IsRead     bool      `json:"isRead"`
+	CreatedAt  time.Time `json:"createdAt"`
+}

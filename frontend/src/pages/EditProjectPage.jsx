@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   FiArrowLeft, FiPlus, FiTrash2, FiCheck, FiSave
 } from 'react-icons/fi';
+import RichTextEditor from '../components/RichTextEditor';
 
 function EditProjectPage() {
   const { id } = useParams();
@@ -136,7 +137,7 @@ function EditProjectPage() {
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: 'var(--text-sm)' }}>
               Описание *
             </label>
-            <textarea required name="description" value={formData.description} onChange={handleChange} className="textarea" rows={4} placeholder="Краткое описание проекта" />
+            <RichTextEditor value={formData.description} onChange={(val) => setFormData(prev => ({ ...prev, description: val }))} placeholder="Краткое описание проекта" />
           </div>
 
           <div style={{ display: 'flex', gap: '0.875rem', flexWrap: 'wrap' }}>

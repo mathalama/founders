@@ -3,24 +3,44 @@ import { useAuth } from '../context/AuthContext';
 import {
   FiHome, FiLayout, FiPlusCircle, FiUser,
   FiBookmark, FiFileText, FiLogOut, FiLogIn,
-  FiMenu, FiX
+  FiMenu, FiX, FiMoon, FiSun, FiBell, FiMessageSquare
 } from 'react-icons/fi';
+import { useTheme } from '../context/ThemeContext';
 import styles from './Sidebar.module.css';
-
-const NAV_ITEMS_AUTH = [
-  { to: '/',             icon: <FiHome size={18} />,       label: 'Лента' },
-  { to: '/dashboard',   icon: <FiLayout size={18} />,     label: 'Мои проекты' },
-  { to: '/applications',icon: <FiFileText size={18} />,   label: 'Мои отклики' },
-  { to: '/bookmarks',   icon: <FiBookmark size={18} />,   label: 'Сохранённое' },
-];
 
 const NAV_ITEMS_GUEST = [
   { to: '/', icon: <FiHome size={18} />, label: 'Лента' },
 ];
 
+import { fetchWithAuth } from '../api/client';
+import { useState, useEffect } from 'react';
+
 function Sidebar({ collapsed, mobileOpen, onToggle }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (user) {
+      fetchWithAuth('/api/notifications')
+        .then(res => res.ok ? res.json() : [])
+        .then(data => {
+          const count = (data || []).filter(n => !n.isRead).length;
+          setUnreadCount(count);
+        })
+        .catch(console.error);
+    }
+  }, [user]);
+
+  const NAV_ITEMS_AUTH = [
+    { to: '/',             icon: <FiHome size={18} />,       label: 'Лента' },
+    { to: '/dashboard',   icon: <FiLayout size={18} />,     label: 'Мои проекты' },
+    { to: '/applications',icon: <FiFileText size={18} />,   label: 'Мои отклики' },
+    { to: '/messages',    icon: <FiMessageSquare size={18} />, label: 'Сообщения' },
+    { to: '/bookmarks',   icon: <FiBookmark size={18} />,   label: 'Сохранённое' },
+    { to: '/notifications',icon: <div style={{position:'relative'}}><FiBell size={18} />{unreadCount > 0 && <span className="badge--count" style={{position:'absolute', top:'-6px', right:'-8px', fontSize:'9px', padding:'2px 4px'}}>{unreadCount}</span>}</div>, label: 'Уведомления' },
+  ];
 
   const navItems = user ? NAV_ITEMS_AUTH : NAV_ITEMS_GUEST;
 
@@ -39,8 +59,7 @@ function Sidebar({ collapsed, mobileOpen, onToggle }) {
       <div className={styles.header}>
         {!collapsed && (
           <Link to="/" className={styles.logo}>
-            <span className={styles.logoMark}>Q</span>
-            <span className={styles.logoText}>oldau</span>
+            <span className={styles.logoText}>Nucla</span>
           </Link>
         )}
         <button
@@ -122,6 +141,17 @@ function Sidebar({ collapsed, mobileOpen, onToggle }) {
             {!collapsed && <span className={styles.navLabel}>Войти</span>}
           </Link>
         )}
+        <button
+          className={`${styles.navItem} ${collapsed ? styles.navItemCollapsed : ''}`}
+          onClick={toggleTheme}
+          title={collapsed ? 'Сменить тему' : undefined}
+          style={{ marginTop: '0.5rem', background: 'var(--surface-raised)', border: '1px solid var(--border)' }}
+        >
+          <span className={styles.navIcon}>
+            {theme === 'light' ? <FiMoon size={18} /> : <FiSun size={18} />}
+          </span>
+          {!collapsed && <span className={styles.navLabel}>{theme === 'light' ? 'Темная тема' : 'Светлая тема'}</span>}
+        </button>
       </div>
     </aside>
   );

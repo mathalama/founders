@@ -2,9 +2,14 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   FiCpu, FiMapPin, FiTrendingUp, FiUser, FiSearch,
-  FiUsers, FiCheckSquare
+  FiUsers, FiCheckSquare, FiStar
 } from 'react-icons/fi';
+import { motion } from 'framer-motion';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { API_BASE_URL } from '../api/client';
+import EmptyState from '../components/EmptyState';
+import Avatar from '../components/ui/Avatar';
+import Badge from '../components/ui/Badge';
 
 // Skeleton card component
 function SkeletonCard({ featured = false }) {
@@ -27,33 +32,7 @@ function SkeletonCard({ featured = false }) {
   );
 }
 
-// Empty state
-function EmptyState({ hasFilters, onReset }) {
-  return (
-    <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
-      <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
-        <circle cx="40" cy="40" r="38" stroke="currentColor" strokeWidth="2" strokeDasharray="6 4" />
-        <path d="M28 36h24M28 44h16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-        <circle cx="40" cy="26" r="6" stroke="currentColor" strokeWidth="2" />
-      </svg>
-      <h3>{hasFilters ? 'Ничего не найдено' : 'Проекты появятся здесь'}</h3>
-      <p>
-        {hasFilters
-          ? 'Попробуйте изменить фильтры или поисковый запрос.'
-          : 'Стань первым — создай проект и найди свою команду.'}
-      </p>
-      {hasFilters ? (
-        <button className="btn btn-outline" onClick={onReset} style={{ marginTop: '0.5rem' }}>
-          Сбросить фильтры
-        </button>
-      ) : (
-        <Link to="/new" className="btn btn-primary" style={{ marginTop: '0.5rem' }}>
-          Создать проект
-        </Link>
-      )}
-    </div>
-  );
-}
+// Empty state is now imported
 
 // Project card
 function ProjectCard({ project, featured = false, index = 0 }) {
@@ -80,11 +59,7 @@ function ProjectCard({ project, featured = false, index = 0 }) {
       {/* Header row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-          <div className="avatar">
-            {p.owner?.avatarUrl
-              ? <img src={p.owner.avatarUrl} alt={p.owner.name} />
-              : initials}
-          </div>
+          <Avatar name={p.owner?.name} url={p.owner?.avatarUrl} />
           <div>
             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', fontWeight: 500 }}>
               {p.owner?.name || 'Фаундер'}
@@ -95,15 +70,15 @@ function ProjectCard({ project, featured = false, index = 0 }) {
           </div>
         </div>
         {featured && (
-          <span className="badge badge--accent">⭐ Топ</span>
+          <Badge type="accent"><FiStar size={12} style={{marginRight: '4px'}} /> Топ</Badge>
         )}
       </div>
 
       {/* Tags */}
       <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap', marginBottom: '0.875rem' }}>
-        <span className="badge"><FiCpu size={11} style={{ marginRight: '2px' }} />{p.category}</span>
-        <span className="badge"><FiMapPin size={11} style={{ marginRight: '2px' }} />{p.city}</span>
-        <span className="badge"><FiTrendingUp size={11} style={{ marginRight: '2px' }} />{p.stage}</span>
+        <Badge><FiCpu size={11} style={{ marginRight: '2px' }} />{p.category}</Badge>
+        <Badge><FiMapPin size={11} style={{ marginRight: '2px' }} />{p.city}</Badge>
+        <Badge><FiTrendingUp size={11} style={{ marginRight: '2px' }} />{p.stage}</Badge>
       </div>
 
       {/* Description */}
@@ -118,7 +93,7 @@ function ProjectCard({ project, featured = false, index = 0 }) {
         WebkitBoxOrient: 'vertical',
         overflow: 'hidden',
       }}>
-        {p.description}
+        {p.description?.replace(/<[^>]+>/g, '')}
       </p>
 
       {/* Roadmap progress */}
@@ -144,12 +119,12 @@ function ProjectCard({ project, featured = false, index = 0 }) {
         {openRoles.length > 0 ? (
           <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
             {openRoles.slice(0, 3).map(role => (
-              <span key={role.id} className="badge badge--accent" style={{ fontSize: '10px' }}>
+              <Badge key={role.id} type="accent" style={{ fontSize: '10px' }}>
                 {role.title}
-              </span>
+              </Badge>
             ))}
             {openRoles.length > 3 && (
-              <span className="badge" style={{ fontSize: '10px' }}>+{openRoles.length - 3}</span>
+              <Badge style={{ fontSize: '10px' }}>+{openRoles.length - 3}</Badge>
             )}
           </div>
         ) : (
@@ -161,12 +136,48 @@ function ProjectCard({ project, featured = false, index = 0 }) {
 }
 
 function FeedPage() {
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filters, setFilters] = useState({ category: '', stage: '', city: '', role: '' });
   const debounceRef = useRef(null);
+  const observer = useRef();
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isPending,
+    isFetchingNextPage
+  } = useInfiniteQuery({
+    queryKey: ['projects', filters, debouncedSearch],
+    queryFn: async ({ pageParam = 1 }) => {
+      const params = new URLSearchParams({
+        ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v)),
+        ...(debouncedSearch ? { search: debouncedSearch } : {}),
+        page: pageParam,
+        limit: 10,
+      }).toString();
+      const res = await fetch(`${API_BASE_URL}/api/projects${params ? '?' + params : ''}`);
+      if (!res.ok) throw new Error('Network error');
+      return res.json();
+    },
+    getNextPageParam: (lastPage, allPages) => {
+      return (lastPage?.length === 10) ? allPages.length + 1 : undefined;
+    },
+  });
+
+  const projects = data?.pages.flat() || [];
+
+  const lastProjectElementRef = useCallback(node => {
+    if (isPending || isFetchingNextPage) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasNextPage) {
+        fetchNextPage();
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [isPending, isFetchingNextPage, hasNextPage, fetchNextPage]);
 
   // Debounce search input
   const handleSearchChange = (e) => {
@@ -186,34 +197,17 @@ function FeedPage() {
     setDebouncedSearch('');
   };
 
-  useEffect(() => {
-    fetchProjects();
-  }, [filters, debouncedSearch]);
-
-  const fetchProjects = async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v)),
-        ...(debouncedSearch ? { search: debouncedSearch } : {}),
-      }).toString();
-      const res = await fetch(`${API_BASE_URL}/api/projects${params ? '?' + params : ''}`);
-      if (res.ok) {
-        const data = await res.json();
-        setProjects(data || []);
-      }
-    } catch (err) {
-      console.error('Failed to fetch projects:', err);
-    }
-    setLoading(false);
-  };
-
   const updateFilter = (e) => {
     setFilters(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   return (
-    <div>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.3 }}
+    >
       {/* Search + Filters bar */}
       <div className="bento-card" style={{ marginBottom: '1.5rem', padding: '1.25rem' }}>
         {/* Search */}
@@ -287,7 +281,7 @@ function FeedPage() {
 
       {/* Grid */}
       <div className="bento-grid">
-        {loading ? (
+        {isPending ? (
           <>
             <SkeletonCard featured />
             <SkeletonCard />
@@ -296,19 +290,34 @@ function FeedPage() {
             <SkeletonCard />
           </>
         ) : projects.length === 0 ? (
-          <EmptyState hasFilters={hasFilters} onReset={resetFilters} />
+          <EmptyState 
+            title={hasFilters ? 'Ничего не найдено' : 'Проекты появятся здесь'}
+            description={hasFilters ? 'Попробуйте изменить фильтры или поисковый запрос.' : 'Стань первым — создай проект и найди свою команду.'}
+            actionText={hasFilters ? 'Сбросить фильтры' : 'Создать проект'}
+            actionOnClick={hasFilters ? resetFilters : undefined}
+            actionTo={hasFilters ? undefined : '/new'}
+          />
         ) : (
-          projects.map((p, i) => (
-            <ProjectCard
-              key={p.id}
-              project={p}
-              featured={i === 0}
-              index={i}
-            />
-          ))
+          <>
+            {projects.map((p, i) => (
+              <div key={p.id} ref={i === projects.length - 1 ? lastProjectElementRef : null}>
+                <ProjectCard
+                  project={p}
+                  featured={i === 0 && !debouncedSearch && !Object.values(filters).some(v=>v)}
+                  index={i}
+                />
+              </div>
+            ))}
+            {isFetchingNextPage && (
+              <>
+                <SkeletonCard />
+                <SkeletonCard />
+              </>
+            )}
+          </>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
 

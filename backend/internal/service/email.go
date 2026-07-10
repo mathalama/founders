@@ -46,7 +46,7 @@ func (s *EmailService) SendApplicationNotification(toEmail, projectName, roleNam
 	m := gomail.NewMessage()
 	m.SetHeader("From", s.from)
 	m.SetHeader("To", toEmail)
-	m.SetHeader("Subject", fmt.Sprintf("Новый отклик на Qoldau: %s", projectName))
+	m.SetHeader("Subject", fmt.Sprintf("Новый отклик на Nucla: %s", projectName))
 	
 	body := fmt.Sprintf(`
 		<h2>У вас новый отклик!</h2>

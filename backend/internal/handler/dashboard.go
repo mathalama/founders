@@ -5,16 +5,17 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/mathalama/founders-backend/internal/middleware"
-	"github.com/mathalama/founders-backend/internal/repository"
+	"github.com/mathalama/nucla-backend/internal/middleware"
+	"github.com/mathalama/nucla-backend/internal/repository"
 )
 
 type DashboardHandler struct {
-	repo *repository.DashboardRepo
+	repo      *repository.DashboardRepo
+	notifRepo *repository.NotificationRepo
 }
 
-func NewDashboardHandler(repo *repository.DashboardRepo) *DashboardHandler {
-	return &DashboardHandler{repo: repo}
+func NewDashboardHandler(repo *repository.DashboardRepo, notifRepo *repository.NotificationRepo) *DashboardHandler {
+	return &DashboardHandler{repo: repo, notifRepo: notifRepo}
 }
 
 func (h *DashboardHandler) GetMyProjects(w http.ResponseWriter, r *http.Request) {
@@ -66,10 +67,20 @@ func (h *DashboardHandler) UpdateApplicationStatus(w http.ResponseWriter, r *htt
 		return
 	}
 
-	if err := h.repo.UpdateApplicationStatus(r.Context(), userID, appID, req.Status); err != nil {
+	applicantID, projectID, projectTitle, err := h.repo.UpdateApplicationStatus(r.Context(), userID, appID, req.Status)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	// Trigger In-App Notification
+	statusRu := "принят"
+	if req.Status == "rejected" {
+		statusRu = "отклонен"
+	}
+	notifMsg := "Твой отклик на проект «" + projectTitle + "» был " + statusRu + "."
+	notifLink := "/project/" + projectID
+	h.notifRepo.Create(r.Context(), applicantID, "application_status", notifMsg, &notifLink)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"status":"success"}`))

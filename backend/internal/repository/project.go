@@ -6,7 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/mathalama/founders-backend/internal/model"
+	"github.com/mathalama/nucla-backend/internal/model"
 )
 
 type ProjectRepo struct {
@@ -17,7 +17,7 @@ func NewProjectRepo(db *pgxpool.Pool) *ProjectRepo {
 	return &ProjectRepo{db: db}
 }
 
-func (r *ProjectRepo) GetAll(ctx context.Context, category, stage, city, role, search string) ([]model.Project, error) {
+func (r *ProjectRepo) GetAll(ctx context.Context, category, stage, city, role, search string, page, limit int) ([]model.Project, error) {
 	query := `
 		SELECT p.id, p.owner_id, p.title, p.description, p.category, p.stage, p.city, p.website, p.github, p.telegram, p.created_at,
 		       u.name as owner_name, u.avatar_url as owner_avatar
@@ -55,6 +55,12 @@ func (r *ProjectRepo) GetAll(ctx context.Context, category, stage, city, role, s
 	}
 
 	query += " ORDER BY p.created_at DESC"
+
+	if limit > 0 {
+		query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argIdx, argIdx+1)
+		args = append(args, limit, (page-1)*limit)
+		argIdx += 2
+	}
 
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
@@ -99,6 +105,41 @@ func (r *ProjectRepo) GetAll(ctx context.Context, category, stage, city, role, s
 		}
 
 		p.Owner = &owner
+		projects = append(projects, p)
+	}
+	return projects, nil
+}
+
+func (r *ProjectRepo) GetPublicProjectsByOwner(ctx context.Context, ownerID string) ([]model.Project, error) {
+	query := `
+		SELECT id, owner_id, title, description, category, stage, city, website, github, telegram, created_at
+		FROM projects
+		WHERE owner_id = $1
+		ORDER BY created_at DESC
+	`
+	rows, err := r.db.Query(ctx, query, ownerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var projects []model.Project
+	for rows.Next() {
+		var p model.Project
+		if err := rows.Scan(&p.ID, &p.OwnerID, &p.Title, &p.Description, &p.Category, &p.Stage, &p.City, &p.Website, &p.Github, &p.Telegram, &p.CreatedAt); err != nil {
+			return nil, err
+		}
+		
+		rolesQuery := `SELECT id, project_id, title, skills, slots, status FROM open_roles WHERE project_id = $1 AND status = 'open'`
+		rolesRows, rErr := r.db.Query(ctx, rolesQuery, p.ID)
+		if rErr == nil {
+			defer rolesRows.Close()
+			for rolesRows.Next() {
+				var role model.OpenRole
+				rolesRows.Scan(&role.ID, &role.ProjectID, &role.Title, &role.Skills, &role.Slots, &role.Status)
+				p.Roles = append(p.Roles, role)
+			}
+		}
 		projects = append(projects, p)
 	}
 	return projects, nil

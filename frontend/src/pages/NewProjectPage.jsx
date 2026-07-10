@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchWithAuth } from '../api/client';
+import RichTextEditor from '../components/RichTextEditor';
 
 function NewProjectPage() {
   const navigate = useNavigate();
@@ -54,7 +55,7 @@ function NewProjectPage() {
 
         <div>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Описание *</label>
-          <textarea required name="description" value={formData.description} onChange={handleChange} className="textarea" rows="4" placeholder="Краткое описание"></textarea>
+          <RichTextEditor value={formData.description} onChange={(val) => setFormData({ ...formData, description: val })} placeholder="Краткое описание" />
         </div>
 
         <div style={{ display: 'flex', gap: '1rem' }}>

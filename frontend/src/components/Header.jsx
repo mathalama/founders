@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import styles from './Header.module.css';
 import { useAuth } from '../context/AuthContext';
-import { FiMenu, FiX, FiPlus } from 'react-icons/fi';
+import { FiMenu, FiX, FiPlus, FiHome, FiFolder, FiFileText, FiBookmark, FiUser } from 'react-icons/fi';
 
 function Header() {
   const { user, logout } = useAuth();
@@ -37,8 +37,7 @@ function Header() {
       <header className={styles.header}>
         <div className={`container ${styles.headerContent}`}>
           <Link to="/" className={styles.logo}>
-            <span className={styles.logoMark}>Q</span>
-            <span>oldau</span>
+            <span>Nucla</span>
           </Link>
 
           {/* Desktop nav */}
@@ -83,8 +82,7 @@ function Header() {
           >
             <div className={styles.drawerHeader}>
               <Link to="/" className={styles.logo}>
-                <span className={styles.logoMark}>Q</span>
-                <span>oldau</span>
+                <span>Nucla</span>
               </Link>
               <button className={styles.burgerBtn} onClick={() => setMenuOpen(false)}>
                 <FiX size={22} />
@@ -94,11 +92,11 @@ function Header() {
             <nav className={styles.drawerNav}>
               {user ? (
                 <>
-                  <Link to="/" className={styles.drawerLink}>🏠 Лента</Link>
-                  <Link to="/dashboard" className={styles.drawerLink}>📂 Мои проекты</Link>
-                  <Link to="/applications" className={styles.drawerLink}>📋 Мои отклики</Link>
-                  <Link to="/bookmarks" className={styles.drawerLink}>🔖 Сохраненное</Link>
-                  <Link to="/profile" className={styles.drawerLink}>👤 Профиль: {user.name}</Link>
+                  <Link to="/" className={styles.drawerLink}><FiHome style={{marginRight: '8px'}} /> Лента</Link>
+                  <Link to="/dashboard" className={styles.drawerLink}><FiFolder style={{marginRight: '8px'}} /> Мои проекты</Link>
+                  <Link to="/applications" className={styles.drawerLink}><FiFileText style={{marginRight: '8px'}} /> Мои отклики</Link>
+                  <Link to="/bookmarks" className={styles.drawerLink}><FiBookmark style={{marginRight: '8px'}} /> Сохраненное</Link>
+                  <Link to="/profile" className={styles.drawerLink}><FiUser style={{marginRight: '8px'}} /> Профиль: {user.name}</Link>
                   <div className={styles.drawerDivider} />
                   <Link to="/new" className="btn btn-primary" style={{ justifyContent: 'center' }}>
                     <FiPlus size={14} /> Создать проект
@@ -109,7 +107,7 @@ function Header() {
                 </>
               ) : (
                 <>
-                  <Link to="/" className={styles.drawerLink}>🏠 Лента</Link>
+                  <Link to="/" className={styles.drawerLink}><FiHome style={{marginRight: '8px'}} /> Лента</Link>
                   <div className={styles.drawerDivider} />
                   <Link to="/login" className="btn btn-outline" style={{ justifyContent: 'center', width: '100%' }}>
                     Войти
