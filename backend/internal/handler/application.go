@@ -66,7 +66,7 @@ func (h *ApplicationHandler) ApplyToRole(w http.ResponseWriter, r *http.Request)
 
 	// Create In-App Notification for Project Owner
 	notifMsg := "Новый отклик от " + applicant.Name + " на роль: " + roleTitle + " (Проект: " + projectName + ")"
-	notifLink := "/project/" + projectID
+	notifLink := "/dashboard"
 	h.notifRepo.Create(r.Context(), ownerID, "new_application", notifMsg, &notifLink)
 
 	w.WriteHeader(http.StatusCreated)

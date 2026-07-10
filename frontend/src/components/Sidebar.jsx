@@ -13,25 +13,24 @@ const NAV_ITEMS_GUEST = [
 ];
 
 import { fetchWithAuth } from '../api/client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 function Sidebar({ collapsed, mobileOpen, onToggle }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
-  const [unreadCount, setUnreadCount] = useState(0);
+  const { data: notifications = [] } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: async () => {
+      const res = await fetchWithAuth('/api/notifications');
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!user
+  });
 
-  useEffect(() => {
-    if (user) {
-      fetchWithAuth('/api/notifications')
-        .then(res => res.ok ? res.json() : [])
-        .then(data => {
-          const count = (data || []).filter(n => !n.isRead).length;
-          setUnreadCount(count);
-        })
-        .catch(console.error);
-    }
-  }, [user]);
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const NAV_ITEMS_AUTH = [
     { to: '/',             icon: <FiHome size={18} />,       label: 'Лента' },
