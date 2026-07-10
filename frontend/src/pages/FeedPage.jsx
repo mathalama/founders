@@ -5,11 +5,12 @@ import {
   FiUsers, FiCheckSquare, FiStar
 } from 'react-icons/fi';
 import { motion } from 'framer-motion';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { API_BASE_URL } from '../api/client';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { API_BASE_URL, fetchWithAuth } from '../api/client';
 import EmptyState from '../components/EmptyState';
 import Avatar from '../components/ui/Avatar';
 import Badge from '../components/ui/Badge';
+import { useAuth } from '../context/AuthContext';
 
 // Skeleton card component
 function SkeletonCard({ featured = false }) {
@@ -35,7 +36,7 @@ function SkeletonCard({ featured = false }) {
 // Empty state is now imported
 
 // Project card
-function ProjectCard({ project, featured = false, index = 0 }) {
+function ProjectCard({ project, featured = false, index = 0, hasApplied = false }) {
   const p = project;
   const initials = p.owner?.name
     ? p.owner.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
@@ -69,9 +70,16 @@ function ProjectCard({ project, featured = false, index = 0 }) {
             </h2>
           </div>
         </div>
-        {featured && (
-          <Badge type="accent"><FiStar size={12} style={{marginRight: '4px'}} /> Топ</Badge>
-        )}
+        <div style={{ display: 'flex', gap: '0.3rem', flexDirection: 'column', alignItems: 'flex-end' }}>
+          {featured && (
+            <Badge type="accent"><FiStar size={12} style={{marginRight: '4px'}} /> Топ</Badge>
+          )}
+          {hasApplied && (
+            <Badge type="success" style={{ fontSize: '10px' }}>
+              <FiCheckSquare size={10} style={{marginRight: '4px'}} /> Отклик сделан
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Tags */}
@@ -136,11 +144,25 @@ function ProjectCard({ project, featured = false, index = 0 }) {
 }
 
 function FeedPage() {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filters, setFilters] = useState({ category: '', stage: '', city: '', role: '' });
   const debounceRef = useRef(null);
   const observer = useRef();
+
+  const { data: myApps = [] } = useQuery({
+    queryKey: ['myApplications'],
+    queryFn: async () => {
+      const res = await fetchWithAuth('/api/applications/my');
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data || [];
+    },
+    enabled: !!user
+  });
+
+  const appliedProjectIds = new Set(myApps.map(app => app.project_id));
 
   const {
     data,
@@ -305,6 +327,7 @@ function FeedPage() {
                   project={p}
                   featured={i === 0 && !debouncedSearch && !Object.values(filters).some(v=>v)}
                   index={i}
+                  hasApplied={appliedProjectIds.has(p.id)}
                 />
               </div>
             ))}
