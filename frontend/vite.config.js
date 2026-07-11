@@ -11,6 +11,9 @@ export default defineConfig({
       devOptions: {
         enabled: false
       },
+      workbox: {
+        navigateFallbackDenylist: [/^\/api/]
+      },
       manifest: {
         name: 'Nucla',
         short_name: 'Nucla',
