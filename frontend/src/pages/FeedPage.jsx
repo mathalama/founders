@@ -12,6 +12,7 @@ import Avatar from '../components/ui/Avatar';
 import Badge from '../components/ui/Badge';
 import { useAuth } from '../context/AuthContext';
 import PullToRefresh from '../components/ui/PullToRefresh';
+import Modal from '../components/ui/Modal';
 
 // Skeleton card component
 function SkeletonCard({ featured = false }) {
@@ -149,6 +150,7 @@ function FeedPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filters, setFilters] = useState({ category: '', stage: '', city: '', role: '' });
+  const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false);
   const debounceRef = useRef(null);
   const observer = useRef();
 
@@ -235,15 +237,27 @@ function FeedPage() {
       {/* Search + Filters bar */}
       <div className="bento-card mobile-filters-card" style={{ marginBottom: '1.5rem', padding: '1.25rem' }}>
         {/* Search */}
-        <div className="input-search" style={{ marginBottom: '1rem' }}>
-          <FiSearch size={16} />
-          <input
-            className="input"
-            placeholder="Поиск проектов по названию или описанию..."
-            value={searchQuery}
-            onChange={handleSearchChange}
-            id="feed-search"
-          />
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+          <div className="input-search" style={{ flex: 1, marginBottom: 0 }}>
+            <FiSearch size={16} />
+            <input
+              className="input"
+              placeholder="Поиск проектов по названию или описанию..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              id="feed-search"
+            />
+          </div>
+          <button 
+            className="btn btn-outline filter-mobile" 
+            style={{ padding: '0 1rem' }} 
+            onClick={() => setIsFiltersModalOpen(true)}
+          >
+            <FiFilter size={18} />
+            {hasFilters && (
+              <div style={{ position: 'absolute', top: '-4px', right: '-4px', width: '12px', height: '12px', background: 'var(--primary)', borderRadius: '50%' }} />
+            )}
+          </button>
         </div>
 
         {/* Desktop Filters */}
@@ -295,45 +309,92 @@ function FeedPage() {
               <option value="QA Engineer" />
             </datalist>
           </div>
-          {hasFilters && (
-            <button className="btn btn-ghost btn-sm" onClick={resetFilters} style={{ whiteSpace: 'nowrap', alignSelf: 'center' }}>
-              Сбросить
-            </button>
-          )}
         </div>
+      </div>
 
-        {/* Mobile Chips Filters */}
-        <div className="filter-mobile">
-          <div className="mobile-chips-scroll">
+      {/* Mobile Filters Modal */}
+      <Modal isOpen={isFiltersModalOpen} onClose={() => setIsFiltersModalOpen(false)}>
+        <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <FiFilter /> Фильтры
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Категория</label>
+            <select name="category" className="select" style={{ width: '100%' }} value={filters.category} onChange={updateFilter}>
+              <option value="">Все категории</option>
+              <option value="AI">AI</option>
+              <option value="SaaS">SaaS</option>
+              <option value="EdTech">EdTech</option>
+              <option value="FinTech">FinTech</option>
+              <option value="HealthTech">HealthTech</option>
+              <option value="E-commerce">E-commerce</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Стадия проекта</label>
+            <select name="stage" className="select" style={{ width: '100%' }} value={filters.stage} onChange={updateFilter}>
+              <option value="">Любая стадия</option>
+              <option value="Идея">Идея</option>
+              <option value="MVP">MVP</option>
+              <option value="Есть пользователи">Есть пользователи</option>
+              <option value="Есть выручка">Есть выручка</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Город</label>
+            <select name="city" className="select" style={{ width: '100%' }} value={filters.city} onChange={updateFilter}>
+              <option value="">Все города</option>
+              <option value="Astana">Astana</option>
+              <option value="Almaty">Almaty</option>
+              <option value="Remote">Remote</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Нужна роль</label>
+            <input
+              list="role-filter-suggestions-mobile"
+              name="role"
+              className="select"
+              value={filters.role}
+              onChange={updateFilter}
+              placeholder="Любая роль"
+              autoComplete="off"
+              style={{ width: '100%' }}
+            />
+            <datalist id="role-filter-suggestions-mobile">
+              <option value="Frontend Developer" />
+              <option value="Backend Developer" />
+              <option value="Full Stack Developer" />
+              <option value="Mobile Developer" />
+              <option value="DevOps / SRE" />
+              <option value="Data Scientist" />
+              <option value="ML Engineer" />
+              <option value="UI/UX Designer" />
+              <option value="Product Manager" />
+              <option value="Marketing" />
+              <option value="QA Engineer" />
+            </datalist>
+          </div>
+          <div style={{ marginTop: '1rem', display: 'flex', gap: '0.75rem' }}>
             {hasFilters && (
-              <button className="mobile-chip mobile-chip--reset" onClick={resetFilters}>
+              <button 
+                className="btn btn-outline" 
+                onClick={() => { resetFilters(); setIsFiltersModalOpen(false); }} 
+                style={{ flex: 1 }}
+              >
                 Сбросить
               </button>
             )}
-            {[
-              { label: 'AI', type: 'category', value: 'AI' },
-              { label: 'SaaS', type: 'category', value: 'SaaS' },
-              { label: 'MVP', type: 'stage', value: 'MVP' },
-              { label: 'Идея', type: 'stage', value: 'Идея' },
-              { label: 'FinTech', type: 'category', value: 'FinTech' },
-              { label: 'Remote', type: 'city', value: 'Remote' },
-              { label: 'Almaty', type: 'city', value: 'Almaty' },
-              { label: 'Astana', type: 'city', value: 'Astana' },
-            ].map(chip => {
-              const isActive = filters[chip.type] === chip.value;
-              return (
-                <button
-                  key={`${chip.type}-${chip.value}`}
-                  className={`mobile-chip ${isActive ? 'active' : ''}`}
-                  onClick={() => setFilters(prev => ({ ...prev, [chip.type]: isActive ? '' : chip.value }))}
-                >
-                  {chip.label}
-                </button>
-              );
-            })}
+            <button 
+              className="btn btn-primary" 
+              onClick={() => setIsFiltersModalOpen(false)} 
+              style={{ flex: 2 }}
+            >
+              Показать результаты
+            </button>
           </div>
         </div>
-      </div>
+      </Modal>
 
       {/* Grid */}
       <PullToRefresh onRefresh={refetch}>
