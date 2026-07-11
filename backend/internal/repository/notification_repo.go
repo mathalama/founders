@@ -55,6 +55,18 @@ func (r *NotificationRepo) MarkAllAsRead(ctx context.Context, userID string) err
 	return err
 }
 
+func (r *NotificationRepo) DeleteNotification(ctx context.Context, notificationID, userID string) error {
+	query := `DELETE FROM notifications WHERE id = $1 AND user_id = $2`
+	_, err := r.db.Exec(ctx, query, notificationID, userID)
+	return err
+}
+
+func (r *NotificationRepo) DeleteAllNotifications(ctx context.Context, userID string) error {
+	query := `DELETE FROM notifications WHERE user_id = $1`
+	_, err := r.db.Exec(ctx, query, userID)
+	return err
+}
+
 func (r *NotificationRepo) AddPushSubscription(ctx context.Context, sub *model.PushSubscription) error {
 	query := `
 		INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth)

@@ -118,6 +118,8 @@ func main() {
 		r.Get("/api/notifications", notifHandler.GetMyNotifications)
 		r.Put("/api/notifications/{id}/read", notifHandler.MarkAsRead)
 		r.Put("/api/notifications/read-all", notifHandler.MarkAllAsRead)
+		r.Delete("/api/notifications/{id}", notifHandler.DeleteNotification)
+		r.Delete("/api/notifications/all", notifHandler.DeleteAllNotifications)
 
 		r.Get("/api/messages", messageHandler.GetConversations)
 		r.Get("/api/messages/{userId}", messageHandler.GetChatHistory)

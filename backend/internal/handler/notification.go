@@ -63,6 +63,34 @@ func (h *NotificationHandler) MarkAllAsRead(w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(http.StatusOK)
 }
 
+func (h *NotificationHandler) DeleteNotification(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(middleware.UserIDKey).(string)
+	id := chi.URLParam(r, "id")
+
+	if id == "" {
+		http.Error(w, "Missing notification ID", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.repo.DeleteNotification(r.Context(), id, userID); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *NotificationHandler) DeleteAllNotifications(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(middleware.UserIDKey).(string)
+
+	if err := h.repo.DeleteAllNotifications(r.Context(), userID); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
 func (h *NotificationHandler) SubscribeToPush(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(middleware.UserIDKey).(string)
 

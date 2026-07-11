@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiBell, FiCheck, FiCheckSquare } from 'react-icons/fi';
+import { FiBell, FiCheck, FiCheckSquare, FiTrash2 } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchWithAuth } from '../api/client';
@@ -47,8 +47,39 @@ function NotificationsPage() {
     }
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id) => {
+      const res = await fetchWithAuth(`/api/notifications/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete notification');
+      return id;
+    },
+    onSuccess: (id) => {
+      queryClient.setQueryData(['notifications'], (old) => {
+        if (!old) return old;
+        return old.filter(n => n.id !== id);
+      });
+    }
+  });
+
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetchWithAuth('/api/notifications/all', { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete all notifications');
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.setQueryData(['notifications'], () => []);
+    }
+  });
+
   const markAsRead = (id) => markAsReadMutation.mutate(id);
   const markAllAsRead = () => markAllAsReadMutation.mutate();
+  const deleteNotification = (id) => deleteMutation.mutate(id);
+  const deleteAll = () => {
+    if (window.confirm('Вы уверены, что хотите удалить все уведомления?')) {
+      deleteAllMutation.mutate();
+    }
+  };
 
   if (isLoading) {
     return (
@@ -71,15 +102,22 @@ function NotificationsPage() {
       style={{ maxWidth: '600px', margin: '0 auto' }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
           <FiBell /> Уведомления
           {unreadCount > 0 && <Badge type="accent">{unreadCount}</Badge>}
         </h1>
-        {unreadCount > 0 && (
-          <button className="btn btn-ghost btn-sm" onClick={markAllAsRead}>
-            <FiCheckSquare size={16} style={{ marginRight: '4px' }} /> Прочитать всё
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          {unreadCount > 0 && (
+            <button className="btn btn-ghost btn-sm" onClick={markAllAsRead}>
+              <FiCheckSquare size={16} style={{ marginRight: '4px' }} /> Прочитать всё
+            </button>
+          )}
+          {notifications.length > 0 && (
+            <button className="btn btn-ghost btn-sm" onClick={deleteAll} style={{ color: 'var(--danger)' }}>
+              <FiTrash2 size={16} style={{ marginRight: '4px' }} /> Очистить
+            </button>
+          )}
+        </div>
       </div>
 
       {notifications.length === 0 ? (
@@ -115,16 +153,26 @@ function NotificationsPage() {
                   )}
                 </div>
               </div>
-              {!notif.isRead && (
+              <div style={{ display: 'flex', gap: '0.25rem' }}>
+                {!notif.isRead && (
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => markAsRead(notif.id)}
+                    title="Отметить как прочитанное"
+                    style={{ padding: '0.25rem', color: 'var(--text-muted)' }}
+                  >
+                    <FiCheck size={16} />
+                  </button>
+                )}
                 <button
                   className="btn btn-ghost btn-sm"
-                  onClick={() => markAsRead(notif.id)}
-                  title="Отметить как прочитанное"
-                  style={{ padding: '0.25rem', color: 'var(--text-muted)' }}
+                  onClick={() => deleteNotification(notif.id)}
+                  title="Удалить уведомление"
+                  style={{ padding: '0.25rem', color: 'var(--danger)', opacity: 0.7 }}
                 >
-                  <FiCheck size={16} />
+                  <FiTrash2 size={16} />
                 </button>
-              )}
+              </div>
             </div>
           ))}
         </div>
