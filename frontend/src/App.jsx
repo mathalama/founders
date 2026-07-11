@@ -8,6 +8,7 @@ import EditProjectPage from './pages/EditProjectPage';
 import ProfilePage from './pages/ProfilePage';
 import UserPage from './pages/UserPage';
 import LoginPage from './pages/LoginPage';
+import OAuthCallbackPage from './pages/OAuthCallbackPage';
 import DashboardPage from './pages/DashboardPage';
 import MyApplicationsPage from './pages/MyApplicationsPage';
 import BookmarksPage from './pages/BookmarksPage';
@@ -147,6 +148,7 @@ function Layout() {
               <AdminRoute><AdminDashboard /></AdminRoute>
             } />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/api/auth/google/callback" element={<OAuthCallbackPage />} />
           </Routes>
         </main>
       </div>
