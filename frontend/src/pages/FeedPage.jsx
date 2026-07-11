@@ -73,6 +73,11 @@ function ProjectCard({ project, featured = false, index = 0, hasApplied = false 
           </div>
         </div>
         <div style={{ display: 'flex', gap: '0.3rem', flexDirection: 'column', alignItems: 'flex-end' }}>
+          {p.status === 'closed' && (
+            <Badge style={{ fontSize: '10px', background: 'var(--border)' }}>
+              Набор закрыт
+            </Badge>
+          )}
           {featured && (
             <Badge type="accent"><FiStar size={12} style={{marginRight: '4px'}} /> Топ</Badge>
           )}

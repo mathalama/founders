@@ -103,6 +103,8 @@ func main() {
 		r.Get("/api/auth/me", authHandler.Me)
 		r.Post("/api/projects", projectHandler.CreateProject)
 		r.Put("/api/projects/{id}", projectHandler.UpdateProject)
+		r.Put("/api/projects/{id}/status", projectHandler.UpdateProjectStatus)
+		r.Put("/api/projects/{id}/roles/{roleId}/status", projectHandler.UpdateRoleStatus)
 		r.Put("/api/profile", profileHandler.UpdateProfile)
 		r.Post("/api/projects/{id}/roles/{roleId}/apply", applicationHandler.ApplyToRole)
 		

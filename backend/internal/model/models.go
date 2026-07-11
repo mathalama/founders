@@ -43,6 +43,7 @@ type Project struct {
 	Website     *string   `json:"website,omitempty"`
 	Github      *string   `json:"github,omitempty"`
 	Telegram    string    `json:"telegram"`
+	Status      string    `json:"status"`
 	CreatedAt   time.Time `json:"createdAt"`
 	IsHidden    bool      `json:"isHidden"`
 	Owner       *User     `json:"owner,omitempty"`

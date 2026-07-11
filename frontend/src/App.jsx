@@ -8,6 +8,7 @@ import EditProjectPage from './pages/EditProjectPage';
 import ProfilePage from './pages/ProfilePage';
 import UserPage from './pages/UserPage';
 import LoginPage from './pages/LoginPage';
+import OnboardingPage from './pages/OnboardingPage';
 import OAuthCallbackPage from './pages/OAuthCallbackPage';
 import DashboardPage from './pages/DashboardPage';
 import MyApplicationsPage from './pages/MyApplicationsPage';
@@ -15,7 +16,7 @@ import BookmarksPage from './pages/BookmarksPage';
 import NotificationsPage from './pages/NotificationsPage';
 import MessagesPage from './pages/MessagesPage';
 import AdminDashboard from './pages/AdminDashboard';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -23,6 +24,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import { FiMenu, FiSun, FiMoon } from 'react-icons/fi';
 import { useRealtime } from './hooks/useRealtime';
+import { useNavigate } from 'react-router-dom';
 
 // Mobile top bar with burger button
 function MobileTopBar({ onOpen }) {
@@ -56,8 +58,19 @@ function Layout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, isLoading } = useAuth();
 
   useRealtime();
+
+  // Redirect to onboarding if profile is empty
+  useEffect(() => {
+    if (!isLoading && user && (!user.roleTitle || user.roleTitle.trim() === '')) {
+      if (location.pathname !== '/onboarding' && location.pathname !== '/api/auth/google/callback') {
+        navigate('/onboarding');
+      }
+    }
+  }, [user, isLoading, location.pathname, navigate]);
 
   // Close mobile sidebar on route change
   useEffect(() => {
@@ -151,6 +164,9 @@ function Layout() {
               <AdminRoute><AdminDashboard /></AdminRoute>
             } />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/onboarding" element={
+              <ProtectedRoute><OnboardingPage /></ProtectedRoute>
+            } />
             <Route path="/api/auth/google/callback" element={<OAuthCallbackPage />} />
           </Routes>
         </main>

@@ -120,3 +120,59 @@ func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(p)
 }
+
+func (h *ProjectHandler) UpdateProjectStatus(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(middleware.UserIDKey).(string)
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		http.Error(w, "Missing project ID", http.StatusBadRequest)
+		return
+	}
+
+	var payload struct {
+		Status string `json:"status"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.repo.UpdateStatus(r.Context(), id, userID, payload.Status); err != nil {
+		if err.Error() == "forbidden or not found" {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *ProjectHandler) UpdateRoleStatus(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(middleware.UserIDKey).(string)
+	roleID := chi.URLParam(r, "roleId")
+	if roleID == "" {
+		http.Error(w, "Missing role ID", http.StatusBadRequest)
+		return
+	}
+
+	var payload struct {
+		Status string `json:"status"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.repo.UpdateRoleStatus(r.Context(), roleID, userID, payload.Status); err != nil {
+		if err.Error() == "forbidden or not found" {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
