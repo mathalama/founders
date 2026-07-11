@@ -104,6 +104,15 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if user.IsBanned {
+		frontendURL := os.Getenv("FRONTEND_URL")
+		if frontendURL == "" {
+			frontendURL = "http://localhost:3000"
+		}
+		http.Redirect(w, r, fmt.Sprintf("%s/login?error=banned", frontendURL), http.StatusTemporaryRedirect)
+		return
+	}
+
 	secret := []byte(os.Getenv("JWT_SECRET"))
 	if len(secret) == 0 {
 		log.Fatal("Missing required environment variable: JWT_SECRET")
@@ -139,6 +148,11 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	}
 	if user == nil {
 		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+	
+	if user.IsBanned {
+		http.Error(w, "Your account has been banned by an administrator.", http.StatusForbidden)
 		return
 	}
 
