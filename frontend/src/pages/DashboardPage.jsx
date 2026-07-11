@@ -147,7 +147,7 @@ function DashboardPage() {
       </div>
 
       {/* Stats widgets */}
-      <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.875rem', marginBottom: '2rem' }}>
+      <div className="stats-grid" style={{ marginBottom: '2rem' }}>
         <StatCard
           label="Проектов"
           value={totalProjects}

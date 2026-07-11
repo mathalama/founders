@@ -286,6 +286,12 @@ h4 { font-size: var(--text-lg);  font-weight: 500; line-height: 1.4; }
   font-size: var(--text-base);
 }
 
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.875rem;
+}
+
 /* ============================================================
    FORM ELEMENTS
    ============================================================ */
