@@ -63,3 +63,19 @@ func (s *EmailService) SendApplicationNotification(toEmail, projectName, roleNam
 	}
 	return nil
 }
+
+func (s *EmailService) SendNewsletterEmail(toEmail, subject, bodyContent string) error {
+	m := gomail.NewMessage()
+	m.SetHeader("From", s.from)
+	m.SetHeader("To", toEmail)
+	m.SetHeader("Subject", subject)
+
+	// Since we expect HTML body from the admin
+	m.SetBody("text/html", bodyContent)
+
+	if err := s.dialer.DialAndSend(m); err != nil {
+		log.Printf("Failed to send newsletter email to %s: %v", toEmail, err)
+		return err
+	}
+	return nil
+}

@@ -9,17 +9,20 @@ import (
 	"github.com/mathalama/nucla-backend/internal/middleware"
 	"github.com/mathalama/nucla-backend/internal/model"
 	"github.com/mathalama/nucla-backend/internal/repository"
+	"github.com/mathalama/nucla-backend/internal/service"
 )
 
 type AdminHandler struct {
 	userRepo    *repository.UserRepo
 	projectRepo *repository.ProjectRepo
+	emailSvc    *service.EmailService
 }
 
-func NewAdminHandler(userRepo *repository.UserRepo, projectRepo *repository.ProjectRepo) *AdminHandler {
+func NewAdminHandler(userRepo *repository.UserRepo, projectRepo *repository.ProjectRepo, emailSvc *service.EmailService) *AdminHandler {
 	return &AdminHandler{
 		userRepo:    userRepo,
 		projectRepo: projectRepo,
+		emailSvc:    emailSvc,
 	}
 }
 
@@ -146,9 +149,13 @@ func (h *AdminHandler) SendNewsletter(w http.ResponseWriter, r *http.Request) {
 	count := 0
 	for _, u := range users {
 		if u.Email != "" && !u.IsBanned {
-			// Simulate email sending
-			log.Printf("[NEWSLETTER] Sending to %s: %s", u.Email, req.Subject)
-			count++
+			// Actually send email
+			err := h.emailSvc.SendNewsletterEmail(u.Email, req.Subject, req.Body)
+			if err == nil {
+				count++
+			} else {
+				log.Printf("[NEWSLETTER ERROR] Failed sending to %s: %v", u.Email, err)
+			}
 		}
 	}
 

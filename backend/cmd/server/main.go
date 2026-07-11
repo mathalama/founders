@@ -66,7 +66,7 @@ func main() {
 	userHandler := handler.NewUserHandler(userRepo, projectRepo)
 	notifHandler := handler.NewNotificationHandler(notifRepo)
 	messageHandler := handler.NewMessageHandler(messageRepo)
-	adminHandler := handler.NewAdminHandler(userRepo, projectRepo)
+	adminHandler := handler.NewAdminHandler(userRepo, projectRepo, emailSvc)
 
 	r := chi.NewRouter()
 
