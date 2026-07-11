@@ -62,12 +62,7 @@ func (h *ApplicationHandler) ApplyToRole(w http.ResponseWriter, r *http.Request)
 
 	// Send email in background if owner has email notifications enabled
 	if owner, _ := h.userRepo.GetByID(r.Context(), ownerID); owner != nil && (owner.EmailNotifications == nil || *owner.EmailNotifications) {
-		go func() {
-			if err := h.emailSvc.SendApplicationNotification(ownerEmail, projectName, roleTitle, applicant.Name, req.Message); err != nil {
-				// Log error but don't fail the request since application is saved
-				// log.Printf("Failed to send email: %v", err)
-			}
-		}()
+		h.emailSvc.SendApplicationNotification(ownerEmail, projectName, roleTitle, applicant.Name, req.Message)
 	}
 
 	// Create In-App Notification for Project Owner

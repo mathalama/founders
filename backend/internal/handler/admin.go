@@ -149,18 +149,13 @@ func (h *AdminHandler) SendNewsletter(w http.ResponseWriter, r *http.Request) {
 	count := 0
 	for _, u := range users {
 		if u.Email != "" && !u.IsBanned {
-			// Actually send email
-			err := h.emailSvc.SendNewsletterEmail(u.Email, req.Subject, req.Body)
-			if err == nil {
-				count++
-			} else {
-				log.Printf("[NEWSLETTER ERROR] Failed sending to %s: %v", u.Email, err)
-			}
+			h.emailSvc.SendNewsletterEmail(u.Email, req.Subject, req.Body)
+			count++
 		}
 	}
 
 	adminID, _ := r.Context().Value(middleware.UserIDKey).(string)
-	log.Printf("[AUDIT] Admin user_id=%s sent newsletter to %d users. Subject: %s", adminID, count, req.Subject)
+	log.Printf("[AUDIT] Admin user_id=%s started sending newsletter to %d users. Subject: %s", adminID, count, req.Subject)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]int{"sentCount": count})

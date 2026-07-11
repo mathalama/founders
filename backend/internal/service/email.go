@@ -40,42 +40,42 @@ func NewEmailService() *EmailService {
 	}
 }
 
-func (s *EmailService) SendApplicationNotification(toEmail, projectName, roleName, applicantName, message string) error {
-	m := gomail.NewMessage()
-	m.SetHeader("From", s.from)
-	m.SetHeader("To", toEmail)
-	m.SetHeader("Subject", fmt.Sprintf("Новый отклик на Nucla: %s", projectName))
-	
-	body := fmt.Sprintf(`
-		<h2>У вас новый отклик!</h2>
-		<p><strong>Проект:</strong> %s</p>
-		<p><strong>Роль:</strong> %s</p>
-		<p><strong>От кого:</strong> %s</p>
-		<hr>
-		<p>%s</p>
-	`, projectName, roleName, applicantName, message)
+func (s *EmailService) SendApplicationNotification(toEmail, projectName, roleName, applicantName, message string) {
+	go func() {
+		m := gomail.NewMessage()
+		m.SetHeader("From", s.from)
+		m.SetHeader("To", toEmail)
+		m.SetHeader("Subject", fmt.Sprintf("Новый отклик на Nucla: %s", projectName))
+		
+		body := fmt.Sprintf(`
+			<h2>У вас новый отклик!</h2>
+			<p><strong>Проект:</strong> %s</p>
+			<p><strong>Роль:</strong> %s</p>
+			<p><strong>От кого:</strong> %s</p>
+			<hr>
+			<p>%s</p>
+		`, projectName, roleName, applicantName, message)
 
-	m.SetBody("text/html", body)
+		m.SetBody("text/html", body)
 
-	if err := s.dialer.DialAndSend(m); err != nil {
-		log.Printf("Failed to send email to %s: %v", toEmail, err)
-		return err
-	}
-	return nil
+		if err := s.dialer.DialAndSend(m); err != nil {
+			log.Printf("Failed to send email to %s: %v", toEmail, err)
+		}
+	}()
 }
 
-func (s *EmailService) SendNewsletterEmail(toEmail, subject, bodyContent string) error {
-	m := gomail.NewMessage()
-	m.SetHeader("From", s.from)
-	m.SetHeader("To", toEmail)
-	m.SetHeader("Subject", subject)
+func (s *EmailService) SendNewsletterEmail(toEmail, subject, bodyContent string) {
+	go func() {
+		m := gomail.NewMessage()
+		m.SetHeader("From", s.from)
+		m.SetHeader("To", toEmail)
+		m.SetHeader("Subject", subject)
 
-	// Since we expect HTML body from the admin
-	m.SetBody("text/html", bodyContent)
+		// Since we expect HTML body from the admin
+		m.SetBody("text/html", bodyContent)
 
-	if err := s.dialer.DialAndSend(m); err != nil {
-		log.Printf("Failed to send newsletter email to %s: %v", toEmail, err)
-		return err
-	}
-	return nil
+		if err := s.dialer.DialAndSend(m); err != nil {
+			log.Printf("Failed to send newsletter email to %s: %v", toEmail, err)
+		}
+	}()
 }
