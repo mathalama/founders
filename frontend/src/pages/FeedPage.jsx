@@ -170,7 +170,8 @@ function FeedPage() {
     fetchNextPage,
     hasNextPage,
     isPending,
-    isFetchingNextPage
+    isFetchingNextPage,
+    refetch
   } = useInfiniteQuery({
     queryKey: ['projects', filters, debouncedSearch],
     queryFn: async ({ pageParam = 1 }) => {
