@@ -13,11 +13,13 @@ import MyApplicationsPage from './pages/MyApplicationsPage';
 import BookmarksPage from './pages/BookmarksPage';
 import NotificationsPage from './pages/NotificationsPage';
 import MessagesPage from './pages/MessagesPage';
+import AdminDashboard from './pages/AdminDashboard';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
 import { FiMenu, FiSun, FiMoon } from 'react-icons/fi';
 
 // Mobile top bar with burger button
@@ -178,6 +180,9 @@ function Layout() {
             <Route path="/user/:id" element={<UserPage />} />
             <Route path="/bookmarks" element={
               <ProtectedRoute><BookmarksPage /></ProtectedRoute>
+            } />
+            <Route path="/admin" element={
+              <AdminRoute><AdminDashboard /></AdminRoute>
             } />
             <Route path="/login" element={<LoginPage />} />
           </Routes>

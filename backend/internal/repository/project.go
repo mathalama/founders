@@ -311,3 +311,9 @@ func (r *ProjectRepo) Update(ctx context.Context, p *model.Project, ownerID stri
 
 	return tx.Commit(ctx)
 }
+
+func (r *ProjectRepo) Delete(ctx context.Context, id string) error {
+	query := `DELETE FROM projects WHERE id = $1`
+	_, err := r.db.Exec(ctx, query, id)
+	return err
+}

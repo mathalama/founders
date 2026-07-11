@@ -17,7 +17,17 @@ type User struct {
 	Github             *string   `json:"github,omitempty"`
 	Telegram   *string   `json:"telegram,omitempty"`
 	Bio        *string   `json:"bio,omitempty"`
+	IsAdmin    bool      `json:"isAdmin"`
 	CreatedAt  time.Time `json:"createdAt"`
+}
+
+type AdminUserDTO struct {
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	RoleTitle *string   `json:"roleTitle,omitempty"`
+	IsAdmin   bool      `json:"isAdmin"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 type Project struct {

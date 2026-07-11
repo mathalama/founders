@@ -12,6 +12,7 @@ import (
 
 type contextKey string
 const UserIDKey contextKey = "user_id"
+const IsAdminKey contextKey = "is_admin"
 
 func RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -55,6 +56,24 @@ func RequireAuth(next http.Handler) http.Handler {
 		}
 
 		ctx := context.WithValue(r.Context(), UserIDKey, userID)
+
+		isAdmin := false
+		if adminClaim, ok := claims["is_admin"].(bool); ok {
+			isAdmin = adminClaim
+		}
+		ctx = context.WithValue(ctx, IsAdminKey, isAdmin)
+
 		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func RequireAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		isAdmin, ok := r.Context().Value(IsAdminKey).(bool)
+		if !ok || !isAdmin {
+			http.Error(w, "Forbidden: Admin access required", http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
 	})
 }

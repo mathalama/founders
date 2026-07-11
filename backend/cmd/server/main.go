@@ -59,6 +59,7 @@ func main() {
 	userHandler := handler.NewUserHandler(userRepo, projectRepo)
 	notifHandler := handler.NewNotificationHandler(notifRepo)
 	messageHandler := handler.NewMessageHandler(messageRepo)
+	adminHandler := handler.NewAdminHandler(userRepo, projectRepo)
 
 	r := chi.NewRouter()
 
@@ -112,6 +113,14 @@ func main() {
 		r.Get("/api/messages", messageHandler.GetConversations)
 		r.Get("/api/messages/{userId}", messageHandler.GetChatHistory)
 		r.Post("/api/messages/{userId}", messageHandler.SendMessage)
+	})
+
+	// Admin routes
+	r.Group(func(r chi.Router) {
+		r.Use(mymiddleware.RequireAuth)
+		r.Use(mymiddleware.RequireAdmin)
+		r.Get("/api/admin/users", adminHandler.GetUsers)
+		r.Delete("/api/admin/projects/{id}", adminHandler.DeleteProject)
 	})
 
 	// Public routes

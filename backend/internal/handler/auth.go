@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -85,7 +86,19 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.userRepo.UpsertByGoogleID(r.Context(), userInfo.ID, userInfo.Name, userInfo.Email)
+	adminEmailsEnv := os.Getenv("ADMIN_EMAILS")
+	isAdmin := false
+	if adminEmailsEnv != "" {
+		emails := strings.Split(adminEmailsEnv, ",")
+		for _, e := range emails {
+			if strings.TrimSpace(e) == userInfo.Email {
+				isAdmin = true
+				break
+			}
+		}
+	}
+
+	user, err := h.userRepo.UpsertByGoogleID(r.Context(), userInfo.ID, userInfo.Name, userInfo.Email, isAdmin)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -97,8 +110,9 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": user.ID,
-		"exp":     time.Now().Add(time.Hour * 72).Unix(),
+		"user_id":  user.ID,
+		"is_admin": user.IsAdmin,
+		"exp":      time.Now().Add(time.Hour * 72).Unix(),
 	})
 
 	tokenString, err := jwtToken.SignedString(secret)
