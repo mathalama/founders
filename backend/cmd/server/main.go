@@ -127,7 +127,15 @@ func main() {
 		r.Use(mymiddleware.RequireAuth)
 		r.Use(mymiddleware.RequireAdmin)
 		r.Get("/api/admin/users", adminHandler.GetUsers)
+		r.Delete("/api/admin/users/{id}", adminHandler.DeleteUser)
+		r.Put("/api/admin/users/{id}/ban", adminHandler.ToggleBanUser)
+		r.Put("/api/admin/users/{id}/admin", adminHandler.ToggleAdmin)
+		r.Get("/api/admin/stats", adminHandler.GetStats)
+		r.Post("/api/admin/newsletter", adminHandler.SendNewsletter)
+		
+		r.Get("/api/admin/projects", adminHandler.GetProjects)
 		r.Delete("/api/admin/projects/{id}", adminHandler.DeleteProject)
+		r.Put("/api/admin/projects/{id}/hide", adminHandler.ToggleHideProject)
 	})
 
 	// Public routes

@@ -18,6 +18,7 @@ type User struct {
 	Telegram   *string   `json:"telegram,omitempty"`
 	Bio        *string   `json:"bio,omitempty"`
 	IsAdmin    bool      `json:"isAdmin"`
+	IsBanned   bool      `json:"isBanned"`
 	CreatedAt  time.Time `json:"createdAt"`
 }
 
@@ -27,6 +28,7 @@ type AdminUserDTO struct {
 	Email     string    `json:"email"`
 	RoleTitle *string   `json:"roleTitle,omitempty"`
 	IsAdmin   bool      `json:"isAdmin"`
+	IsBanned  bool      `json:"isBanned"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
@@ -42,6 +44,7 @@ type Project struct {
 	Github      *string   `json:"github,omitempty"`
 	Telegram    string    `json:"telegram"`
 	CreatedAt   time.Time `json:"createdAt"`
+	IsHidden    bool      `json:"isHidden"`
 	Owner       *User     `json:"owner,omitempty"`
 	Team        []TeamMember `json:"team,omitempty"`
 	Roles       []OpenRole   `json:"roles,omitempty"`

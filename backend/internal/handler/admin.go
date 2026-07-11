@@ -38,6 +38,7 @@ func (h *AdminHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 			Email:     u.Email,
 			RoleTitle: u.RoleTitle,
 			IsAdmin:   u.IsAdmin,
+			IsBanned:  u.IsBanned,
 			CreatedAt: u.CreatedAt,
 		})
 	}
@@ -64,4 +65,96 @@ func (h *AdminHandler) DeleteProject(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	w.WriteHeader(http.StatusOK)
+}
+
+func (h *AdminHandler) GetProjects(w http.ResponseWriter, r *http.Request) {
+	projects, err := h.projectRepo.GetAllAdmin(r.Context())
+	if err != nil {
+		http.Error(w, "Failed to fetch projects", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(projects)
+}
+
+func (h *AdminHandler) ToggleBanUser(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if err := h.userRepo.ToggleBan(r.Context(), id); err != nil {
+		http.Error(w, "Failed to toggle ban", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *AdminHandler) ToggleAdmin(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if err := h.userRepo.ToggleAdmin(r.Context(), id); err != nil {
+		http.Error(w, "Failed to toggle admin", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *AdminHandler) ToggleHideProject(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if err := h.projectRepo.ToggleHide(r.Context(), id); err != nil {
+		http.Error(w, "Failed to toggle hide", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *AdminHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	adminID, _ := r.Context().Value(middleware.UserIDKey).(string)
+	id := chi.URLParam(r, "id")
+	
+	log.Printf("[AUDIT] Admin user_id=%s initiated deletion of user_id=%s", adminID, id)
+	
+	if err := h.userRepo.Delete(r.Context(), id); err != nil {
+		http.Error(w, "Failed to delete user", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *AdminHandler) GetStats(w http.ResponseWriter, r *http.Request) {
+	stats, err := h.userRepo.GetAdminStats(r.Context())
+	if err != nil {
+		http.Error(w, "Failed to fetch stats", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(stats)
+}
+
+func (h *AdminHandler) SendNewsletter(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Subject string `json:"subject"`
+		Body    string `json:"body"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	users, err := h.userRepo.GetAllUsers(r.Context())
+	if err != nil {
+		http.Error(w, "Failed to fetch users", http.StatusInternalServerError)
+		return
+	}
+
+	count := 0
+	for _, u := range users {
+		if u.Email != "" && !u.IsBanned {
+			// Simulate email sending
+			log.Printf("[NEWSLETTER] Sending to %s: %s", u.Email, req.Subject)
+			count++
+		}
+	}
+
+	adminID, _ := r.Context().Value(middleware.UserIDKey).(string)
+	log.Printf("[AUDIT] Admin user_id=%s sent newsletter to %d users. Subject: %s", adminID, count, req.Subject)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]int{"sentCount": count})
 }
