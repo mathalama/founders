@@ -152,7 +152,7 @@ func runMigrations(dbUrl string) {
 	// Ensure we are using the postgres driver for golang-migrate
 	// Clean up dbUrl if necessary (usually pgxpool URLs work, but migrate expects 'postgres://' or 'postgresql://')
 	
-	d, err := iofs.New(migrations.FS, ".")
+	d, err := iofs.New(migrations.FS, "sql")
 	if err != nil {
 		log.Fatalf("Failed to load embedded migrations: %v", err)
 	}
