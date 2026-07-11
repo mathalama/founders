@@ -7,15 +7,17 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/mathalama/nucla-backend/internal/middleware"
 	"github.com/mathalama/nucla-backend/internal/repository"
+	"github.com/mathalama/nucla-backend/internal/service"
 )
 
 type DashboardHandler struct {
 	repo      *repository.DashboardRepo
 	notifRepo *repository.NotificationRepo
+	pushSvc   *service.PushService
 }
 
-func NewDashboardHandler(repo *repository.DashboardRepo, notifRepo *repository.NotificationRepo) *DashboardHandler {
-	return &DashboardHandler{repo: repo, notifRepo: notifRepo}
+func NewDashboardHandler(repo *repository.DashboardRepo, notifRepo *repository.NotificationRepo, pushSvc *service.PushService) *DashboardHandler {
+	return &DashboardHandler{repo: repo, notifRepo: notifRepo, pushSvc: pushSvc}
 }
 
 func (h *DashboardHandler) GetMyProjects(w http.ResponseWriter, r *http.Request) {

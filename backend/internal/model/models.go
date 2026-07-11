@@ -94,3 +94,12 @@ type Message struct {
 	IsRead     bool      `json:"isRead"`
 	CreatedAt  time.Time `json:"createdAt"`
 }
+
+type PushSubscription struct {
+	ID        string    `json:"id"`
+	UserID    string    `json:"userId"`
+	Endpoint  string    `json:"endpoint"`
+	P256dh    string    `json:"p256dh"`
+	Auth      string    `json:"auth"`
+	CreatedAt time.Time `json:"createdAt"`
+}

@@ -22,6 +22,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import { FiMenu, FiSun, FiMoon } from 'react-icons/fi';
+import { useRealtime } from './hooks/useRealtime';
 
 // Mobile top bar with burger button
 function MobileTopBar({ onOpen }) {
@@ -55,6 +56,8 @@ function Layout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+
+  useRealtime();
 
   // Close mobile sidebar on route change
   useEffect(() => {

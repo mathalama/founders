@@ -11,18 +11,20 @@ import (
 )
 
 type ApplicationHandler struct {
-	appRepo  *repository.ApplicationRepo
-	userRepo *repository.UserRepo
-	emailSvc *service.EmailService
+	appRepo   *repository.ApplicationRepo
+	userRepo  *repository.UserRepo
+	emailSvc  *service.EmailService
 	notifRepo *repository.NotificationRepo
+	pushSvc   *service.PushService
 }
 
-func NewApplicationHandler(appRepo *repository.ApplicationRepo, userRepo *repository.UserRepo, emailSvc *service.EmailService, notifRepo *repository.NotificationRepo) *ApplicationHandler {
+func NewApplicationHandler(appRepo *repository.ApplicationRepo, userRepo *repository.UserRepo, emailSvc *service.EmailService, notifRepo *repository.NotificationRepo, pushSvc *service.PushService) *ApplicationHandler {
 	return &ApplicationHandler{
 		appRepo:   appRepo,
 		userRepo:  userRepo,
 		emailSvc:  emailSvc,
 		notifRepo: notifRepo,
+		pushSvc:   pushSvc,
 	}
 }
 

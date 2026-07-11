@@ -55,17 +55,18 @@ func main() {
 	
 	// Init Services
 	emailSvc := service.NewEmailService()
+	pushSvc := service.NewPushService(notifRepo)
 
 	// Init Handlers
 	authHandler := handler.NewAuthHandler(userRepo)
+	userHandler := handler.NewUserHandler(userRepo, projectRepo)
 	projectHandler := handler.NewProjectHandler(projectRepo)
 	profileHandler := handler.NewProfileHandler(userRepo)
-	applicationHandler := handler.NewApplicationHandler(appRepo, userRepo, emailSvc, notifRepo)
-	dashboardHandler := handler.NewDashboardHandler(dashboardRepo, notifRepo)
+	applicationHandler := handler.NewApplicationHandler(appRepo, userRepo, emailSvc, notifRepo, pushSvc)
+	dashboardHandler := handler.NewDashboardHandler(dashboardRepo, notifRepo, pushSvc)
 	bookmarkHandler := handler.NewBookmarkHandler(bookmarkRepo)
-	userHandler := handler.NewUserHandler(userRepo, projectRepo)
 	notifHandler := handler.NewNotificationHandler(notifRepo)
-	messageHandler := handler.NewMessageHandler(messageRepo)
+	messageHandler := handler.NewMessageHandler(messageRepo, notifRepo, pushSvc)
 	adminHandler := handler.NewAdminHandler(userRepo, projectRepo, emailSvc)
 
 	r := chi.NewRouter()
@@ -137,6 +138,9 @@ func main() {
 		r.Delete("/api/admin/projects/{id}", adminHandler.DeleteProject)
 		r.Put("/api/admin/projects/{id}/hide", adminHandler.ToggleHideProject)
 	})
+
+	r.Get("/api/ws", handler.WSConnect)
+	r.Post("/api/notifications/subscribe", notifHandler.SubscribeToPush)
 
 	// Public routes
 	r.Get("/api/users/{id}", userHandler.GetPublicProfile)

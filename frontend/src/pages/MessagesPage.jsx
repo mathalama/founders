@@ -84,6 +84,27 @@ function MessagesPage() {
     sendMessageMutation.mutate(messageText);
   };
 
+  useEffect(() => {
+    const handleNewMessage = (e) => {
+      const msg = e.detail;
+      // If message belongs to this conversation
+      if (msg.senderId === otherUserId || msg.receiverId === otherUserId) {
+        queryClient.setQueryData(['chat', otherUserId], (old) => {
+          if (!old) return old;
+          // Avoid duplicates
+          if (old.chatHistory.some(m => m.id === msg.id)) return old;
+          return { ...old, chatHistory: [...old.chatHistory, msg] };
+        });
+        scrollToBottom();
+      }
+      // Invalidate conversations list to update last message
+      queryClient.invalidateQueries(['conversations']);
+    };
+
+    window.addEventListener('new_message', handleNewMessage);
+    return () => window.removeEventListener('new_message', handleNewMessage);
+  }, [otherUserId, queryClient]);
+
   // Mobile layout: show only list OR chat
   const isMobile = window.innerWidth <= 768;
   const showList = !isMobile || !otherUserId;

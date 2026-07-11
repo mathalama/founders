@@ -1,20 +1,24 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/mathalama/nucla-backend/internal/middleware"
+	"github.com/mathalama/nucla-backend/internal/service"
 	"github.com/mathalama/nucla-backend/internal/repository"
 )
 
 type MessageHandler struct {
-	repo *repository.MessageRepo
+	repo      *repository.MessageRepo
+	notifRepo *repository.NotificationRepo
+	pushSvc   *service.PushService
 }
 
-func NewMessageHandler(repo *repository.MessageRepo) *MessageHandler {
-	return &MessageHandler{repo: repo}
+func NewMessageHandler(repo *repository.MessageRepo, notifRepo *repository.NotificationRepo, pushSvc *service.PushService) *MessageHandler {
+	return &MessageHandler{repo: repo, notifRepo: notifRepo, pushSvc: pushSvc}
 }
 
 func (h *MessageHandler) GetConversations(w http.ResponseWriter, r *http.Request) {
@@ -86,6 +90,25 @@ func (h *MessageHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	// Broadcast via WebSocket
+	WSHub.BroadcastToUser(otherUserID, map[string]interface{}{
+		"type": "new_message",
+		"message": msg,
+	})
+
+	// Also broadcast to sender (so their other tabs update)
+	WSHub.BroadcastToUser(userID, map[string]interface{}{
+		"type": "new_message",
+		"message": msg,
+	})
+
+	// Send Push Notification to receiver
+	go h.pushSvc.SendPush(context.Background(), otherUserID, map[string]interface{}{
+		"title": "Новое сообщение",
+		"body": "Вам пришло новое сообщение",
+		"url": "/messages/" + userID,
+	})
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
