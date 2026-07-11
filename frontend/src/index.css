@@ -129,6 +129,10 @@ button {
   padding: 0 1.5rem;
 }
 
+main {
+  padding: 2rem 1.5rem;
+}
+
 /* ============================================================
    TYPOGRAPHY
    ============================================================ */
@@ -721,7 +725,7 @@ h4 { font-size: var(--text-lg);  font-weight: 500; line-height: 1.4; }
 
   /* Push content below topbar */
   .main-content-area main {
-    padding-top: calc(var(--header-height) + 1.5rem);
+    padding: calc(var(--header-height) + 1.25rem) 1rem 2rem 1rem !important;
   }
 }
 

@@ -111,7 +111,7 @@ function Layout() {
         {/* Mobile top bar */}
         <MobileTopBar onOpen={() => setMobileOpen(true)} />
 
-        <main style={{ padding: '2rem 1.5rem' }}>
+        <main>
           <Routes>
             <Route path="/" element={<FeedPage />} />
             <Route path="/project/:id" element={<ProjectPage />} />
