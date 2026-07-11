@@ -780,6 +780,18 @@ h4 { font-size: var(--text-lg);  font-weight: 500; line-height: 1.4; }
     border-color: var(--danger-bg);
     background: var(--danger-bg);
   }
+
+  .mobile-filters-card {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin-bottom: 1rem !important;
+  }
+  .mobile-filters-card .filter-mobile {
+    margin: 0;
+    padding: 0;
+  }
 }
 
 /* Mobile topbar hidden by default on desktop */
