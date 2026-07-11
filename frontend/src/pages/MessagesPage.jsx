@@ -70,6 +70,7 @@ function MessagesPage() {
     onSuccess: (newMsg) => {
       queryClient.setQueryData(['chat', otherUserId], (old) => {
         if (!old) return old;
+        if (old.chatHistory.some(m => m.id === newMsg.id)) return old;
         return { ...old, chatHistory: [...old.chatHistory, newMsg] };
       });
       queryClient.invalidateQueries(['conversations']);
