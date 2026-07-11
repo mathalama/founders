@@ -18,6 +18,11 @@ import (
 	"github.com/mathalama/nucla-backend/internal/handler"
 	"github.com/mathalama/nucla-backend/internal/repository"
 	"github.com/mathalama/nucla-backend/internal/service"
+	"github.com/mathalama/nucla-backend/migrations"
+
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 )
 
 func main() {
@@ -30,6 +35,8 @@ func main() {
 	if dbUrl == "" {
 		log.Fatal("Missing required environment variable: DATABASE_URL")
 	}
+
+	runMigrations(dbUrl)
 
 	pool, err := pgxpool.New(context.Background(), dbUrl)
 	if err != nil {
@@ -137,4 +144,28 @@ func main() {
 	if err := http.ListenAndServe(":"+port, r); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func runMigrations(dbUrl string) {
+	log.Println("Running database migrations...")
+	
+	// Ensure we are using the postgres driver for golang-migrate
+	// Clean up dbUrl if necessary (usually pgxpool URLs work, but migrate expects 'postgres://' or 'postgresql://')
+	
+	d, err := iofs.New(migrations.FS, ".")
+	if err != nil {
+		log.Fatalf("Failed to load embedded migrations: %v", err)
+	}
+
+	m, err := migrate.NewWithSourceInstance("iofs", d, dbUrl)
+	if err != nil {
+		log.Fatalf("Failed to initialize migrate instance: %v", err)
+	}
+	defer m.Close()
+
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		log.Fatalf("Failed to apply migrations: %v", err)
+	}
+
+	log.Println("Database migrations applied successfully!")
 }
