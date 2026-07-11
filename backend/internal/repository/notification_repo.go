@@ -86,3 +86,9 @@ func (r *NotificationRepo) GetPushSubscriptions(ctx context.Context, userID stri
 	}
 	return subs, nil
 }
+
+// DeletePushSubscriptionByEndpoint removes a dead push subscription
+func (r *NotificationRepo) DeletePushSubscriptionByEndpoint(ctx context.Context, endpoint string) error {
+	_, err := r.db.Exec(ctx, `DELETE FROM push_subscriptions WHERE endpoint = $1`, endpoint)
+	return err
+}

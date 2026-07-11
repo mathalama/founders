@@ -1,25 +1,27 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { API_BASE_URL } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 
 function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const { user } = useAuth();
+
   useEffect(() => {
-    // Check if we came back from OAuth with a token
-    const searchParams = new URLSearchParams(location.search);
-    const token = searchParams.get('token');
-    const error = searchParams.get('error');
-    
-    if (token) {
-      localStorage.setItem('token', token);
+    // If the user is already authenticated (AuthContext fetched /me successfully), go to home
+    if (user) {
       navigate('/');
-    } else if (error === 'banned') {
-      // Clear token just in case
-      localStorage.removeItem('token');
     }
-  }, [location, navigate]);
+
+    const searchParams = new URLSearchParams(location.search);
+    const error = searchParams.get('error');
+    if (error === 'banned') {
+      // The backend handled the cookie, but we can call logout to be safe
+      fetch(`${API_BASE_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
+    }
+  }, [user, location, navigate]);
 
   const searchParams = new URLSearchParams(location.search);
   const error = searchParams.get('error');

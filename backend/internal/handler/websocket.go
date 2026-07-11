@@ -68,11 +68,12 @@ func (h *Hub) BroadcastToUser(userID string, message interface{}) {
 
 // WSConnect upgrades the HTTP connection to a WebSocket
 func WSConnect(w http.ResponseWriter, r *http.Request) {
-	tokenString := r.URL.Query().Get("token")
-	if tokenString == "" {
+	cookie, err := r.Cookie("token")
+	if err != nil || cookie.Value == "" {
 		http.Error(w, "token required", http.StatusUnauthorized)
 		return
 	}
+	tokenString := cookie.Value
 
 	secret := []byte(os.Getenv("JWT_SECRET"))
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {

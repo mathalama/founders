@@ -38,7 +38,7 @@ func (s *PushService) SendPush(ctx context.Context, userID string, payload inter
 
 	for _, sub := range subs {
 		// Send Notification
-		_, err := webpush.SendNotification(b, &webpush.Subscription{
+		resp, err := webpush.SendNotification(b, &webpush.Subscription{
 			Endpoint: sub.Endpoint,
 			Keys: webpush.Keys{
 				P256dh: sub.P256dh,
@@ -52,8 +52,12 @@ func (s *PushService) SendPush(ctx context.Context, userID string, payload inter
 		})
 
 		if err != nil {
-			log.Printf("Failed to send push to user %s: %v", userID, err)
-			// optionally remove dead subscriptions
+			if resp != nil && (resp.StatusCode == 410 || resp.StatusCode == 404) {
+				log.Printf("Push subscription for user %s is dead, removing...", userID)
+				s.notifRepo.DeletePushSubscriptionByEndpoint(ctx, sub.Endpoint)
+			} else {
+				log.Printf("Failed to send push to user %s: %v", userID, err)
+			}
 		}
 	}
 }

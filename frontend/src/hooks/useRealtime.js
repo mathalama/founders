@@ -6,13 +6,11 @@ export const useRealtime = () => {
   const ws = useRef(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
     let reconnectTimeout = null;
 
     const connect = () => {
-      const wsUrl = API_BASE_URL.replace('http', 'ws') + `/api/ws?token=${token}`;
+      // With HttpOnly cookies, we don't need to pass the token in the URL!
+      const wsUrl = API_BASE_URL.replace('http', 'ws') + `/api/ws`;
       ws.current = new WebSocket(wsUrl);
 
       ws.current.onopen = () => {
@@ -43,40 +41,6 @@ export const useRealtime = () => {
     };
 
     connect();
-
-    // Register Push Subscription
-    const registerPush = async () => {
-      try {
-        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-        
-        const registration = await navigator.serviceWorker.ready;
-        
-        // Wait for permission
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') return;
-
-        const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-        if (!VAPID_PUBLIC_KEY) return;
-
-        let subscription = await registration.pushManager.getSubscription();
-        if (!subscription) {
-          subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-          });
-        }
-
-        // Send to backend
-        await fetchWithAuth('/api/notifications/subscribe', {
-          method: 'POST',
-          body: JSON.stringify(subscription),
-        });
-      } catch (error) {
-        console.error('Error registering push:', error);
-      }
-    };
-
-    registerPush();
 
     return () => {
       if (reconnectTimeout) clearTimeout(reconnectTimeout);

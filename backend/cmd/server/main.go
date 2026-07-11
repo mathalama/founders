@@ -95,6 +95,7 @@ func main() {
 	// Auth routes
 	r.Get("/api/auth/google/login", authHandler.GoogleLogin)
 	r.Get("/api/auth/google/callback", authHandler.GoogleCallback)
+	r.Post("/api/auth/logout", authHandler.Logout)
 	
 	// Protected routes
 	r.Group(func(r chi.Router) {

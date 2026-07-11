@@ -130,12 +130,35 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Redirect to frontend with token (or set as cookie)
+	// Set HttpOnly Cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Value:    tokenString,
+		Path:     "/",
+		MaxAge:   int(72 * time.Hour / time.Second),
+		HttpOnly: true,
+		Secure:   true, // Requires HTTPS, Caddy provides this
+		SameSite: http.SameSiteLaxMode,
+	})
+
 	frontendURL := os.Getenv("FRONTEND_URL")
 	if frontendURL == "" {
 		log.Fatal("Missing required environment variable: FRONTEND_URL")
 	}
-	http.Redirect(w, r, fmt.Sprintf("%s/login?token=%s", frontendURL, tokenString), http.StatusTemporaryRedirect)
+	http.Redirect(w, r, fmt.Sprintf("%s/", frontendURL), http.StatusTemporaryRedirect)
+}
+
+func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	})
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
