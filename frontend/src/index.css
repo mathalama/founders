@@ -713,6 +713,10 @@ h4 { font-size: var(--text-lg);  font-weight: 500; line-height: 1.4; }
     grid-column: span 1;
   }
 
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+
   /* Main content: on mobile sidebar is an overlay, no margin needed */
   .main-content-area {
     margin-left: 0 !important;

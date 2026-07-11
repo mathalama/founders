@@ -114,7 +114,7 @@ function DashboardPage() {
   if (isLoading) {
     return (
       <div style={{ maxWidth: '860px', margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
+        <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
           {[1, 2, 3].map(i => (
             <div key={i} className="skeleton-card" style={{ height: '80px' }}>
               <div className="skeleton skeleton-text-sm" style={{ width: '60%' }} />
@@ -147,7 +147,7 @@ function DashboardPage() {
       </div>
 
       {/* Stats widgets */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.875rem', marginBottom: '2rem' }}>
+      <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.875rem', marginBottom: '2rem' }}>
         <StatCard
           label="Проектов"
           value={totalProjects}
@@ -184,7 +184,7 @@ function DashboardPage() {
             return (
               <div key={p.id} className="bento-card">
                 {/* Project header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
                   <div>
                     <h2 style={{ marginBottom: '0.375rem' }}>
                       <Link to={`/project/${p.id}`} style={{ color: 'inherit' }}>{p.title}</Link>
@@ -208,6 +208,8 @@ function DashboardPage() {
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '0.75rem',
                         padding: '0.625rem 0.875rem',
                         background: 'var(--bg)',
                         borderRadius: 'var(--radius-md)',
@@ -270,7 +272,7 @@ function DashboardPage() {
                               на роль: {app.role_title}
                             </div>
                           </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                             <AppStatusBadge status={app.status} />
                             {app.status === 'pending' && (
                               <>
