@@ -1,19 +1,13 @@
 import React from 'react';
-import { FiLogOut, FiX } from 'react-icons/fi';
+import { FiLogOut } from 'react-icons/fi';
+import Modal from './ui/Modal';
 
 export default function LogoutModal({ isOpen, onClose, onConfirm }) {
-  if (!isOpen) return null;
-
   return (
-    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 9999 }}>
-      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '-20px', position: 'relative', zIndex: 1 }}>
-          <button className="btn btn-ghost btn-icon" onClick={onClose} style={{ padding: '4px' }}>
-            <FiX size={20} />
-          </button>
-        </div>
+    <Modal isOpen={isOpen} onClose={onClose} maxWidth="400px">
+      <div style={{ textAlign: 'center' }}>
         <div style={{ marginBottom: '1rem', color: 'var(--danger)' }}>
-          <FiLogOut size={42} />
+          <FiLogOut size={42} style={{ margin: '0 auto' }} />
         </div>
         <h3 style={{ marginBottom: '0.75rem' }}>Выход из аккаунта</h3>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '1.75rem', fontSize: 'var(--text-sm)' }}>
@@ -28,6 +22,6 @@ export default function LogoutModal({ isOpen, onClose, onConfirm }) {
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

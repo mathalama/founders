@@ -38,51 +38,12 @@ function MobileTopBar({ onOpen }) {
   const title = titles[location.pathname] ?? 'Nucla';
 
   return (
-    <div style={{
-      display: 'none',
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: 'var(--header-height)',
-      background: 'rgba(248,250,252,0.92)',
-      backdropFilter: 'blur(12px)',
-      WebkitBackdropFilter: 'blur(12px)',
-      borderBottom: '1px solid var(--border)',
-      zIndex: 20,
-      alignItems: 'center',
-      padding: '0 1rem',
-      gap: '0.75rem',
-      // shown via CSS media query
-      className: 'mobile-topbar',
-    }}
-      className="mobile-topbar"
-    >
-      <button
-        onClick={onOpen}
-        style={{
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          color: 'var(--text-primary)',
-          display: 'flex',
-          padding: '0.25rem',
-        }}
-      >
+    <div className="mobile-topbar">
+      <button onClick={onOpen} className="mobile-topbar__btn">
         <FiMenu size={22} />
       </button>
-      <span style={{ fontWeight: 700, fontSize: '1.1rem', letterSpacing: '-0.02em', flex: 1 }}>{title}</span>
-      <button
-        onClick={toggleTheme}
-        style={{
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          color: 'var(--text-primary)',
-          display: 'flex',
-          padding: '0.25rem',
-        }}
-      >
+      <span className="mobile-topbar__title">{title}</span>
+      <button onClick={toggleTheme} className="mobile-topbar__btn">
         {theme === 'light' ? <FiMoon size={22} /> : <FiSun size={22} />}
       </button>
     </div>
@@ -133,6 +94,7 @@ function Layout() {
           collapsed={collapsed}
           mobileOpen={mobileOpen}
           onToggle={() => setCollapsed(v => !v)}
+          onCloseMobile={() => setMobileOpen(false)}
         />
       </div>
 

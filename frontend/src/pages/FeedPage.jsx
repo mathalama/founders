@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   FiCpu, FiMapPin, FiTrendingUp, FiUser, FiSearch,
-  FiUsers, FiCheckSquare, FiStar
+  FiUsers, FiCheckSquare, FiStar, FiFilter, FiClock
 } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
@@ -231,7 +231,7 @@ function FeedPage() {
       transition={{ duration: 0.3 }}
     >
       {/* Search + Filters bar */}
-      <div className="bento-card" style={{ marginBottom: '1.5rem', padding: '1.25rem' }}>
+      <div className="bento-card mobile-filters-card" style={{ marginBottom: '1.5rem', padding: '1.25rem' }}>
         {/* Search */}
         <div className="input-search" style={{ marginBottom: '1rem' }}>
           <FiSearch size={16} />
@@ -244,8 +244,8 @@ function FeedPage() {
           />
         </div>
 
-        {/* Filters */}
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+        {/* Desktop Filters */}
+        <div className="filter-desktop" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           <select name="category" className="select" style={{ flex: '1 1 140px' }} value={filters.category} onChange={updateFilter}>
             <option value="">Все категории</option>
             <option value="AI">AI</option>
@@ -299,10 +299,43 @@ function FeedPage() {
             </button>
           )}
         </div>
+
+        {/* Mobile Chips Filters */}
+        <div className="filter-mobile">
+          <div className="mobile-chips-scroll">
+            {hasFilters && (
+              <button className="mobile-chip mobile-chip--reset" onClick={resetFilters}>
+                Сбросить
+              </button>
+            )}
+            {[
+              { label: 'AI', type: 'category', value: 'AI' },
+              { label: 'SaaS', type: 'category', value: 'SaaS' },
+              { label: 'MVP', type: 'stage', value: 'MVP' },
+              { label: 'Идея', type: 'stage', value: 'Идея' },
+              { label: 'FinTech', type: 'category', value: 'FinTech' },
+              { label: 'Remote', type: 'city', value: 'Remote' },
+              { label: 'Almaty', type: 'city', value: 'Almaty' },
+              { label: 'Astana', type: 'city', value: 'Astana' },
+            ].map(chip => {
+              const isActive = filters[chip.type] === chip.value;
+              return (
+                <button
+                  key={`${chip.type}-${chip.value}`}
+                  className={`mobile-chip ${isActive ? 'active' : ''}`}
+                  onClick={() => setFilters(prev => ({ ...prev, [chip.type]: isActive ? '' : chip.value }))}
+                >
+                  {chip.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Grid */}
-      <div className="bento-grid">
+      <PullToRefresh onRefresh={refetch}>
+        <div className="bento-grid">
         {isPending ? (
           <>
             <SkeletonCard featured />
@@ -339,7 +372,8 @@ function FeedPage() {
             )}
           </>
         )}
-      </div>
+        </div>
+      </PullToRefresh>
     </motion.div>
   );
 }
