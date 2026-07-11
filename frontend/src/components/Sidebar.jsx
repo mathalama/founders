@@ -43,7 +43,10 @@ function Sidebar({ collapsed, mobileOpen, onToggle }) {
     { to: '/notifications',icon: <div style={{position:'relative'}}><FiBell size={18} />{unreadCount > 0 && <span className="badge--count" style={{position:'absolute', top:'-6px', right:'-8px', fontSize:'9px', padding:'2px 4px'}}>{unreadCount}</span>}</div>, label: 'Уведомления' },
   ];
 
-  const navItems = user ? NAV_ITEMS_AUTH : NAV_ITEMS_GUEST;
+  const navItems = user ? [
+    ...NAV_ITEMS_AUTH,
+    ...(user.isAdmin ? [{ to: '/admin', icon: <FiUser size={18} />, label: 'Админка' }] : [])
+  ] : NAV_ITEMS_GUEST;
 
   const confirmLogout = () => {
     logout();
