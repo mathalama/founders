@@ -11,6 +11,7 @@ import EmptyState from '../components/EmptyState';
 import Avatar from '../components/ui/Avatar';
 import Badge from '../components/ui/Badge';
 import { useAuth } from '../context/AuthContext';
+import PullToRefresh from '../components/ui/PullToRefresh';
 
 // Skeleton card component
 function SkeletonCard({ featured = false }) {
