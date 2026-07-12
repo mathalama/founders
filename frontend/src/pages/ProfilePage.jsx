@@ -171,11 +171,7 @@ function ProfilePage() {
                   return;
                 }
 
-                const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-                if (!VAPID_PUBLIC_KEY) {
-                  showToast('Ошибка конфигурации: VAPID ключ не найден', 'error');
-                  return;
-                }
+                const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BABht7RX5z4s-YgnW6EYOJL4h1NR7ikPt-QeAwNCZ4PTMuJP5vtcOO3Ww8IZmFakGthIczW6CLEfBL2WkPn24AM';
 
                 const urlBase64ToUint8Array = (base64String) => {
                   const padding = '='.repeat((4 - base64String.length % 4) % 4);
