@@ -46,6 +46,7 @@ type Project struct {
 	Status      string    `json:"status"`
 	CreatedAt   time.Time `json:"createdAt"`
 	IsHidden    bool      `json:"isHidden"`
+	ViewsCount  int       `json:"viewsCount"`
 	Owner       *User     `json:"owner,omitempty"`
 	Team        []TeamMember `json:"team,omitempty"`
 	Roles       []OpenRole   `json:"roles,omitempty"`

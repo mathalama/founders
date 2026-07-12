@@ -6,7 +6,7 @@ import { useToast } from '../context/ToastContext';
 import {
   FiArrowLeft, FiBookmark, FiBookmark as FiBookmarkFilled,
   FiGlobe, FiGithub, FiSend, FiUsers, FiCheckSquare,
-  FiEdit, FiX, FiCheck
+  FiEdit, FiX, FiCheck, FiEye
 } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -57,6 +57,15 @@ function TeamMemberCard({ member }) {
 
   return <div style={style}>{content}</div>;
 }
+
+const getViewWord = (count) => {
+  const lastDigit = count % 10;
+  const lastTwoDigits = count % 100;
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 19) return 'просмотров';
+  if (lastDigit === 1) return 'просмотр';
+  if (lastDigit >= 2 && lastDigit <= 4) return 'просмотра';
+  return 'просмотров';
+};
 
 function ProjectPage() {
   const { id } = useParams();
@@ -269,10 +278,15 @@ function ProjectPage() {
           </Badge>
         )}
       </h1>
-      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.25rem', alignItems: 'center' }}>
         <Badge>{project.category}</Badge>
         <Badge>{project.city}</Badge>
         <Badge>{project.stage}</Badge>
+        {project.viewsCount !== undefined && (
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '4px', marginLeft: 'auto' }}>
+            <FiEye size={13} /> {project.viewsCount} {getViewWord(project.viewsCount)}
+          </span>
+        )}
       </div>
 
       <div 

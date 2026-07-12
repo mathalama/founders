@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -69,6 +70,13 @@ func (h *ApplicationHandler) ApplyToRole(w http.ResponseWriter, r *http.Request)
 	notifMsg := "Новый отклик от " + applicant.Name + " на роль: " + roleTitle + " (Проект: " + projectName + ")"
 	notifLink := "/dashboard"
 	h.notifRepo.Create(r.Context(), ownerID, "new_application", notifMsg, &notifLink)
+
+	// Trigger Push Notification
+	go h.pushSvc.SendPush(context.Background(), ownerID, map[string]interface{}{
+		"title": "Новый отклик!",
+		"body":  notifMsg,
+		"url":   notifLink,
+	})
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(`{"status":"success"}`))

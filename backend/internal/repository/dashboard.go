@@ -33,7 +33,8 @@ type Application struct {
 func (r *DashboardRepo) GetMyProjectsWithApplications(ctx context.Context, ownerID string) ([]DashboardProject, error) {
 	// Fetch projects
 	query := `
-		SELECT p.id, p.title, p.description, p.category, p.stage, p.city, p.created_at
+		SELECT p.id, p.title, p.description, p.category, p.stage, p.city, p.created_at,
+		       (SELECT COUNT(*) FROM project_views pv WHERE pv.project_id = p.id) as views_count
 		FROM projects p
 		WHERE p.owner_id = $1
 		ORDER BY p.created_at DESC
@@ -47,7 +48,7 @@ func (r *DashboardRepo) GetMyProjectsWithApplications(ctx context.Context, owner
 	var projects []DashboardProject
 	for rows.Next() {
 		var dp DashboardProject
-		err := rows.Scan(&dp.ID, &dp.Title, &dp.Description, &dp.Category, &dp.Stage, &dp.City, &dp.CreatedAt)
+		err := rows.Scan(&dp.ID, &dp.Title, &dp.Description, &dp.Category, &dp.Stage, &dp.City, &dp.CreatedAt, &dp.ViewsCount)
 		if err != nil {
 			return nil, err
 		}

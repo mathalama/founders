@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchWithAuth } from '../api/client';
 import { useToast } from '../context/ToastContext';
-import { FiUsers, FiMessageSquare, FiEdit, FiPlus, FiFolder, FiClock } from 'react-icons/fi';
+import { FiUsers, FiMessageSquare, FiEdit, FiPlus, FiFolder, FiClock, FiEye } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import EmptyState from '../components/EmptyState';
@@ -41,6 +41,15 @@ function StatCard({ label, value, sub, icon, accent = false }) {
     </div>
   );
 }
+
+const getViewWord = (count) => {
+  const lastDigit = count % 10;
+  const lastTwoDigits = count % 100;
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 19) return 'просмотров';
+  if (lastDigit === 1) return 'просмотр';
+  if (lastDigit >= 2 && lastDigit <= 4) return 'просмотра';
+  return 'просмотров';
+};
 
 function DashboardPage() {
   const { showToast } = useToast();
@@ -189,7 +198,14 @@ function DashboardPage() {
                     <h2 style={{ marginBottom: '0.375rem' }}>
                       <Link to={`/project/${p.id}`} style={{ color: 'inherit' }}>{p.title}</Link>
                     </h2>
-                    <Badge>{p.stage}</Badge>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <Badge>{p.stage}</Badge>
+                      {p.viewsCount !== undefined && (
+                        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <FiEye size={12} /> {p.viewsCount} {getViewWord(p.viewsCount)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <Link to={`/project/${p.id}/edit`} className="btn btn-outline btn-sm">
                     <FiEdit size={13} /> Редактировать

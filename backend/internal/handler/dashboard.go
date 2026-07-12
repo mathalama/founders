@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -83,6 +84,13 @@ func (h *DashboardHandler) UpdateApplicationStatus(w http.ResponseWriter, r *htt
 	notifMsg := "Твой отклик на проект «" + projectTitle + "» был " + statusRu + "."
 	notifLink := "/project/" + projectID
 	h.notifRepo.Create(r.Context(), applicantID, "application_status", notifMsg, &notifLink)
+
+	// Trigger Push Notification
+	go h.pushSvc.SendPush(context.Background(), applicantID, map[string]interface{}{
+		"title": "Статус отклика обновлен",
+		"body":  notifMsg,
+		"url":   notifLink,
+	})
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"status":"success"}`))

@@ -1,21 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import FeedPage from './pages/FeedPage';
-import ProjectPage from './pages/ProjectPage';
-import NewProjectPage from './pages/NewProjectPage';
-import EditProjectPage from './pages/EditProjectPage';
-import ProfilePage from './pages/ProfilePage';
-import UserPage from './pages/UserPage';
 import LoginPage from './pages/LoginPage';
 import OnboardingPage from './pages/OnboardingPage';
 import OAuthCallbackPage from './pages/OAuthCallbackPage';
-import DashboardPage from './pages/DashboardPage';
-import MyApplicationsPage from './pages/MyApplicationsPage';
-import BookmarksPage from './pages/BookmarksPage';
-import NotificationsPage from './pages/NotificationsPage';
-import MessagesPage from './pages/MessagesPage';
-import AdminDashboard from './pages/AdminDashboard';
+
+// Lazy-loaded pages
+const ProjectPage = lazy(() => import('./pages/ProjectPage'));
+const NewProjectPage = lazy(() => import('./pages/NewProjectPage'));
+const EditProjectPage = lazy(() => import('./pages/EditProjectPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const UserPage = lazy(() => import('./pages/UserPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const MyApplicationsPage = lazy(() => import('./pages/MyApplicationsPage'));
+const BookmarksPage = lazy(() => import('./pages/BookmarksPage'));
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
+const MessagesPage = lazy(() => import('./pages/MessagesPage'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
@@ -50,6 +52,20 @@ function MobileTopBar({ onOpen }) {
       <button onClick={toggleTheme} className="mobile-topbar__btn">
         {theme === 'light' ? <FiMoon size={22} /> : <FiSun size={22} />}
       </button>
+    </div>
+  );
+}
+
+// Simple page loader for Suspense
+function PageLoader() {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh', flexDirection: 'column', gap: '1rem' }}>
+      <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '3px solid var(--border)', borderTopColor: 'var(--accent)', animation: 'app-spin 1s linear infinite' }} />
+      <style>{`
+        @keyframes app-spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
@@ -129,46 +145,48 @@ function Layout() {
         <MobileTopBar onOpen={() => setMobileOpen(true)} />
 
         <main>
-          <Routes>
-            <Route path="/" element={<FeedPage />} />
-            <Route path="/project/:id" element={<ProjectPage />} />
-            <Route path="/new" element={
-              <ProtectedRoute><NewProjectPage /></ProtectedRoute>
-            } />
-            <Route path="/project/:id/edit" element={
-              <ProtectedRoute><EditProjectPage /></ProtectedRoute>
-            } />
-            <Route path="/profile" element={
-              <ProtectedRoute><ProfilePage /></ProtectedRoute>
-            } />
-            <Route path="/dashboard" element={
-              <ProtectedRoute><DashboardPage /></ProtectedRoute>
-            } />
-            <Route path="/applications" element={
-              <ProtectedRoute><MyApplicationsPage /></ProtectedRoute>
-            } />
-            <Route path="/notifications" element={
-              <ProtectedRoute><NotificationsPage /></ProtectedRoute>
-            } />
-            <Route path="/messages" element={
-              <ProtectedRoute><MessagesPage /></ProtectedRoute>
-            } />
-            <Route path="/messages/:id" element={
-              <ProtectedRoute><MessagesPage /></ProtectedRoute>
-            } />
-            <Route path="/user/:id" element={<UserPage />} />
-            <Route path="/bookmarks" element={
-              <ProtectedRoute><BookmarksPage /></ProtectedRoute>
-            } />
-            <Route path="/admin" element={
-              <AdminRoute><AdminDashboard /></AdminRoute>
-            } />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/onboarding" element={
-              <ProtectedRoute><OnboardingPage /></ProtectedRoute>
-            } />
-            <Route path="/api/auth/google/callback" element={<OAuthCallbackPage />} />
-          </Routes>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<FeedPage />} />
+              <Route path="/project/:id" element={<ProjectPage />} />
+              <Route path="/new" element={
+                <ProtectedRoute><NewProjectPage /></ProtectedRoute>
+              } />
+              <Route path="/project/:id/edit" element={
+                <ProtectedRoute><EditProjectPage /></ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute><ProfilePage /></ProtectedRoute>
+              } />
+              <Route path="/dashboard" element={
+                <ProtectedRoute><DashboardPage /></ProtectedRoute>
+              } />
+              <Route path="/applications" element={
+                <ProtectedRoute><MyApplicationsPage /></ProtectedRoute>
+              } />
+              <Route path="/notifications" element={
+                <ProtectedRoute><NotificationsPage /></ProtectedRoute>
+              } />
+              <Route path="/messages" element={
+                <ProtectedRoute><MessagesPage /></ProtectedRoute>
+              } />
+              <Route path="/messages/:id" element={
+                <ProtectedRoute><MessagesPage /></ProtectedRoute>
+              } />
+              <Route path="/user/:id" element={<UserPage />} />
+              <Route path="/bookmarks" element={
+                <ProtectedRoute><BookmarksPage /></ProtectedRoute>
+              } />
+              <Route path="/admin" element={
+                <AdminRoute><AdminDashboard /></AdminRoute>
+              } />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/onboarding" element={
+                <ProtectedRoute><OnboardingPage /></ProtectedRoute>
+              } />
+              <Route path="/api/auth/google/callback" element={<OAuthCallbackPage />} />
+            </Routes>
+          </Suspense>
         </main>
       </div>
     </div>

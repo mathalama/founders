@@ -112,7 +112,8 @@ func (r *ProjectRepo) GetAll(ctx context.Context, category, stage, city, role, s
 
 func (r *ProjectRepo) GetPublicProjectsByOwner(ctx context.Context, ownerID string) ([]model.Project, error) {
 	query := `
-		SELECT id, owner_id, title, description, category, stage, city, website, github, telegram, status, created_at, is_hidden
+		SELECT id, owner_id, title, description, category, stage, city, website, github, telegram, status, created_at, is_hidden,
+		       (SELECT COUNT(*) FROM project_views pv WHERE pv.project_id = id) as views_count
 		FROM projects
 		WHERE owner_id = $1 AND is_hidden = false
 		ORDER BY created_at DESC
@@ -126,7 +127,7 @@ func (r *ProjectRepo) GetPublicProjectsByOwner(ctx context.Context, ownerID stri
 	var projects []model.Project
 	for rows.Next() {
 		var p model.Project
-		if err := rows.Scan(&p.ID, &p.OwnerID, &p.Title, &p.Description, &p.Category, &p.Stage, &p.City, &p.Website, &p.Github, &p.Telegram, &p.Status, &p.CreatedAt, &p.IsHidden); err != nil {
+		if err := rows.Scan(&p.ID, &p.OwnerID, &p.Title, &p.Description, &p.Category, &p.Stage, &p.City, &p.Website, &p.Github, &p.Telegram, &p.Status, &p.CreatedAt, &p.IsHidden, &p.ViewsCount); err != nil {
 			return nil, err
 		}
 		
@@ -148,7 +149,8 @@ func (r *ProjectRepo) GetPublicProjectsByOwner(ctx context.Context, ownerID stri
 func (r *ProjectRepo) GetByID(ctx context.Context, id string) (*model.Project, error) {
 	query := `
 		SELECT p.id, p.owner_id, p.title, p.description, p.category, p.stage, p.city, p.website, p.github, p.telegram, p.status, p.created_at, p.is_hidden,
-		       u.name as owner_name, u.avatar_url as owner_avatar
+		       u.name as owner_name, u.avatar_url as owner_avatar,
+		       (SELECT COUNT(*) FROM project_views pv WHERE pv.project_id = p.id) as views_count
 		FROM projects p
 		JOIN users u ON p.owner_id = u.id
 		WHERE p.id = $1
@@ -157,7 +159,7 @@ func (r *ProjectRepo) GetByID(ctx context.Context, id string) (*model.Project, e
 	var owner model.User
 	err := r.db.QueryRow(ctx, query, id).Scan(
 		&p.ID, &p.OwnerID, &p.Title, &p.Description, &p.Category, &p.Stage, &p.City, &p.Website, &p.Github, &p.Telegram, &p.Status, &p.CreatedAt, &p.IsHidden,
-		&owner.Name, &owner.AvatarURL,
+		&owner.Name, &owner.AvatarURL, &p.ViewsCount,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -382,5 +384,11 @@ func (r *ProjectRepo) GetAllAdmin(ctx context.Context) ([]model.Project, error) 
 func (r *ProjectRepo) ToggleHide(ctx context.Context, id string) error {
 	query := `UPDATE projects SET is_hidden = NOT is_hidden WHERE id = $1`
 	_, err := r.db.Exec(ctx, query, id)
+	return err
+}
+
+func (r *ProjectRepo) RecordView(ctx context.Context, projectID string, viewerID *string) error {
+	query := `INSERT INTO project_views (project_id, viewer_id) VALUES ($1, $2)`
+	_, err := r.db.Exec(ctx, query, projectID, viewerID)
 	return err
 }

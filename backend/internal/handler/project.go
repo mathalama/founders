@@ -3,9 +3,11 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/mathalama/nucla-backend/internal/middleware"
 	"github.com/mathalama/nucla-backend/internal/model"
 	"github.com/mathalama/nucla-backend/internal/repository"
@@ -51,6 +53,37 @@ func (h *ProjectHandler) ListProjects(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(projects)
 }
 
+func getOptionalUserID(r *http.Request) *string {
+	cookie, err := r.Cookie("token")
+	if err != nil || cookie.Value == "" {
+		return nil
+	}
+	tokenString := cookie.Value
+
+	secret := []byte(os.Getenv("JWT_SECRET"))
+	if len(secret) == 0 {
+		return nil
+	}
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return secret, nil
+	})
+	if err != nil || !token.Valid {
+		return nil
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil
+	}
+
+	userID, ok := claims["user_id"].(string)
+	if !ok {
+		return nil
+	}
+	return &userID
+}
+
 func (h *ProjectHandler) GetProject(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if id == "" {
@@ -66,6 +99,14 @@ func (h *ProjectHandler) GetProject(w http.ResponseWriter, r *http.Request) {
 	if project == nil {
 		http.Error(w, "Project not found", http.StatusNotFound)
 		return
+	}
+
+	// Record Project View (excluding owner)
+	var viewerID *string
+	optUID := getOptionalUserID(r)
+	if optUID == nil || *optUID != project.OwnerID {
+		viewerID = optUID
+		_ = h.repo.RecordView(r.Context(), id, viewerID)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
