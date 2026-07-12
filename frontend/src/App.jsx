@@ -6,18 +6,31 @@ import LoginPage from './pages/LoginPage';
 import OnboardingPage from './pages/OnboardingPage';
 import OAuthCallbackPage from './pages/OAuthCallbackPage';
 
+// Lazy-load helper with auto-retry on chunk loading failure (e.g. after a new deployment)
+const lazyWithRetry = (componentImport) => {
+  return lazy(async () => {
+    try {
+      return await componentImport();
+    } catch (error) {
+      console.error("Failed to load chunk, forcing page reload...", error);
+      window.location.reload();
+      return new Promise(() => {}); // prevent further execution/rendering during reload
+    }
+  });
+};
+
 // Lazy-loaded pages
-const ProjectPage = lazy(() => import('./pages/ProjectPage'));
-const NewProjectPage = lazy(() => import('./pages/NewProjectPage'));
-const EditProjectPage = lazy(() => import('./pages/EditProjectPage'));
-const ProfilePage = lazy(() => import('./pages/ProfilePage'));
-const UserPage = lazy(() => import('./pages/UserPage'));
-const DashboardPage = lazy(() => import('./pages/DashboardPage'));
-const MyApplicationsPage = lazy(() => import('./pages/MyApplicationsPage'));
-const BookmarksPage = lazy(() => import('./pages/BookmarksPage'));
-const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
-const MessagesPage = lazy(() => import('./pages/MessagesPage'));
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const ProjectPage = lazyWithRetry(() => import('./pages/ProjectPage'));
+const NewProjectPage = lazyWithRetry(() => import('./pages/NewProjectPage'));
+const EditProjectPage = lazyWithRetry(() => import('./pages/EditProjectPage'));
+const ProfilePage = lazyWithRetry(() => import('./pages/ProfilePage'));
+const UserPage = lazyWithRetry(() => import('./pages/UserPage'));
+const DashboardPage = lazyWithRetry(() => import('./pages/DashboardPage'));
+const MyApplicationsPage = lazyWithRetry(() => import('./pages/MyApplicationsPage'));
+const BookmarksPage = lazyWithRetry(() => import('./pages/BookmarksPage'));
+const NotificationsPage = lazyWithRetry(() => import('./pages/NotificationsPage'));
+const MessagesPage = lazyWithRetry(() => import('./pages/MessagesPage'));
+const AdminDashboard = lazyWithRetry(() => import('./pages/AdminDashboard'));
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
