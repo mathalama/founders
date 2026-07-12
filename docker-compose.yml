@@ -51,7 +51,7 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL}
-        VITE_VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+        VITE_VAPID_PUBLIC_KEY: ${VITE_VAPID_PUBLIC_KEY}
     depends_on:
       - backend
 
