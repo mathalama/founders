@@ -3,10 +3,12 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
-	"fmt"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/mathalama/nucla-backend/internal/middleware"
@@ -24,7 +26,7 @@ func NewAuthHandler(userRepo *repository.UserRepo) *AuthHandler {
 	conf := &oauth2.Config{
 		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-		RedirectURL:  "http://localhost:8080/api/auth/google/callback",
+		RedirectURL:  getRedirectURL(),
 		Scopes: []string{
 			"https://www.googleapis.com/auth/userinfo.email",
 			"https://www.googleapis.com/auth/userinfo.profile",
@@ -38,6 +40,13 @@ func NewAuthHandler(userRepo *repository.UserRepo) *AuthHandler {
 	}
 }
 
+func getRedirectURL() string {
+	domain := os.Getenv("BACKEND_DOMAIN")
+	if domain == "" {
+		log.Fatal("Missing required environment variable: BACKEND_DOMAIN")
+	}
+	return "https://" + domain + "/api/auth/google/callback"
+}
 func (h *AuthHandler) GoogleLogin(w http.ResponseWriter, r *http.Request) {
 	// Typically you'd generate a random state string and store it in a cookie to prevent CSRF
 	state := "random-state-string"
@@ -77,20 +86,42 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.userRepo.UpsertByGoogleID(r.Context(), userInfo.ID, userInfo.Name, userInfo.Email)
+	adminEmailsEnv := os.Getenv("ADMIN_EMAILS")
+	isAdmin := false
+	if adminEmailsEnv != "" {
+		emails := strings.Split(adminEmailsEnv, ",")
+		for _, e := range emails {
+			if strings.TrimSpace(e) == userInfo.Email {
+				isAdmin = true
+				break
+			}
+		}
+	}
+
+	user, err := h.userRepo.UpsertByGoogleID(r.Context(), userInfo.ID, userInfo.Name, userInfo.Email, isAdmin)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	if user.IsBanned {
+		frontendURL := os.Getenv("FRONTEND_URL")
+		if frontendURL == "" {
+			frontendURL = "http://localhost:3000"
+		}
+		http.Redirect(w, r, fmt.Sprintf("%s/login?error=banned", frontendURL), http.StatusTemporaryRedirect)
+		return
+	}
+
 	secret := []byte(os.Getenv("JWT_SECRET"))
 	if len(secret) == 0 {
-		secret = []byte("super-secret-dev-key")
+		log.Fatal("Missing required environment variable: JWT_SECRET")
 	}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": user.ID,
-		"exp":     time.Now().Add(time.Hour * 72).Unix(),
+		"user_id":  user.ID,
+		"is_admin": user.IsAdmin,
+		"exp":      time.Now().Add(time.Hour * 72).Unix(),
 	})
 
 	tokenString, err := jwtToken.SignedString(secret)
@@ -99,12 +130,35 @@ func (h *AuthHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Redirect to frontend with token (or set as cookie)
+	// Set HttpOnly Cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Value:    tokenString,
+		Path:     "/",
+		MaxAge:   int(72 * time.Hour / time.Second),
+		HttpOnly: true,
+		Secure:   true, // Requires HTTPS, Caddy provides this
+		SameSite: http.SameSiteLaxMode,
+	})
+
 	frontendURL := os.Getenv("FRONTEND_URL")
 	if frontendURL == "" {
-		frontendURL = "http://localhost:5173"
+		log.Fatal("Missing required environment variable: FRONTEND_URL")
 	}
-	http.Redirect(w, r, fmt.Sprintf("%s/login?token=%s", frontendURL, tokenString), http.StatusTemporaryRedirect)
+	http.Redirect(w, r, fmt.Sprintf("%s/", frontendURL), http.StatusTemporaryRedirect)
+}
+
+func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	})
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
@@ -117,6 +171,11 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	}
 	if user == nil {
 		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+	
+	if user.IsBanned {
+		http.Error(w, "Your account has been banned by an administrator.", http.StatusForbidden)
 		return
 	}
 

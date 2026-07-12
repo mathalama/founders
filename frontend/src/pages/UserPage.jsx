@@ -97,15 +97,18 @@ function UserPage() {
             </div>
           )}
 
-          {skills && (
+          {skills && (Array.isArray(skills) ? skills.length > 0 : typeof skills === 'string' && skills.trim().length > 0) && (
             <div>
               <h3 style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Навыки</h3>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                {skills.split(',').map((skill, index) => (
-                  <span key={index} className="badge" style={{ backgroundColor: 'var(--bg-secondary)' }}>
-                    {skill.trim()}
-                  </span>
-                ))}
+                {(Array.isArray(skills) ? skills : skills.split(',')).map((skill, index) => {
+                  const cleaned = typeof skill === 'string' ? skill.trim() : '';
+                  return cleaned ? (
+                    <span key={index} className="badge" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                      {cleaned}
+                    </span>
+                  ) : null;
+                })}
               </div>
             </div>
           )}

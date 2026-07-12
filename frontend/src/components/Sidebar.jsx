@@ -13,25 +13,26 @@ const NAV_ITEMS_GUEST = [
 ];
 
 import { fetchWithAuth } from '../api/client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import LogoutModal from './LogoutModal';
 
-function Sidebar({ collapsed, mobileOpen, onToggle }) {
+function Sidebar({ collapsed, mobileOpen, onToggle, onCloseMobile }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const { data: notifications = [] } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: async () => {
+      const res = await fetchWithAuth('/api/notifications');
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!user
+  });
 
-  useEffect(() => {
-    if (user) {
-      fetchWithAuth('/api/notifications')
-        .then(res => res.ok ? res.json() : [])
-        .then(data => {
-          const count = (data || []).filter(n => !n.isRead).length;
-          setUnreadCount(count);
-        })
-        .catch(console.error);
-    }
-  }, [user]);
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const NAV_ITEMS_AUTH = [
     { to: '/',             icon: <FiHome size={18} />,       label: 'Лента' },
@@ -42,41 +43,57 @@ function Sidebar({ collapsed, mobileOpen, onToggle }) {
     { to: '/notifications',icon: <div style={{position:'relative'}}><FiBell size={18} />{unreadCount > 0 && <span className="badge--count" style={{position:'absolute', top:'-6px', right:'-8px', fontSize:'9px', padding:'2px 4px'}}>{unreadCount}</span>}</div>, label: 'Уведомления' },
   ];
 
-  const navItems = user ? NAV_ITEMS_AUTH : NAV_ITEMS_GUEST;
+  const navItems = user ? [
+    ...NAV_ITEMS_AUTH,
+    ...(user.isAdmin ? [{ to: '/admin', icon: <FiUser size={18} />, label: 'Админка' }] : [])
+  ] : NAV_ITEMS_GUEST;
 
-  const handleLogout = () => {
+  const confirmLogout = () => {
     logout();
+    setShowLogoutModal(false);
     navigate('/');
   };
+
+  const isEffectivelyCollapsed = collapsed && !mobileOpen;
 
   return (
     <aside className={[
       styles.sidebar,
-      collapsed ? styles.collapsed : '',
+      isEffectivelyCollapsed ? styles.collapsed : '',
       mobileOpen ? styles.mobileOpen : '',
     ].join(' ')}>
       {/* Logo + toggle */}
       <div className={styles.header}>
-        {!collapsed && (
+        {!isEffectivelyCollapsed && (
           <Link to="/" className={styles.logo}>
             <span className={styles.logoText}>Nucla</span>
           </Link>
         )}
-        <button
-          className={styles.toggleBtn}
-          onClick={onToggle}
-          aria-label={collapsed ? 'Развернуть' : 'Свернуть'}
-        >
-          {collapsed ? <FiMenu size={20} /> : <FiX size={18} />}
-        </button>
+        {mobileOpen ? (
+          <button
+            className={styles.toggleBtn}
+            onClick={onCloseMobile}
+            aria-label="Закрыть"
+          >
+            <FiX size={20} />
+          </button>
+        ) : (
+          <button
+            className={styles.toggleBtn}
+            onClick={onToggle}
+            aria-label={isEffectivelyCollapsed ? 'Развернуть' : 'Свернуть'}
+          >
+            {isEffectivelyCollapsed ? <FiMenu size={20} /> : <FiX size={18} />}
+          </button>
+        )}
       </div>
 
       {/* Create project button */}
       {user && (
         <div className={styles.createWrap}>
-          <Link to="/new" className={`${styles.createBtn} ${collapsed ? styles.createBtnCollapsed : ''}`}>
+          <Link to="/new" className={`${styles.createBtn} ${isEffectivelyCollapsed ? styles.createBtnCollapsed : ''}`}>
             <FiPlusCircle size={18} />
-            {!collapsed && <span>Создать проект</span>}
+            {!isEffectivelyCollapsed && <span>Создать проект</span>}
           </Link>
         </div>
       )}
@@ -89,12 +106,12 @@ function Sidebar({ collapsed, mobileOpen, onToggle }) {
             to={item.to}
             end={item.to === '/'}
             className={({ isActive }) =>
-              `${styles.navItem} ${isActive ? styles.active : ''} ${collapsed ? styles.navItemCollapsed : ''}`
+              `${styles.navItem} ${isActive ? styles.active : ''} ${isEffectivelyCollapsed ? styles.navItemCollapsed : ''}`
             }
-            title={collapsed ? item.label : undefined}
+            title={isEffectivelyCollapsed ? item.label : undefined}
           >
             <span className={styles.navIcon}>{item.icon}</span>
-            {!collapsed && <span className={styles.navLabel}>{item.label}</span>}
+            {!isEffectivelyCollapsed && <span className={styles.navLabel}>{item.label}</span>}
           </NavLink>
         ))}
       </nav>
@@ -106,16 +123,16 @@ function Sidebar({ collapsed, mobileOpen, onToggle }) {
             <NavLink
               to="/profile"
               className={({ isActive }) =>
-                `${styles.navItem} ${isActive ? styles.active : ''} ${collapsed ? styles.navItemCollapsed : ''}`
+                `${styles.navItem} ${isActive ? styles.active : ''} ${isEffectivelyCollapsed ? styles.navItemCollapsed : ''}`
               }
-              title={collapsed ? 'Профиль' : undefined}
+              title={isEffectivelyCollapsed ? 'Профиль' : undefined}
             >
               <div className={`avatar avatar--sm ${styles.navIcon}`}>
                 {user.avatarUrl
                   ? <img src={user.avatarUrl} alt={user.name} />
                   : user.name?.[0]?.toUpperCase() || '?'}
               </div>
-              {!collapsed && (
+              {!isEffectivelyCollapsed && (
                 <div className={styles.userInfo}>
                   <div className={styles.userName}>{user.name}</div>
                   {user.roleTitle && <div className={styles.userRole}>{user.roleTitle}</div>}
@@ -123,36 +140,41 @@ function Sidebar({ collapsed, mobileOpen, onToggle }) {
               )}
             </NavLink>
             <button
-              className={`${styles.navItem} ${styles.logoutBtn} ${collapsed ? styles.navItemCollapsed : ''}`}
-              onClick={handleLogout}
-              title={collapsed ? 'Выйти' : undefined}
+              className={`${styles.navItem} ${styles.logoutBtn} ${isEffectivelyCollapsed ? styles.navItemCollapsed : ''}`}
+              onClick={() => setShowLogoutModal(true)}
+              title={isEffectivelyCollapsed ? 'Выйти' : undefined}
             >
               <span className={styles.navIcon}><FiLogOut size={18} /></span>
-              {!collapsed && <span className={styles.navLabel}>Выйти</span>}
+              {!isEffectivelyCollapsed && <span className={styles.navLabel}>Выйти</span>}
             </button>
           </>
         ) : (
           <Link
             to="/login"
-            className={`${styles.navItem} ${collapsed ? styles.navItemCollapsed : ''}`}
-            title={collapsed ? 'Войти' : undefined}
+            className={`${styles.navItem} ${isEffectivelyCollapsed ? styles.navItemCollapsed : ''}`}
+            title={isEffectivelyCollapsed ? 'Войти' : undefined}
           >
             <span className={styles.navIcon}><FiLogIn size={18} /></span>
-            {!collapsed && <span className={styles.navLabel}>Войти</span>}
+            {!isEffectivelyCollapsed && <span className={styles.navLabel}>Войти</span>}
           </Link>
         )}
         <button
-          className={`${styles.navItem} ${collapsed ? styles.navItemCollapsed : ''}`}
+          className={`${styles.navItem} ${isEffectivelyCollapsed ? styles.navItemCollapsed : ''}`}
           onClick={toggleTheme}
-          title={collapsed ? 'Сменить тему' : undefined}
+          title={isEffectivelyCollapsed ? 'Сменить тему' : undefined}
           style={{ marginTop: '0.5rem', background: 'var(--surface-raised)', border: '1px solid var(--border)' }}
         >
           <span className={styles.navIcon}>
             {theme === 'light' ? <FiMoon size={18} /> : <FiSun size={18} />}
           </span>
-          {!collapsed && <span className={styles.navLabel}>{theme === 'light' ? 'Темная тема' : 'Светлая тема'}</span>}
+          {!isEffectivelyCollapsed && <span className={styles.navLabel}>{theme === 'light' ? 'Темная тема' : 'Светлая тема'}</span>}
         </button>
       </div>
+      <LogoutModal 
+        isOpen={showLogoutModal} 
+        onClose={() => setShowLogoutModal(false)} 
+        onConfirm={confirmLogout} 
+      />
     </aside>
   );
 }

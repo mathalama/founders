@@ -1,0 +1,162 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
+import { fetchWithAuth } from '../api/client';
+import { useToast } from '../context/ToastContext';
+
+function OnboardingPage() {
+  const { user, setUser } = useAuth();
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+  
+  const [formData, setFormData] = useState({
+    roleTitle: '',
+    skills: '',
+    experience: '',
+    bio: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.roleTitle.trim()) {
+      showToast('Пожалуйста, укажите вашу роль', 'error');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        roleTitle: formData.roleTitle,
+        skills: formData.skills.split(',').map(s => s.trim()).filter(s => s !== ''),
+        experience: formData.experience,
+        bio: formData.bio,
+        // Preserve existing user fields that we aren't editing here
+        emailNotifications: user?.emailNotifications ?? true,
+        github: user?.github || '',
+        telegram: user?.telegram || '',
+      };
+
+      const res = await fetchWithAuth('/api/profile', {
+        method: 'PUT',
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        const updatedUser = await res.json();
+        setUser(updatedUser);
+        showToast('Добро пожаловать!', 'success');
+        navigate('/');
+      } else {
+        showToast('Ошибка при сохранении профиля', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Ошибка соединения', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="bento-card"
+        style={{ maxWidth: '500px', width: '100%', padding: '2rem' }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', background: 'var(--primary-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            Добро пожаловать в Nucla!
+          </h1>
+          <p style={{ color: 'var(--text-secondary)' }}>
+            Прежде чем мы начнем, расскажите немного о себе. Это поможет фаундерам и командам лучше вас узнать.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Ваша основная роль *</label>
+            <input
+              list="role-suggestions"
+              name="roleTitle"
+              value={formData.roleTitle}
+              onChange={handleChange}
+              className="input"
+              placeholder="Frontend Developer, Product Manager..."
+              autoComplete="off"
+              required
+            />
+            <datalist id="role-suggestions">
+              <option value="Frontend Developer" />
+              <option value="Backend Developer" />
+              <option value="Full Stack Developer" />
+              <option value="Mobile Developer" />
+              <option value="DevOps / SRE" />
+              <option value="Data Scientist" />
+              <option value="ML Engineer" />
+              <option value="UI/UX Designer" />
+              <option value="Product Manager" />
+              <option value="Marketing" />
+              <option value="Founder / CEO" />
+              <option value="Business Analyst" />
+              <option value="QA Engineer" />
+            </datalist>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Навыки</label>
+            <input 
+              name="skills" 
+              value={formData.skills} 
+              onChange={handleChange} 
+              className="input" 
+              placeholder="React, Figma, Python (через запятую)" 
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Опыт работы</label>
+            <input 
+              name="experience" 
+              value={formData.experience} 
+              onChange={handleChange} 
+              className="input" 
+              placeholder="Например: 3 года, Junior, Middle..." 
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>О себе</label>
+            <textarea 
+              name="bio" 
+              value={formData.bio} 
+              onChange={handleChange} 
+              className="textarea" 
+              rows="3" 
+              placeholder="Пару слов о том, чем вы занимаетесь и какие проекты ищете"
+            ></textarea>
+          </div>
+
+          <button 
+            type="submit" 
+            className="btn btn-primary" 
+            style={{ marginTop: '0.5rem', width: '100%', padding: '0.75rem' }}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Сохранение...' : 'Продолжить'}
+          </button>
+        </form>
+      </motion.div>
+    </div>
+  );
+}
+
+export default OnboardingPage;

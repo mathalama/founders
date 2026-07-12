@@ -12,28 +12,28 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAuth = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setIsLoading(false);
-      return;
-    }
-
     try {
       const res = await fetchWithAuth('/api/auth/me');
       if (res.ok) {
-        const data = await res.json();
-        setUser(data);
+        const userData = await res.json();
+        setUser(userData);
       } else {
-        localStorage.removeItem('token');
+        setUser(null);
       }
-    } catch (err) {
-      console.error('Auth check failed:', err);
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      setUser(null);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
+  const logout = async () => {
+    try {
+      await fetchWithAuth('/api/auth/logout', { method: 'POST' });
+    } catch (e) {
+      console.error('Logout failed:', e);
+    }
     setUser(null);
   };
 

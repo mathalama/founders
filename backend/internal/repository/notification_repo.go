@@ -54,3 +54,53 @@ func (r *NotificationRepo) MarkAllAsRead(ctx context.Context, userID string) err
 	_, err := r.db.Exec(ctx, query, userID)
 	return err
 }
+
+func (r *NotificationRepo) DeleteNotification(ctx context.Context, notificationID, userID string) error {
+	query := `DELETE FROM notifications WHERE id = $1 AND user_id = $2`
+	_, err := r.db.Exec(ctx, query, notificationID, userID)
+	return err
+}
+
+func (r *NotificationRepo) DeleteAllNotifications(ctx context.Context, userID string) error {
+	query := `DELETE FROM notifications WHERE user_id = $1`
+	_, err := r.db.Exec(ctx, query, userID)
+	return err
+}
+
+func (r *NotificationRepo) AddPushSubscription(ctx context.Context, sub *model.PushSubscription) error {
+	query := `
+		INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (user_id, endpoint) DO UPDATE
+		SET p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth
+		RETURNING id, created_at`
+	
+	err := r.db.QueryRow(ctx, query, sub.UserID, sub.Endpoint, sub.P256dh, sub.Auth).
+		Scan(&sub.ID, &sub.CreatedAt)
+	return err
+}
+
+func (r *NotificationRepo) GetPushSubscriptions(ctx context.Context, userID string) ([]*model.PushSubscription, error) {
+	query := `SELECT id, user_id, endpoint, p256dh, auth, created_at FROM push_subscriptions WHERE user_id = $1`
+	rows, err := r.db.Query(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var subs []*model.PushSubscription
+	for rows.Next() {
+		var sub model.PushSubscription
+		if err := rows.Scan(&sub.ID, &sub.UserID, &sub.Endpoint, &sub.P256dh, &sub.Auth, &sub.CreatedAt); err != nil {
+			return nil, err
+		}
+		subs = append(subs, &sub)
+	}
+	return subs, nil
+}
+
+// DeletePushSubscriptionByEndpoint removes a dead push subscription
+func (r *NotificationRepo) DeletePushSubscriptionByEndpoint(ctx context.Context, endpoint string) error {
+	_, err := r.db.Exec(ctx, `DELETE FROM push_subscriptions WHERE endpoint = $1`, endpoint)
+	return err
+}

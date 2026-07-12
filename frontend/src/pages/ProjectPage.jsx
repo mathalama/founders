@@ -13,6 +13,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import EmptyState from '../components/EmptyState';
 import Avatar from '../components/ui/Avatar';
 import Badge from '../components/ui/Badge';
+import Modal from '../components/ui/Modal';
 
 // Role status badge
 function RoleStatusBadge({ status, applications = 0 }) {
@@ -78,6 +79,19 @@ function ProjectPage() {
   });
 
   const [bookmarked, setBookmarked] = useState(false);
+  const { data: myApps = [] } = useQuery({
+    queryKey: ['myApplications'],
+    queryFn: async () => {
+      const res = await fetchWithAuth('/api/applications/my');
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data || [];
+    },
+    enabled: !!user
+  });
+
+  const appliedRoleIds = new Set(myApps.map(app => app.role_id));
+
   useEffect(() => {
     // Only way to initialize bookmarked right now, though ideally it should come from backend
   }, [project]);
@@ -95,8 +109,47 @@ function ProjectPage() {
       showToast('Отклик отправлен!', 'success');
       setShowModal(false);
       setApplicationMsg('');
+      queryClient.invalidateQueries(['myApplications']);
     },
     onError: () => showToast('Ошибка при отправке отклика', 'error')
+  });
+
+  const toggleProjectStatusMutation = useMutation({
+    mutationFn: async (newStatus) => {
+      const res = await fetchWithAuth(`/api/projects/${id}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) throw new Error('Failed to update project status');
+      return newStatus;
+    },
+    onSuccess: (newStatus) => {
+      queryClient.setQueryData(['project', id], old => ({ ...old, status: newStatus }));
+      showToast(newStatus === 'closed' ? 'Набор в проект закрыт' : 'Набор в проект открыт', 'success');
+    },
+    onError: () => showToast('Ошибка при обновлении статуса проекта', 'error')
+  });
+
+  const toggleRoleStatusMutation = useMutation({
+    mutationFn: async ({ roleId, newStatus }) => {
+      const res = await fetchWithAuth(`/api/projects/${id}/roles/${roleId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) throw new Error('Failed to update role status');
+      return { roleId, newStatus };
+    },
+    onSuccess: ({ roleId, newStatus }) => {
+      queryClient.setQueryData(['project', id], old => {
+        if (!old) return old;
+        return {
+          ...old,
+          roles: old.roles.map(r => r.id === roleId ? { ...r, status: newStatus } : r)
+        };
+      });
+      showToast('Статус роли обновлен', 'success');
+    },
+    onError: () => showToast('Ошибка при обновлении статуса роли', 'error')
   });
 
   const handleApply = () => {
@@ -181,9 +234,21 @@ function ProjectPage() {
         </Link>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           {isOwner && (
-            <Link to={`/project/${id}/edit`} className="btn btn-outline btn-sm">
-              <FiEdit size={14} /> Редактировать
-            </Link>
+            <>
+              <button
+                className={`btn btn-sm ${project.status === 'closed' ? 'btn-outline' : 'btn-danger'}`}
+                onClick={() => {
+                  if (window.confirm(project.status === 'closed' ? 'Открыть набор в проект?' : 'Вы уверены, что хотите закрыть набор в этот проект? Никто не сможет откликаться.')) {
+                    toggleProjectStatusMutation.mutate(project.status === 'closed' ? 'open' : 'closed');
+                  }
+                }}
+              >
+                {project.status === 'closed' ? 'Открыть проект' : 'Закрыть проект'}
+              </button>
+              <Link to={`/project/${id}/edit`} className="btn btn-outline btn-sm">
+                <FiEdit size={14} /> Редактировать
+              </Link>
+            </>
           )}
           <button
             onClick={toggleBookmark}
@@ -196,7 +261,14 @@ function ProjectPage() {
       </div>
 
       {/* Title */}
-      <h1 style={{ marginBottom: '0.375rem' }}>{project.title}</h1>
+      <h1 style={{ marginBottom: '0.375rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        {project.title}
+        {project.status === 'closed' && (
+          <Badge style={{ fontSize: '12px', background: 'var(--danger)', color: 'white' }}>
+            Набор закрыт
+          </Badge>
+        )}
+      </h1>
       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
         <Badge>{project.category}</Badge>
         <Badge>{project.city}</Badge>
@@ -266,7 +338,21 @@ function ProjectPage() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <RoleStatusBadge status={role.status} />
-                {role.status !== 'closed' && !isOwner && (
+                
+                {isOwner && (
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => toggleRoleStatusMutation.mutate({ 
+                      roleId: role.id, 
+                      newStatus: role.status === 'closed' ? 'open' : 'closed' 
+                    })}
+                    title={role.status === 'closed' ? 'Открыть вакансию' : 'Закрыть вакансию (нашли человека)'}
+                  >
+                    {role.status === 'closed' ? 'Открыть' : 'Закрыть'}
+                  </button>
+                )}
+
+                {project.status !== 'closed' && role.status !== 'closed' && !isOwner && !appliedRoleIds.has(role.id) && (
                   <button
                     className="btn btn-primary btn-sm"
                     style={{ animation: 'pulse-ring 2s ease infinite' }}
@@ -281,6 +367,11 @@ function ProjectPage() {
                   >
                     Откликнуться
                   </button>
+                )}
+                {appliedRoleIds.has(role.id) && (
+                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <FiCheck size={14} /> Отклик отправлен
+                  </span>
                 )}
               </div>
             </div>
@@ -349,40 +440,32 @@ function ProjectPage() {
       )}
 
       {/* Apply Modal */}
-      {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3>Отклик на «{selectedRole?.title}»</h3>
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={() => setShowModal(false)}
-                style={{ padding: '0.25rem' }}
-              >
-                <FiX size={18} />
-              </button>
-            </div>
-            <textarea
-              className="textarea"
-              rows={4}
-              placeholder="Расскажи немного о себе — почему ты подходишь для этой роли?"
-              value={applicationMsg}
-              onChange={e => setApplicationMsg(e.target.value)}
-              style={{ marginBottom: '1rem' }}
-            />
-            <div style={{ display: 'flex', gap: '0.625rem', justifyContent: 'flex-end' }}>
-              <button className="btn btn-outline" onClick={() => setShowModal(false)}>Отмена</button>
-              <button
-                className="btn btn-primary"
-                onClick={handleApply}
-                disabled={applyMutation.isPending || !applicationMsg.trim()}
-              >
-                {applyMutation.isPending ? 'Отправляю...' : 'Отправить отклик'}
-              </button>
-            </div>
-          </div>
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
+        <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          Отклик на «{selectedRole?.title}»
+        </h3>
+        <textarea
+          className="textarea"
+          rows={4}
+          placeholder="Расскажи немного о себе — почему ты подходишь для этой роли?"
+          value={applicationMsg}
+          onChange={e => setApplicationMsg(e.target.value)}
+          style={{ marginBottom: '1.5rem' }}
+        />
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button className="btn btn-outline" onClick={() => setShowModal(false)} style={{ flex: 1 }}>
+            Отмена
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={handleApply}
+            disabled={applyMutation.isPending || !applicationMsg.trim()}
+            style={{ flex: 2 }}
+          >
+            {applyMutation.isPending ? 'Отправляю...' : 'Отправить отклик'}
+          </button>
         </div>
-      )}
+      </Modal>
     </motion.div>
   );
 }

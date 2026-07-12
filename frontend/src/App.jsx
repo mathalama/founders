@@ -8,17 +8,23 @@ import EditProjectPage from './pages/EditProjectPage';
 import ProfilePage from './pages/ProfilePage';
 import UserPage from './pages/UserPage';
 import LoginPage from './pages/LoginPage';
+import OnboardingPage from './pages/OnboardingPage';
+import OAuthCallbackPage from './pages/OAuthCallbackPage';
 import DashboardPage from './pages/DashboardPage';
 import MyApplicationsPage from './pages/MyApplicationsPage';
 import BookmarksPage from './pages/BookmarksPage';
 import NotificationsPage from './pages/NotificationsPage';
 import MessagesPage from './pages/MessagesPage';
-import { AuthProvider } from './context/AuthContext';
+import AdminDashboard from './pages/AdminDashboard';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
 import { FiMenu, FiSun, FiMoon } from 'react-icons/fi';
+import { useRealtime } from './hooks/useRealtime';
+import { useNavigate } from 'react-router-dom';
 
 // Mobile top bar with burger button
 function MobileTopBar({ onOpen }) {
@@ -36,51 +42,12 @@ function MobileTopBar({ onOpen }) {
   const title = titles[location.pathname] ?? 'Nucla';
 
   return (
-    <div style={{
-      display: 'none',
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: 'var(--header-height)',
-      background: 'rgba(248,250,252,0.92)',
-      backdropFilter: 'blur(12px)',
-      WebkitBackdropFilter: 'blur(12px)',
-      borderBottom: '1px solid var(--border)',
-      zIndex: 20,
-      alignItems: 'center',
-      padding: '0 1rem',
-      gap: '0.75rem',
-      // shown via CSS media query
-      className: 'mobile-topbar',
-    }}
-      className="mobile-topbar"
-    >
-      <button
-        onClick={onOpen}
-        style={{
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          color: 'var(--text-primary)',
-          display: 'flex',
-          padding: '0.25rem',
-        }}
-      >
+    <div className="mobile-topbar">
+      <button onClick={onOpen} className="mobile-topbar__btn">
         <FiMenu size={22} />
       </button>
-      <span style={{ fontWeight: 700, fontSize: '1.1rem', letterSpacing: '-0.02em', flex: 1 }}>{title}</span>
-      <button
-        onClick={toggleTheme}
-        style={{
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          color: 'var(--text-primary)',
-          display: 'flex',
-          padding: '0.25rem',
-        }}
-      >
+      <span className="mobile-topbar__title">{title}</span>
+      <button onClick={toggleTheme} className="mobile-topbar__btn">
         {theme === 'light' ? <FiMoon size={22} /> : <FiSun size={22} />}
       </button>
     </div>
@@ -91,6 +58,19 @@ function Layout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, isLoading } = useAuth();
+
+  useRealtime();
+
+  // Redirect to onboarding if profile is empty
+  useEffect(() => {
+    if (!isLoading && user && (!user.roleTitle || user.roleTitle.trim() === '')) {
+      if (location.pathname !== '/onboarding' && location.pathname !== '/api/auth/google/callback') {
+        navigate('/onboarding');
+      }
+    }
+  }, [user, isLoading, location.pathname, navigate]);
 
   // Close mobile sidebar on route change
   useEffect(() => {
@@ -131,6 +111,7 @@ function Layout() {
           collapsed={collapsed}
           mobileOpen={mobileOpen}
           onToggle={() => setCollapsed(v => !v)}
+          onCloseMobile={() => setMobileOpen(false)}
         />
       </div>
 
@@ -147,7 +128,7 @@ function Layout() {
         {/* Mobile top bar */}
         <MobileTopBar onOpen={() => setMobileOpen(true)} />
 
-        <main style={{ padding: '2rem 1.5rem' }}>
+        <main>
           <Routes>
             <Route path="/" element={<FeedPage />} />
             <Route path="/project/:id" element={<ProjectPage />} />
@@ -179,7 +160,14 @@ function Layout() {
             <Route path="/bookmarks" element={
               <ProtectedRoute><BookmarksPage /></ProtectedRoute>
             } />
+            <Route path="/admin" element={
+              <AdminRoute><AdminDashboard /></AdminRoute>
+            } />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/onboarding" element={
+              <ProtectedRoute><OnboardingPage /></ProtectedRoute>
+            } />
+            <Route path="/api/auth/google/callback" element={<OAuthCallbackPage />} />
           </Routes>
         </main>
       </div>

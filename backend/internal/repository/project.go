@@ -19,11 +19,11 @@ func NewProjectRepo(db *pgxpool.Pool) *ProjectRepo {
 
 func (r *ProjectRepo) GetAll(ctx context.Context, category, stage, city, role, search string, page, limit int) ([]model.Project, error) {
 	query := `
-		SELECT p.id, p.owner_id, p.title, p.description, p.category, p.stage, p.city, p.website, p.github, p.telegram, p.created_at,
+		SELECT p.id, p.owner_id, p.title, p.description, p.category, p.stage, p.city, p.website, p.github, p.telegram, p.status, p.created_at, p.is_hidden,
 		       u.name as owner_name, u.avatar_url as owner_avatar
 		FROM projects p
 		JOIN users u ON p.owner_id = u.id
-		WHERE 1=1
+		WHERE p.is_hidden = false
 	`
 	var args []interface{}
 	argIdx := 1
@@ -73,7 +73,7 @@ func (r *ProjectRepo) GetAll(ctx context.Context, category, stage, city, role, s
 		var p model.Project
 		var owner model.User
 		err := rows.Scan(
-			&p.ID, &p.OwnerID, &p.Title, &p.Description, &p.Category, &p.Stage, &p.City, &p.Website, &p.Github, &p.Telegram, &p.CreatedAt,
+			&p.ID, &p.OwnerID, &p.Title, &p.Description, &p.Category, &p.Stage, &p.City, &p.Website, &p.Github, &p.Telegram, &p.Status, &p.CreatedAt, &p.IsHidden,
 			&owner.Name, &owner.AvatarURL,
 		)
 		if err != nil {
@@ -112,9 +112,9 @@ func (r *ProjectRepo) GetAll(ctx context.Context, category, stage, city, role, s
 
 func (r *ProjectRepo) GetPublicProjectsByOwner(ctx context.Context, ownerID string) ([]model.Project, error) {
 	query := `
-		SELECT id, owner_id, title, description, category, stage, city, website, github, telegram, created_at
+		SELECT id, owner_id, title, description, category, stage, city, website, github, telegram, status, created_at, is_hidden
 		FROM projects
-		WHERE owner_id = $1
+		WHERE owner_id = $1 AND is_hidden = false
 		ORDER BY created_at DESC
 	`
 	rows, err := r.db.Query(ctx, query, ownerID)
@@ -126,7 +126,7 @@ func (r *ProjectRepo) GetPublicProjectsByOwner(ctx context.Context, ownerID stri
 	var projects []model.Project
 	for rows.Next() {
 		var p model.Project
-		if err := rows.Scan(&p.ID, &p.OwnerID, &p.Title, &p.Description, &p.Category, &p.Stage, &p.City, &p.Website, &p.Github, &p.Telegram, &p.CreatedAt); err != nil {
+		if err := rows.Scan(&p.ID, &p.OwnerID, &p.Title, &p.Description, &p.Category, &p.Stage, &p.City, &p.Website, &p.Github, &p.Telegram, &p.Status, &p.CreatedAt, &p.IsHidden); err != nil {
 			return nil, err
 		}
 		
@@ -147,7 +147,7 @@ func (r *ProjectRepo) GetPublicProjectsByOwner(ctx context.Context, ownerID stri
 
 func (r *ProjectRepo) GetByID(ctx context.Context, id string) (*model.Project, error) {
 	query := `
-		SELECT p.id, p.owner_id, p.title, p.description, p.category, p.stage, p.city, p.website, p.github, p.telegram, p.created_at,
+		SELECT p.id, p.owner_id, p.title, p.description, p.category, p.stage, p.city, p.website, p.github, p.telegram, p.status, p.created_at, p.is_hidden,
 		       u.name as owner_name, u.avatar_url as owner_avatar
 		FROM projects p
 		JOIN users u ON p.owner_id = u.id
@@ -156,7 +156,7 @@ func (r *ProjectRepo) GetByID(ctx context.Context, id string) (*model.Project, e
 	var p model.Project
 	var owner model.User
 	err := r.db.QueryRow(ctx, query, id).Scan(
-		&p.ID, &p.OwnerID, &p.Title, &p.Description, &p.Category, &p.Stage, &p.City, &p.Website, &p.Github, &p.Telegram, &p.CreatedAt,
+		&p.ID, &p.OwnerID, &p.Title, &p.Description, &p.Category, &p.Stage, &p.City, &p.Website, &p.Github, &p.Telegram, &p.Status, &p.CreatedAt, &p.IsHidden,
 		&owner.Name, &owner.AvatarURL,
 	)
 	if err != nil {
@@ -214,11 +214,11 @@ func (r *ProjectRepo) Create(ctx context.Context, p *model.Project) error {
 	defer tx.Rollback(ctx)
 
 	query := `
-		INSERT INTO projects (owner_id, title, description, category, stage, city, website, github, telegram)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO projects (owner_id, title, description, category, stage, city, website, github, telegram, status)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		RETURNING id, created_at
 	`
-	err = tx.QueryRow(ctx, query, p.OwnerID, p.Title, p.Description, p.Category, p.Stage, p.City, p.Website, p.Github, p.Telegram).Scan(&p.ID, &p.CreatedAt)
+	err = tx.QueryRow(ctx, query, p.OwnerID, p.Title, p.Description, p.Category, p.Stage, p.City, p.Website, p.Github, p.Telegram, p.Status).Scan(&p.ID, &p.CreatedAt)
 	if err != nil {
 		return err
 	}
@@ -274,9 +274,9 @@ func (r *ProjectRepo) Update(ctx context.Context, p *model.Project, ownerID stri
 	_, err = tx.Exec(ctx, `
 		UPDATE projects SET
 			title = $1, description = $2, category = $3, stage = $4,
-			city = $5, website = $6, github = $7, telegram = $8
-		WHERE id = $9
-	`, p.Title, p.Description, p.Category, p.Stage, p.City, p.Website, p.Github, p.Telegram, p.ID)
+			city = $5, website = $6, github = $7, telegram = $8, status = $9
+		WHERE id = $10
+	`, p.Title, p.Description, p.Category, p.Stage, p.City, p.Website, p.Github, p.Telegram, p.Status, p.ID)
 	if err != nil {
 		return err
 	}
@@ -310,4 +310,77 @@ func (r *ProjectRepo) Update(ctx context.Context, p *model.Project, ownerID stri
 	}
 
 	return tx.Commit(ctx)
+}
+
+func (r *ProjectRepo) UpdateStatus(ctx context.Context, id, ownerID, status string) error {
+	query := `UPDATE projects SET status = $1 WHERE id = $2 AND owner_id = $3`
+	res, err := r.db.Exec(ctx, query, status, id, ownerID)
+	if err != nil {
+		return err
+	}
+	if res.RowsAffected() == 0 {
+		return fmt.Errorf("forbidden or not found")
+	}
+	return nil
+}
+
+func (r *ProjectRepo) UpdateRoleStatus(ctx context.Context, roleID, ownerID, status string) error {
+	// First verify that the owner owns the project this role belongs to
+	query := `
+		UPDATE open_roles 
+		SET status = $1 
+		WHERE id = $2 
+		AND EXISTS (SELECT 1 FROM projects WHERE id = open_roles.project_id AND owner_id = $3)
+	`
+	res, err := r.db.Exec(ctx, query, status, roleID, ownerID)
+	if err != nil {
+		return err
+	}
+	if res.RowsAffected() == 0 {
+		return fmt.Errorf("forbidden or not found")
+	}
+	return nil
+}
+
+func (r *ProjectRepo) Delete(ctx context.Context, id string) error {
+	query := `DELETE FROM projects WHERE id = $1`
+	_, err := r.db.Exec(ctx, query, id)
+	return err
+}
+
+func (r *ProjectRepo) GetAllAdmin(ctx context.Context) ([]model.Project, error) {
+	query := `
+		SELECT p.id, p.owner_id, p.title, p.description, p.category, p.stage, p.city, p.website, p.github, p.telegram, p.status, p.created_at, p.is_hidden,
+		       u.name as owner_name, u.avatar_url as owner_avatar
+		FROM projects p
+		JOIN users u ON p.owner_id = u.id
+		ORDER BY p.created_at DESC
+	`
+	rows, err := r.db.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var projects []model.Project
+	for rows.Next() {
+		var p model.Project
+		var owner model.User
+		err := rows.Scan(
+			&p.ID, &p.OwnerID, &p.Title, &p.Description, &p.Category, &p.Stage, &p.City, &p.Website, &p.Github, &p.Telegram, &p.Status, &p.CreatedAt, &p.IsHidden,
+			&owner.Name, &owner.AvatarURL,
+		)
+		if err != nil {
+			return nil, err
+		}
+		p.Owner = &owner
+		projects = append(projects, p)
+	}
+	return projects, nil
+}
+
+func (r *ProjectRepo) ToggleHide(ctx context.Context, id string) error {
+	query := `UPDATE projects SET is_hidden = NOT is_hidden WHERE id = $1`
+	_, err := r.db.Exec(ctx, query, id)
+	return err
 }

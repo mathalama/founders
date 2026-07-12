@@ -11,18 +11,20 @@ import (
 )
 
 type ApplicationHandler struct {
-	appRepo  *repository.ApplicationRepo
-	userRepo *repository.UserRepo
-	emailSvc *service.EmailService
+	appRepo   *repository.ApplicationRepo
+	userRepo  *repository.UserRepo
+	emailSvc  *service.EmailService
 	notifRepo *repository.NotificationRepo
+	pushSvc   *service.PushService
 }
 
-func NewApplicationHandler(appRepo *repository.ApplicationRepo, userRepo *repository.UserRepo, emailSvc *service.EmailService, notifRepo *repository.NotificationRepo) *ApplicationHandler {
+func NewApplicationHandler(appRepo *repository.ApplicationRepo, userRepo *repository.UserRepo, emailSvc *service.EmailService, notifRepo *repository.NotificationRepo, pushSvc *service.PushService) *ApplicationHandler {
 	return &ApplicationHandler{
 		appRepo:   appRepo,
 		userRepo:  userRepo,
 		emailSvc:  emailSvc,
 		notifRepo: notifRepo,
+		pushSvc:   pushSvc,
 	}
 }
 
@@ -46,7 +48,7 @@ func (h *ApplicationHandler) ApplyToRole(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Fetch details for email notification
-	roleTitle, projectName, ownerEmail, _, ownerID, projectID, err := h.appRepo.GetRoleDetails(r.Context(), roleID)
+	roleTitle, projectName, ownerEmail, _, ownerID, _, err := h.appRepo.GetRoleDetails(r.Context(), roleID)
 	if err != nil {
 		http.Error(w, "Failed to get role details for notification", http.StatusInternalServerError)
 		return
@@ -58,15 +60,14 @@ func (h *ApplicationHandler) ApplyToRole(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Send email
-	if err := h.emailSvc.SendApplicationNotification(ownerEmail, projectName, roleTitle, applicant.Name, req.Message); err != nil {
-		// Log error but don't fail the request since application is saved
-		// log.Printf("Failed to send email: %v", err)
+	// Send email in background if owner has email notifications enabled
+	if owner, _ := h.userRepo.GetByID(r.Context(), ownerID); owner != nil && (owner.EmailNotifications == nil || *owner.EmailNotifications) {
+		h.emailSvc.SendApplicationNotification(ownerEmail, projectName, roleTitle, applicant.Name, req.Message)
 	}
 
 	// Create In-App Notification for Project Owner
 	notifMsg := "Новый отклик от " + applicant.Name + " на роль: " + roleTitle + " (Проект: " + projectName + ")"
-	notifLink := "/project/" + projectID
+	notifLink := "/dashboard"
 	h.notifRepo.Create(r.Context(), ownerID, "new_application", notifMsg, &notifLink)
 
 	w.WriteHeader(http.StatusCreated)

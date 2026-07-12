@@ -7,7 +7,7 @@ function ProfilePage() {
   const { user, setUser } = useAuth();
   const { showToast } = useToast();
   const [formData, setFormData] = useState({
-    roleTitle: '', skills: '', experience: 0, github: '', telegram: '', bio: ''
+    roleTitle: '', skills: '', experience: '', emailNotifications: true, github: '', telegram: '', bio: ''
   });
 
   useEffect(() => {
@@ -15,7 +15,8 @@ function ProfilePage() {
       setFormData({
         roleTitle: user.roleTitle || '',
         skills: user.skills ? user.skills.join(', ') : '',
-        experience: user.experience || 0,
+        experience: user.experience || '',
+        emailNotifications: user.emailNotifications !== false, // default true
         github: user.github || '',
         telegram: user.telegram || '',
         bio: user.bio || ''
@@ -24,7 +25,11 @@ function ProfilePage() {
   }, [user]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, type, checked } = e.target;
+    setFormData({ 
+      ...formData, 
+      [name]: type === 'checkbox' ? checked : value 
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -33,7 +38,8 @@ function ProfilePage() {
       const payload = {
         ...formData,
         skills: formData.skills.split(',').map(s => s.trim()).filter(s => s !== ''),
-        experience: parseInt(formData.experience) || 0
+        experience: formData.experience,
+        emailNotifications: formData.emailNotifications
       };
 
       const res = await fetchWithAuth('/api/profile', {
@@ -108,8 +114,8 @@ function ProfilePage() {
         </div>
 
         <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Опыт (лет)</label>
-          <input name="experience" type="number" min="0" value={formData.experience} onChange={handleChange} className="input" />
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Опыт</label>
+          <input name="experience" type="text" value={formData.experience} onChange={handleChange} className="input" placeholder="Например: 3 года, Junior, Middle..." />
         </div>
 
         <div style={{ display: 'flex', gap: '1rem' }}>
@@ -126,6 +132,84 @@ function ProfilePage() {
         <div>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>О себе</label>
           <textarea name="bio" value={formData.bio} onChange={handleChange} className="textarea" rows="3" placeholder="Пару слов о себе"></textarea>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+          <input 
+            type="checkbox" 
+            id="emailNotifications" 
+            name="emailNotifications" 
+            checked={formData.emailNotifications} 
+            onChange={handleChange} 
+            style={{ width: '1.2rem', height: '1.2rem', accentColor: 'var(--primary)' }}
+          />
+          <label htmlFor="emailNotifications" style={{ fontWeight: 500, cursor: 'pointer' }}>
+            Получать уведомления на почту (Email)
+          </label>
+        </div>
+
+        <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: 'var(--bg)', borderRadius: '0.5rem', border: '1px solid var(--border)' }}>
+          <h3 style={{ marginBottom: '0.5rem' }}>Web-Push Уведомления</h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+            Включите уведомления, чтобы мгновенно узнавать о новых сообщениях и откликах, даже когда вкладка закрыта.
+          </p>
+          <button 
+            type="button" 
+            className="btn btn-secondary" 
+            onClick={async () => {
+              try {
+                if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                  showToast('Ваш браузер не поддерживает Push-уведомления', 'error');
+                  return;
+                }
+                
+                const registration = await navigator.serviceWorker.ready;
+                const permission = await Notification.requestPermission();
+                
+                if (permission !== 'granted') {
+                  showToast('Вы заблокировали уведомления. Разрешите их в настройках браузера.', 'error');
+                  return;
+                }
+
+                const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+                if (!VAPID_PUBLIC_KEY) {
+                  showToast('Ошибка конфигурации: VAPID ключ не найден', 'error');
+                  return;
+                }
+
+                const urlBase64ToUint8Array = (base64String) => {
+                  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+                  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+                  const rawData = window.atob(base64);
+                  const outputArray = new Uint8Array(rawData.length);
+                  for (let i = 0; i < rawData.length; ++i) {
+                    outputArray[i] = rawData.charCodeAt(i);
+                  }
+                  return outputArray;
+                };
+
+                let subscription = await registration.pushManager.getSubscription();
+                if (!subscription) {
+                  subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+                  });
+                }
+
+                await fetchWithAuth('/api/notifications/subscribe', {
+                  method: 'POST',
+                  body: JSON.stringify(subscription),
+                });
+                
+                showToast('Push-уведомления успешно включены!', 'success');
+              } catch (error) {
+                console.error('Error registering push:', error);
+                showToast('Произошла ошибка при включении уведомлений', 'error');
+              }
+            }}
+          >
+            Включить Web-Push
+          </button>
         </div>
 
         <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem' }}>Сохранить</button>

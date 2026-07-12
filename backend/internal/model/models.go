@@ -12,11 +12,24 @@ type User struct {
 	AvatarURL  *string   `json:"avatarUrl,omitempty"`
 	RoleTitle  *string   `json:"roleTitle,omitempty"`
 	Skills     []string  `json:"skills,omitempty"`
-	Experience *int      `json:"experience,omitempty"`
-	Github     *string   `json:"github,omitempty"`
+	Experience         *string   `json:"experience,omitempty"`
+	EmailNotifications *bool     `json:"emailNotifications,omitempty"`
+	Github             *string   `json:"github,omitempty"`
 	Telegram   *string   `json:"telegram,omitempty"`
 	Bio        *string   `json:"bio,omitempty"`
+	IsAdmin    bool      `json:"isAdmin"`
+	IsBanned   bool      `json:"isBanned"`
 	CreatedAt  time.Time `json:"createdAt"`
+}
+
+type AdminUserDTO struct {
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	RoleTitle *string   `json:"roleTitle,omitempty"`
+	IsAdmin   bool      `json:"isAdmin"`
+	IsBanned  bool      `json:"isBanned"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 type Project struct {
@@ -30,7 +43,9 @@ type Project struct {
 	Website     *string   `json:"website,omitempty"`
 	Github      *string   `json:"github,omitempty"`
 	Telegram    string    `json:"telegram"`
+	Status      string    `json:"status"`
 	CreatedAt   time.Time `json:"createdAt"`
+	IsHidden    bool      `json:"isHidden"`
 	Owner       *User     `json:"owner,omitempty"`
 	Team        []TeamMember `json:"team,omitempty"`
 	Roles       []OpenRole   `json:"roles,omitempty"`
@@ -79,4 +94,13 @@ type Message struct {
 	Content    string    `json:"content"`
 	IsRead     bool      `json:"isRead"`
 	CreatedAt  time.Time `json:"createdAt"`
+}
+
+type PushSubscription struct {
+	ID        string    `json:"id"`
+	UserID    string    `json:"userId"`
+	Endpoint  string    `json:"endpoint"`
+	P256dh    string    `json:"p256dh"`
+	Auth      string    `json:"auth"`
+	CreatedAt time.Time `json:"createdAt"`
 }

@@ -1,11 +1,8 @@
 {$FRONTEND_DOMAIN:localhost} {
-    handle {
-        reverse_proxy frontend:80
-    }
-}
-
-{$BACKEND_DOMAIN:api.localhost} {
     handle /api/* {
         reverse_proxy backend:8080
+    }
+    handle {
+        reverse_proxy frontend:80
     }
 }

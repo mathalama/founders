@@ -70,6 +70,7 @@ function MessagesPage() {
     onSuccess: (newMsg) => {
       queryClient.setQueryData(['chat', otherUserId], (old) => {
         if (!old) return old;
+        if (old.chatHistory.some(m => m.id === newMsg.id)) return old;
         return { ...old, chatHistory: [...old.chatHistory, newMsg] };
       });
       queryClient.invalidateQueries(['conversations']);
@@ -83,6 +84,27 @@ function MessagesPage() {
     if (!messageText.trim() || !otherUserId) return;
     sendMessageMutation.mutate(messageText);
   };
+
+  useEffect(() => {
+    const handleNewMessage = (e) => {
+      const msg = e.detail;
+      // If message belongs to this conversation
+      if (msg.senderId === otherUserId || msg.receiverId === otherUserId) {
+        queryClient.setQueryData(['chat', otherUserId], (old) => {
+          if (!old) return old;
+          // Avoid duplicates
+          if (old.chatHistory.some(m => m.id === msg.id)) return old;
+          return { ...old, chatHistory: [...old.chatHistory, msg] };
+        });
+        scrollToBottom();
+      }
+      // Invalidate conversations list to update last message
+      queryClient.invalidateQueries(['conversations']);
+    };
+
+    window.addEventListener('new_message', handleNewMessage);
+    return () => window.removeEventListener('new_message', handleNewMessage);
+  }, [otherUserId, queryClient]);
 
   // Mobile layout: show only list OR chat
   const isMobile = window.innerWidth <= 768;
@@ -196,11 +218,11 @@ function MessagesPage() {
                           borderBottomRightRadius: isMine ? '0' : '1rem',
                           borderBottomLeftRadius: isMine ? '1rem' : '0',
                           background: isMine ? 'var(--primary)' : 'var(--surface)',
-                          color: isMine ? 'white' : 'var(--text-primary)',
+                          color: isMine ? 'var(--primary-content)' : 'var(--text-primary)',
                           boxShadow: 'var(--shadow-sm)',
                         }}>
                           <div style={{ lineHeight: 1.5, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{msg.content}</div>
-                          <div style={{ fontSize: '10px', textAlign: 'right', marginTop: '4px', opacity: 0.7, color: isMine ? 'rgba(255,255,255,0.8)' : 'var(--text-muted)' }}>
+                          <div style={{ fontSize: '10px', textAlign: 'right', marginTop: '4px', opacity: 0.7, color: isMine ? 'var(--primary-content)' : 'var(--text-muted)' }}>
                             {new Date(msg.createdAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
                           </div>
                         </div>
