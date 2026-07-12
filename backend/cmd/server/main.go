@@ -122,6 +122,8 @@ func main() {
 		r.Put("/api/notifications/read-all", notifHandler.MarkAllAsRead)
 		r.Delete("/api/notifications/{id}", notifHandler.DeleteNotification)
 		r.Delete("/api/notifications/all", notifHandler.DeleteAllNotifications)
+		r.Post("/api/notifications/subscribe", notifHandler.SubscribeToPush)
+		r.Get("/api/notifications/push-key", notifHandler.GetPushPublicKey)
 
 		r.Get("/api/messages", messageHandler.GetConversations)
 		r.Get("/api/messages/{userId}", messageHandler.GetChatHistory)
@@ -145,7 +147,6 @@ func main() {
 	})
 
 	r.Get("/api/ws", handler.WSConnect)
-	r.Post("/api/notifications/subscribe", notifHandler.SubscribeToPush)
 
 	// Public routes
 	r.Get("/api/users/{id}", userHandler.GetPublicProfile)

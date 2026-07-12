@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/mathalama/nucla-backend/internal/middleware"
@@ -120,4 +121,15 @@ func (h *NotificationHandler) SubscribeToPush(w http.ResponseWriter, r *http.Req
 	}
 
 	w.WriteHeader(http.StatusCreated)
+}
+
+func (h *NotificationHandler) GetPushPublicKey(w http.ResponseWriter, r *http.Request) {
+	key := os.Getenv("VAPID_PUBLIC_KEY")
+	if key == "" {
+		http.Error(w, "VAPID public key not configured on server", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"publicKey": key})
 }

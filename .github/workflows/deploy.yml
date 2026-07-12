@@ -43,9 +43,7 @@ jobs:
         run: |
           echo "${{ secrets.ENV_FILE }}" > .env.temp
           VITE_API_URL=$(grep '^VITE_API_URL=' .env.temp | cut -d '=' -f2-)
-          VAPID_PUBLIC_KEY=$(grep '^VAPID_PUBLIC_KEY=' .env.temp | cut -d '=' -f2-)
           echo "VITE_API_URL=$VITE_API_URL" >> $GITHUB_ENV
-          echo "VAPID_PUBLIC_KEY=$VAPID_PUBLIC_KEY" >> $GITHUB_ENV
           rm .env.temp
 
       - name: Build and push Frontend
@@ -58,7 +56,6 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             VITE_API_URL=${{ env.VITE_API_URL }}
-            VITE_VAPID_PUBLIC_KEY=${{ env.VAPID_PUBLIC_KEY }}
 
       - name: Copy deployment files via scp
         uses: appleboy/scp-action@v0.1.7

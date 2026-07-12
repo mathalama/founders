@@ -171,7 +171,17 @@ function ProfilePage() {
                   return;
                 }
 
-                const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BABht7RX5z4s-YgnW6EYOJL4h1NR7ikPt-QeAwNCZ4PTMuJP5vtcOO3Ww8IZmFakGthIczW6CLEfBL2WkPn24AM';
+                // Fetch VAPID public key from backend
+                const keyRes = await fetchWithAuth('/api/notifications/push-key');
+                if (!keyRes.ok) {
+                  showToast('Не удалось получить ключ конфигурации push-уведомлений', 'error');
+                  return;
+                }
+                const { publicKey: VAPID_PUBLIC_KEY } = await keyRes.json();
+                if (!VAPID_PUBLIC_KEY) {
+                  showToast('Ошибка конфигурации: VAPID ключ не найден на сервере', 'error');
+                  return;
+                }
 
                 const urlBase64ToUint8Array = (base64String) => {
                   const padding = '='.repeat((4 - base64String.length % 4) % 4);
