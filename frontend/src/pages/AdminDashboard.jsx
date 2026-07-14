@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchWithAuth } from '../api/client';
 import { useToast } from '../context/ToastContext';
-import { FiUsers, FiFolder, FiTrash2, FiShield, FiSlash, FiEyeOff, FiPieChart, FiDownload, FiMail } from 'react-icons/fi';
+import { FiUsers, FiFolder, FiTrash2, FiShield, FiSlash, FiEyeOff, FiPieChart, FiDownload, FiMail, FiMessageSquare } from 'react-icons/fi';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('stats');
@@ -86,6 +86,32 @@ const AdminDashboard = () => {
     }
   });
 
+  const { data: posts, isLoading: postsLoading } = useQuery({
+    queryKey: ['adminPosts'],
+    queryFn: async () => {
+      const res = await fetchWithAuth('/api/admin/posts');
+      if (!res.ok) throw new Error('Failed to load posts');
+      return res.json();
+    }
+  });
+
+  const deletePostMutation = useMutation({
+    mutationFn: async (id) => fetchWithAuth(`/api/admin/posts/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminPosts'] });
+      showToast('Пост/комментарий удален', 'success');
+    },
+    onError: () => {
+      showToast('Ошибка при удалении поста', 'error');
+    }
+  });
+
+  const handleDeletePost = (id) => {
+    if (window.confirm('Вы уверены, что хотите удалить этот пост? Все связанные ответы также будут удалены.')) {
+      deletePostMutation.mutate(id);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-8">
@@ -122,6 +148,12 @@ const AdminDashboard = () => {
           className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${activeTab === 'projects' ? 'bg-[var(--surface-raised)] font-medium' : 'text-[var(--text-secondary)] hover:bg-[var(--surface)]'}`}
         >
           <FiFolder /> Проекты
+        </button>
+        <button
+          onClick={() => setActiveTab('posts')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${activeTab === 'posts' ? 'bg-[var(--surface-raised)] font-medium' : 'text-[var(--text-secondary)] hover:bg-[var(--surface)]'}`}
+        >
+          <FiMessageSquare /> Обсуждения
         </button>
         <button
           onClick={() => setActiveTab('newsletter')}
@@ -232,6 +264,68 @@ const AdminDashboard = () => {
                       </td>
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'posts' && (
+        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl overflow-hidden">
+          {postsLoading ? <div className="p-8 text-center">Загрузка обсуждений...</div> : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-[var(--surface-raised)] text-[var(--text-secondary)] text-sm">
+                    <th className="p-4 font-medium">Автор</th>
+                    <th className="p-4 font-medium">Тип</th>
+                    <th className="p-4 font-medium">Содержание</th>
+                    <th className="p-4 font-medium">Дата создания</th>
+                    <th className="p-4 font-medium text-right">Действия</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--border)]">
+                  {posts && posts.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="p-8 text-center text-[var(--text-muted)]">
+                        Обсуждений пока нет
+                      </td>
+                    </tr>
+                  ) : (
+                    posts?.map(post => (
+                      <tr key={post.id} className="hover:bg-[var(--surface-raised)] transition-colors">
+                        <td className="p-4 font-medium">
+                          <div>{post.user?.name}</div>
+                          <div className="text-xs text-[var(--text-secondary)]">{post.user?.roleTitle || 'Участник'}</div>
+                        </td>
+                        <td className="p-4">
+                          {post.parentId ? (
+                            <span className="px-2 py-1 bg-[var(--surface-raised)] border border-[var(--border)] rounded text-xs text-[var(--text-secondary)]">Ответ</span>
+                          ) : (
+                            <span className="px-2 py-1 bg-violet-500/10 border border-violet-500/20 text-violet-500 rounded text-xs font-semibold">Главный тред</span>
+                          )}
+                        </td>
+                        <td className="p-4 max-w-sm">
+                          <div className="truncate text-sm text-[var(--text-primary)]" title={post.content}>
+                            {post.content}
+                          </div>
+                        </td>
+                        <td className="p-4 text-sm text-[var(--text-secondary)]">
+                          {new Date(post.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </td>
+                        <td className="p-4 text-right">
+                          <button
+                            onClick={() => handleDeletePost(post.id)}
+                            className="p-2 text-red-500 hover:bg-red-500/10 rounded"
+                            title="Удалить"
+                          >
+                            <FiTrash2 size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

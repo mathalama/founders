@@ -15,13 +15,15 @@ import (
 type AdminHandler struct {
 	userRepo    *repository.UserRepo
 	projectRepo *repository.ProjectRepo
+	postRepo    *repository.PostRepo
 	emailSvc    *service.EmailService
 }
 
-func NewAdminHandler(userRepo *repository.UserRepo, projectRepo *repository.ProjectRepo, emailSvc *service.EmailService) *AdminHandler {
+func NewAdminHandler(userRepo *repository.UserRepo, projectRepo *repository.ProjectRepo, postRepo *repository.PostRepo, emailSvc *service.EmailService) *AdminHandler {
 	return &AdminHandler{
 		userRepo:    userRepo,
 		projectRepo: projectRepo,
+		postRepo:    postRepo,
 		emailSvc:    emailSvc,
 	}
 }
@@ -159,4 +161,33 @@ func (h *AdminHandler) SendNewsletter(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]int{"sentCount": count})
+}
+
+func (h *AdminHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
+	posts, err := h.postRepo.GetAllAdmin(r.Context())
+	if err != nil {
+		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(posts)
+}
+
+func (h *AdminHandler) DeletePost(w http.ResponseWriter, r *http.Request) {
+	adminID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok {
+		adminID = "unknown"
+	}
+	
+	postID := chi.URLParam(r, "id")
+	
+	log.Printf("[AUDIT] Admin user_id=%s initiated deletion of post_id=%s", adminID, postID)
+	
+	err := h.postRepo.Delete(r.Context(), postID)
+	if err != nil {
+		http.Error(w, "Failed to delete post", http.StatusInternalServerError)
+		return
+	}
+	
+	w.WriteHeader(http.StatusOK)
 }

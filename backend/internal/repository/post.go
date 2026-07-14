@@ -135,3 +135,43 @@ func (r *PostRepo) GetByID(ctx context.Context, id string) (*model.Post, error) 
 	p.User = &u
 	return &p, nil
 }
+
+func (r *PostRepo) GetAllAdmin(ctx context.Context) ([]model.Post, error) {
+	query := `
+		SELECT p.id, p.user_id, p.parent_id, p.content, p.created_at,
+		       u.name, u.avatar_url, u.role_title
+		FROM posts p
+		JOIN users u ON p.user_id = u.id
+		ORDER BY p.created_at DESC
+	`
+	rows, err := r.db.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []model.Post
+	for rows.Next() {
+		var p model.Post
+		var u model.PublicUserDTO
+		err := rows.Scan(
+			&p.ID, &p.UserID, &p.ParentID, &p.Content, &p.CreatedAt,
+			&u.Name, &u.AvatarURL, &u.RoleTitle,
+		)
+		if err != nil {
+			return nil, err
+		}
+		p.User = &u
+		posts = append(posts, p)
+	}
+	if posts == nil {
+		posts = []model.Post{}
+	}
+	return posts, nil
+}
+
+func (r *PostRepo) Delete(ctx context.Context, id string) error {
+	query := `DELETE FROM posts WHERE id = $1`
+	_, err := r.db.Exec(ctx, query, id)
+	return err
+}

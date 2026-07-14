@@ -69,7 +69,7 @@ func main() {
 	bookmarkHandler := handler.NewBookmarkHandler(bookmarkRepo)
 	notifHandler := handler.NewNotificationHandler(notifRepo)
 	messageHandler := handler.NewMessageHandler(messageRepo, notifRepo, userRepo, pushSvc)
-	adminHandler := handler.NewAdminHandler(userRepo, projectRepo, emailSvc)
+	adminHandler := handler.NewAdminHandler(userRepo, projectRepo, postRepo, emailSvc)
 	commentHandler := handler.NewCommentHandler(commentRepo)
 	postHandler := handler.NewPostHandler(postRepo)
 
@@ -156,6 +156,9 @@ func main() {
 		r.Get("/api/admin/projects", adminHandler.GetProjects)
 		r.Delete("/api/admin/projects/{id}", adminHandler.DeleteProject)
 		r.Put("/api/admin/projects/{id}/hide", adminHandler.ToggleHideProject)
+
+		r.Get("/api/admin/posts", adminHandler.GetPosts)
+		r.Delete("/api/admin/posts/{id}", adminHandler.DeletePost)
 	})
 
 	r.Get("/api/ws", handler.WSConnect)

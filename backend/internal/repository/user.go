@@ -99,9 +99,52 @@ func (r *UserRepo) ToggleAdmin(ctx context.Context, id string) error {
 }
 
 func (r *UserRepo) ToggleBan(ctx context.Context, id string) error {
-	query := `UPDATE users SET is_banned = NOT is_banned WHERE id = $1`
-	_, err := r.db.Exec(ctx, query, id)
-	return err
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	var isBanned bool
+	err = tx.QueryRow(ctx, "SELECT is_banned FROM users WHERE id = $1", id).Scan(&isBanned)
+	if err != nil {
+		return err
+	}
+
+	newBanned := !isBanned
+	_, err = tx.Exec(ctx, "UPDATE users SET is_banned = $1 WHERE id = $2", newBanned, id)
+	if err != nil {
+		return err
+	}
+
+	if newBanned {
+		// Cascade delete all user's content when they are banned
+		_, err = tx.Exec(ctx, `DELETE FROM applications WHERE user_id = $1`, id)
+		if err != nil { return err }
+
+		_, err = tx.Exec(ctx, `DELETE FROM team_members WHERE user_id = $1`, id)
+		if err != nil { return err }
+
+		_, err = tx.Exec(ctx, `DELETE FROM projects WHERE owner_id = $1`, id)
+		if err != nil { return err }
+
+		_, err = tx.Exec(ctx, `DELETE FROM posts WHERE user_id = $1`, id)
+		if err != nil { return err }
+
+		_, err = tx.Exec(ctx, `DELETE FROM notifications WHERE user_id = $1`, id)
+		if err != nil { return err }
+
+		_, err = tx.Exec(ctx, `DELETE FROM bookmarks WHERE user_id = $1`, id)
+		if err != nil { return err }
+
+		_, err = tx.Exec(ctx, `DELETE FROM messages WHERE sender_id = $1 OR receiver_id = $1`, id)
+		if err != nil { return err }
+
+		_, err = tx.Exec(ctx, `DELETE FROM blocked_users WHERE blocker_id = $1 OR blocked_id = $1`, id)
+		if err != nil { return err }
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (r *UserRepo) Delete(ctx context.Context, id string) error {
