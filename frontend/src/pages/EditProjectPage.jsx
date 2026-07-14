@@ -324,14 +324,15 @@ function EditProjectPage() {
                     onChange={e => updateRole(idx, 'title', e.target.value)}
                   />
                 </div>
-                <div style={{ width: '90px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', fontWeight: 500 }}>Мест:</span>
                   <input
                     type="number"
                     className="input"
-                    placeholder="Мест"
                     min="1"
                     value={role.slots || 1}
                     onChange={e => updateRole(idx, 'slots', parseInt(e.target.value) || 1)}
+                    style={{ width: '64px', textAlign: 'center', padding: '0.625rem 0.375rem' }}
                   />
                 </div>
                 <button
