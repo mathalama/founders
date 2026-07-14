@@ -307,31 +307,53 @@ function EditProjectPage() {
               key={role.id || idx}
               style={{
                 display: 'flex',
-                gap: '0.625rem',
-                flexWrap: 'wrap',
-                alignItems: 'flex-start',
-                padding: '0.875rem',
-                background: 'var(--bg)',
+                flexDirection: 'column',
+                gap: '0.75rem',
+                padding: '1rem',
+                background: 'var(--surface-raised)',
                 borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border)',
               }}
             >
-              <input
-                className="input"
-                style={{ flex: '1 1 160px' }}
-                value={role.title}
-                placeholder="Название роли (Frontend, Backend...)"
-                onChange={e => updateRole(idx, 'title', e.target.value)}
-              />
-              <input
-                className="input"
-                style={{ flex: '2 1 220px' }}
-                value={role.skills}
-                placeholder="Навыки (React, TypeScript...)"
-                onChange={e => updateRole(idx, 'skills', e.target.value)}
-              />
-              <button type="button" onClick={() => removeRole(idx)} className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', padding: '0.375rem', alignSelf: 'center' }}>
-                <FiTrash2 size={14} />
-              </button>
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                <div style={{ flex: 1 }}>
+                  <input
+                    className="input"
+                    placeholder="Название роли (Frontend, Backend...)"
+                    value={role.title}
+                    onChange={e => updateRole(idx, 'title', e.target.value)}
+                  />
+                </div>
+                <div style={{ width: '90px' }}>
+                  <input
+                    type="number"
+                    className="input"
+                    placeholder="Мест"
+                    min="1"
+                    value={role.slots || 1}
+                    onChange={e => updateRole(idx, 'slots', parseInt(e.target.value) || 1)}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeRole(idx)}
+                  className="btn btn-ghost btn-sm"
+                  style={{ color: 'var(--danger)', padding: '0.5rem' }}
+                  title="Удалить роль"
+                >
+                  <FiTrash2 size={16} />
+                </button>
+              </div>
+              <div>
+                <textarea
+                  className="textarea"
+                  placeholder="Требования к опыту, стек технологий, задачи..."
+                  rows={2}
+                  value={role.skills}
+                  onChange={e => updateRole(idx, 'skills', e.target.value)}
+                  style={{ minHeight: '60px' }}
+                />
+              </div>
             </div>
           ))}
         </div>

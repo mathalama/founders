@@ -52,6 +52,7 @@ func main() {
 	bookmarkRepo := repository.NewBookmarkRepo(pool)
 	notifRepo := repository.NewNotificationRepo(pool)
 	messageRepo := repository.NewMessageRepo(pool)
+	commentRepo := repository.NewCommentRepo(pool)
 	
 	// Init Services
 	emailSvc := service.NewEmailService()
@@ -68,6 +69,7 @@ func main() {
 	notifHandler := handler.NewNotificationHandler(notifRepo)
 	messageHandler := handler.NewMessageHandler(messageRepo, notifRepo, pushSvc)
 	adminHandler := handler.NewAdminHandler(userRepo, projectRepo, emailSvc)
+	commentHandler := handler.NewCommentHandler(commentRepo)
 
 	r := chi.NewRouter()
 
@@ -107,6 +109,7 @@ func main() {
 		r.Put("/api/projects/{id}/roles/{roleId}/status", projectHandler.UpdateRoleStatus)
 		r.Put("/api/profile", profileHandler.UpdateProfile)
 		r.Post("/api/projects/{id}/roles/{roleId}/apply", applicationHandler.ApplyToRole)
+		r.Post("/api/projects/{id}/comments", commentHandler.CreateComment)
 		
 		r.Get("/api/dashboard/projects", dashboardHandler.GetMyProjects)
 		r.Put("/api/dashboard/roles/{roleId}/status", dashboardHandler.UpdateRoleStatus)
@@ -152,6 +155,7 @@ func main() {
 	r.Get("/api/users/{id}", userHandler.GetPublicProfile)
 	r.Get("/api/projects", projectHandler.ListProjects)
 	r.Get("/api/projects/{id}", projectHandler.GetProject)
+	r.Get("/api/projects/{id}/comments", commentHandler.ListComments)
 
 	port := os.Getenv("PORT")
 	if port == "" {

@@ -14,6 +14,7 @@ import EmptyState from '../components/EmptyState';
 import Avatar from '../components/ui/Avatar';
 import Badge from '../components/ui/Badge';
 import Modal from '../components/ui/Modal';
+import ProjectComments from '../components/ProjectComments';
 
 // Role status badge
 function RoleStatusBadge({ status, applications = 0 }) {
@@ -340,54 +341,76 @@ function ProjectPage() {
               className="bento-card"
               style={{
                 display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '1rem 1.25rem',
+                flexDirection: 'column',
+                gap: '0.75rem',
+                padding: '1.25rem',
                 opacity: role.status === 'closed' ? 0.55 : 1,
               }}
             >
-              <div>
-                <h4 style={{ marginBottom: '0.25rem' }}>{role.title}</h4>
-                <div style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)' }}>{role.skills}</div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <RoleStatusBadge status={role.status} />
-                
-                {isOwner && (
-                  <button
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => toggleRoleStatusMutation.mutate({ 
-                      roleId: role.id, 
-                      newStatus: role.status === 'closed' ? 'open' : 'closed' 
-                    })}
-                    title={role.status === 'closed' ? 'Открыть вакансию' : 'Закрыть вакансию (нашли человека)'}
-                  >
-                    {role.status === 'closed' ? 'Открыть' : 'Закрыть'}
-                  </button>
-                )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <h4 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {role.title}
+                  {role.slots > 1 && (
+                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', fontWeight: 500 }}>
+                      ({role.slots} {role.slots === 2 || role.slots === 3 || role.slots === 4 ? 'места' : 'мест'})
+                    </span>
+                  )}
+                </h4>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <RoleStatusBadge status={role.status} />
+                  
+                  {isOwner && (
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => toggleRoleStatusMutation.mutate({ 
+                        roleId: role.id, 
+                        newStatus: role.status === 'closed' ? 'open' : 'closed' 
+                      })}
+                      title={role.status === 'closed' ? 'Открыть вакансию' : 'Закрыть вакансию (нашли человека)'}
+                    >
+                      {role.status === 'closed' ? 'Открыть' : 'Закрыть'}
+                    </button>
+                  )}
 
-                {project.status !== 'closed' && role.status !== 'closed' && !isOwner && !appliedRoleIds.has(role.id) && (
-                  <button
-                    className="btn btn-primary btn-sm"
-                    style={{ animation: 'pulse-ring 2s ease infinite' }}
-                    onClick={() => {
-                      if (!user) {
-                        showToast('Войдите в систему', 'info');
-                        return;
-                      }
-                      setSelectedRole(role);
-                      setShowModal(true);
-                    }}
-                  >
-                    Откликнуться
-                  </button>
-                )}
-                {appliedRoleIds.has(role.id) && (
-                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <FiCheck size={14} /> Отклик отправлен
-                  </span>
-                )}
+                  {project.status !== 'closed' && role.status !== 'closed' && !isOwner && !appliedRoleIds.has(role.id) && (
+                    <button
+                      className="btn btn-primary btn-sm"
+                      style={{ animation: 'pulse-ring 2s ease infinite' }}
+                      onClick={() => {
+                        if (!user) {
+                          showToast('Войдите в систему', 'info');
+                          return;
+                        }
+                        setSelectedRole(role);
+                        setShowModal(true);
+                      }}
+                    >
+                      Откликнуться
+                    </button>
+                  )}
+                  {appliedRoleIds.has(role.id) && (
+                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <FiCheck size={14} /> Отклик отправлен
+                    </span>
+                  )}
+                </div>
               </div>
+              
+              {role.skills && role.skills.trim() !== '' && (
+                <div 
+                  style={{ 
+                    color: 'var(--text-secondary)', 
+                    fontSize: 'var(--text-sm)', 
+                    lineHeight: 1.5, 
+                    whiteSpace: 'pre-wrap',
+                    borderTop: '1px solid var(--border)',
+                    paddingTop: '0.75rem',
+                    marginTop: '0.25rem'
+                  }}
+                >
+                  {role.skills}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -452,6 +475,9 @@ function ProjectPage() {
           </div>
         </>
       )}
+
+      <hr className="divider" />
+      <ProjectComments projectId={id} />
 
       {/* Apply Modal */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)}>

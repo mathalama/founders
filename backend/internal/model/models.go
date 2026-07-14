@@ -105,3 +105,14 @@ type PushSubscription struct {
 	Auth      string    `json:"auth"`
 	CreatedAt time.Time `json:"createdAt"`
 }
+
+type Comment struct {
+	ID        string    `json:"id"`
+	ProjectID string    `json:"projectId"`
+	UserID    string    `json:"userId"`
+	ParentID  *string   `json:"parentId,omitempty"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"createdAt"`
+	User      *User     `json:"user,omitempty"`
+}
+

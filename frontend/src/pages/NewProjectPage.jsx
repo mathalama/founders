@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchWithAuth } from '../api/client';
 import RichTextEditor from '../components/RichTextEditor';
+import { FiTrash2 } from 'react-icons/fi';
 
 function NewProjectPage() {
   const navigate = useNavigate();
@@ -16,6 +17,14 @@ function NewProjectPage() {
 
   const addRole = () => setRoles([...roles, { title: '', skills: '', slots: 1 }]);
   
+  const removeRole = (index) => {
+    if (roles.length > 1) {
+      setRoles(roles.filter((_, idx) => idx !== index));
+    } else {
+      setRoles([{ title: '', skills: '', slots: 1 }]);
+    }
+  };
+
   const updateRole = (index, field, value) => {
     const newRoles = [...roles];
     newRoles[index][field] = value;
@@ -156,15 +165,56 @@ function NewProjectPage() {
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {roles.map((role, idx) => (
-              <div key={idx} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                <div style={{ flex: 2 }}>
-                  <input className="input" placeholder="Роль (напр. Frontend Dev)" value={role.title} onChange={e => updateRole(idx, 'title', e.target.value)} />
+              <div
+                key={idx}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.75rem',
+                  padding: '1rem',
+                  background: 'var(--surface-raised)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--border)',
+                }}
+              >
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                  <div style={{ flex: 1 }}>
+                    <input
+                      className="input"
+                      placeholder="Роль (напр. Frontend Dev)"
+                      value={role.title}
+                      onChange={e => updateRole(idx, 'title', e.target.value)}
+                    />
+                  </div>
+                  <div style={{ width: '90px' }}>
+                    <input
+                      type="number"
+                      className="input"
+                      placeholder="Мест"
+                      min="1"
+                      value={role.slots}
+                      onChange={e => updateRole(idx, 'slots', parseInt(e.target.value) || 1)}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeRole(idx)}
+                    className="btn btn-ghost btn-sm"
+                    style={{ color: 'var(--danger)', padding: '0.5rem' }}
+                    title="Удалить роль"
+                  >
+                    <FiTrash2 size={16} />
+                  </button>
                 </div>
-                <div style={{ flex: 2 }}>
-                  <input className="input" placeholder="Навыки (через запятую)" value={role.skills} onChange={e => updateRole(idx, 'skills', e.target.value)} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <input type="number" className="input" placeholder="Мест" min="1" value={role.slots} onChange={e => updateRole(idx, 'slots', parseInt(e.target.value))} />
+                <div>
+                  <textarea
+                    className="textarea"
+                    placeholder="Требования к опыту, стек технологий, задачи..."
+                    rows={2}
+                    value={role.skills}
+                    onChange={e => updateRole(idx, 'skills', e.target.value)}
+                    style={{ minHeight: '60px' }}
+                  />
                 </div>
               </div>
             ))}
