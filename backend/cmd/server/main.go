@@ -54,6 +54,7 @@ func main() {
 	messageRepo := repository.NewMessageRepo(pool)
 	commentRepo := repository.NewCommentRepo(pool)
 	postRepo := repository.NewPostRepo(pool)
+	auditRepo := repository.NewAuditLogRepo(pool)
 	
 	// Init Services
 	emailSvc := service.NewEmailService()
@@ -69,7 +70,7 @@ func main() {
 	bookmarkHandler := handler.NewBookmarkHandler(bookmarkRepo)
 	notifHandler := handler.NewNotificationHandler(notifRepo)
 	messageHandler := handler.NewMessageHandler(messageRepo, notifRepo, userRepo, pushSvc)
-	adminHandler := handler.NewAdminHandler(userRepo, projectRepo, postRepo, emailSvc)
+	adminHandler := handler.NewAdminHandler(userRepo, projectRepo, postRepo, auditRepo, emailSvc)
 	commentHandler := handler.NewCommentHandler(commentRepo)
 	postHandler := handler.NewPostHandler(postRepo)
 
@@ -159,6 +160,7 @@ func main() {
 
 		r.Get("/api/admin/posts", adminHandler.GetPosts)
 		r.Delete("/api/admin/posts/{id}", adminHandler.DeletePost)
+		r.Get("/api/admin/audit-logs", adminHandler.GetAuditLogs)
 	})
 
 	r.Get("/api/ws", handler.WSConnect)

@@ -140,3 +140,14 @@ type PublicUserDTO struct {
 	OpenToOffers bool     `json:"openToOffers"`
 }
 
+type AuditLog struct {
+	ID         string    `json:"id"`
+	AdminID    *string   `json:"adminId,omitempty"`
+	AdminName  *string   `json:"adminName,omitempty"`
+	Action     string    `json:"action"`
+	TargetType string    `json:"targetType"`
+	TargetID   string    `json:"targetId"`
+	Details    *string   `json:"details,omitempty"`
+	CreatedAt  time.Time `json:"createdAt"`
+}
+

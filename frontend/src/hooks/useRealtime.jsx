@@ -1,15 +1,27 @@
-import { useEffect, useRef } from 'react';
-import { API_BASE_URL, fetchWithAuth } from '../api/client';
+import { createContext, useContext, useEffect, useRef } from 'react';
+import { API_BASE_URL } from '../api/client';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 
-export const useRealtime = () => {
+const SocketContext = createContext(null);
+
+export const SocketProvider = ({ children }) => {
   const ws = useRef(null);
+  const { user } = useAuth();
 
   useEffect(() => {
+    if (!user) {
+      if (ws.current) {
+        ws.current.onclose = null;
+        ws.current.close();
+        ws.current = null;
+      }
+      return;
+    }
+
     let reconnectTimeout = null;
 
     const connect = () => {
-      // With HttpOnly cookies, we don't need to pass the token in the URL!
       const wsUrl = API_BASE_URL.replace('http', 'ws') + `/api/ws`;
       ws.current = new WebSocket(wsUrl);
 
@@ -28,6 +40,8 @@ export const useRealtime = () => {
               });
             }
             window.dispatchEvent(new CustomEvent('new_message', { detail: data.message }));
+          } else if (data.type === 'typing') {
+            window.dispatchEvent(new CustomEvent('user_typing', { detail: { senderId: data.senderId } }));
           }
         } catch (e) {
           console.error('Failed to parse WS message', e);
@@ -45,18 +59,32 @@ export const useRealtime = () => {
     return () => {
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
       if (ws.current) {
-        // Remove onclose so it doesn't trigger reconnect when unmounting
         ws.current.onclose = null;
         ws.current.close();
+        ws.current = null;
       }
     };
-  }, []);
+  }, [user]);
 
-  return ws;
+  const sendJsonMessage = (msg) => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify(msg));
+    }
+  };
+
+  return (
+    <SocketContext.Provider value={{ sendJsonMessage }}>
+      {children}
+    </SocketContext.Provider>
+  );
+};
+
+export const useSocket = () => {
+  return useContext(SocketContext);
 };
 
 // Utility function
-function urlBase64ToUint8Array(base64String) {
+export function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
   const base64 = (base64String + padding)
     .replace(/\-/g, '+')

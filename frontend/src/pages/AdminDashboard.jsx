@@ -40,12 +40,18 @@ const AdminDashboard = () => {
 
   const toggleAdmin = useMutation({
     mutationFn: async (id) => fetchWithAuth(`/api/admin/users/${id}/admin`, { method: 'PUT' }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['adminUsers'] })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+      queryClient.invalidateQueries({ queryKey: ['adminAuditLogs'] });
+    }
   });
 
   const toggleBan = useMutation({
     mutationFn: async (id) => fetchWithAuth(`/api/admin/users/${id}/ban`, { method: 'PUT' }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['adminUsers'] })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+      queryClient.invalidateQueries({ queryKey: ['adminAuditLogs'] });
+    }
   });
 
   const deleteUser = useMutation({
@@ -53,19 +59,24 @@ const AdminDashboard = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
       queryClient.invalidateQueries({ queryKey: ['adminProjects'] });
+      queryClient.invalidateQueries({ queryKey: ['adminAuditLogs'] });
       showToast('Пользователь удален', 'success');
     }
   });
 
   const toggleHide = useMutation({
     mutationFn: async (id) => fetchWithAuth(`/api/admin/projects/${id}/hide`, { method: 'PUT' }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['adminProjects'] })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminProjects'] });
+      queryClient.invalidateQueries({ queryKey: ['adminAuditLogs'] });
+    }
   });
 
   const deleteProject = useMutation({
     mutationFn: async (id) => fetchWithAuth(`/api/admin/projects/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminProjects'] });
+      queryClient.invalidateQueries({ queryKey: ['adminAuditLogs'] });
       showToast('Проект удален', 'success');
     }
   });
@@ -80,6 +91,7 @@ const AdminDashboard = () => {
       showToast(`Рассылка отправлена ${data.sentCount} пользователям`, 'success');
       setNewsletterSubject('');
       setNewsletterBody('');
+      queryClient.invalidateQueries({ queryKey: ['adminAuditLogs'] });
     },
     onError: (err) => {
       showToast(err.message, 'error');
@@ -99,10 +111,20 @@ const AdminDashboard = () => {
     mutationFn: async (id) => fetchWithAuth(`/api/admin/posts/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminPosts'] });
+      queryClient.invalidateQueries({ queryKey: ['adminAuditLogs'] });
       showToast('Пост/комментарий удален', 'success');
     },
     onError: () => {
       showToast('Ошибка при удалении поста', 'error');
+    }
+  });
+
+  const { data: auditLogs, isLoading: auditLogsLoading } = useQuery({
+    queryKey: ['adminAuditLogs'],
+    queryFn: async () => {
+      const res = await fetchWithAuth('/api/admin/audit-logs');
+      if (!res.ok) throw new Error('Failed to load audit logs');
+      return res.json();
     }
   });
 
@@ -160,6 +182,12 @@ const AdminDashboard = () => {
           className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${activeTab === 'newsletter' ? 'bg-[var(--surface-raised)] font-medium' : 'text-[var(--text-secondary)] hover:bg-[var(--surface)]'}`}
         >
           <FiMail /> Рассылка
+        </button>
+        <button
+          onClick={() => setActiveTab('audit')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${activeTab === 'audit' ? 'bg-[var(--surface-raised)] font-medium' : 'text-[var(--text-secondary)] hover:bg-[var(--surface)]'}`}
+        >
+          <FiShield /> Аудит
         </button>
       </div>
 
@@ -369,6 +397,77 @@ const AdminDashboard = () => {
               <FiMail /> {sendNewsletter.isPending ? 'Отправка...' : 'Отправить рассылку'}
             </button>
           </div>
+        </div>
+      )}
+
+      {activeTab === 'audit' && (
+        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-6">
+          <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+            <FiShield style={{ color: 'var(--accent)' }} /> Журнал аудита действий администрации
+          </h2>
+          {auditLogsLoading ? (
+            <div className="text-center py-8">Загрузка логов аудита...</div>
+          ) : !auditLogs || auditLogs.length === 0 ? (
+            <div className="text-center py-8 text-[var(--text-muted)]">Журнал аудита пуст.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-[var(--border)] pb-2 text-[var(--text-secondary)] text-sm">
+                    <th className="py-3 px-4">Время</th>
+                    <th className="py-3 px-4">Администратор</th>
+                    <th className="py-3 px-4">Действие</th>
+                    <th className="py-3 px-4">Тип цели</th>
+                    <th className="py-3 px-4">ID цели</th>
+                    <th className="py-3 px-4">Подробности</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {auditLogs.map((log) => {
+                    const date = new Date(log.createdAt).toLocaleString('ru-RU', {
+                      day: 'numeric',
+                      month: 'short',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                    });
+                    
+                    let actionBadgeColor = 'var(--text-muted)';
+                    let actionBadgeBg = 'var(--border)';
+                    if (log.action.includes('delete') || log.action.includes('ban')) {
+                      actionBadgeColor = 'var(--danger)';
+                      actionBadgeBg = 'rgba(239, 68, 68, 0.1)';
+                    } else if (log.action.includes('unban') || log.action.includes('show') || log.action.includes('make')) {
+                      actionBadgeColor = 'var(--success)';
+                      actionBadgeBg = 'rgba(34, 197, 94, 0.1)';
+                    }
+
+                    return (
+                      <tr key={log.id} className="border-b border-[var(--border)] hover:bg-[var(--surface-raised)] text-sm">
+                        <td className="py-3 px-4 whitespace-nowrap text-[var(--text-secondary)]">{date}</td>
+                        <td className="py-3 px-4 font-medium">{log.adminName || log.adminId || 'Система'}</td>
+                        <td className="py-3 px-4">
+                          <span style={{
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            padding: '0.125rem 0.5rem',
+                            borderRadius: '100px',
+                            color: actionBadgeColor,
+                            background: actionBadgeBg,
+                          }}>
+                            {log.action}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-[var(--text-secondary)]">{log.targetType}</td>
+                        <td className="py-3 px-4 font-mono text-xs">{log.targetId}</td>
+                        <td className="py-3 px-4 text-[var(--text-secondary)]">{log.details}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </div>

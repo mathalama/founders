@@ -39,7 +39,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import { FiMenu, FiSun, FiMoon } from 'react-icons/fi';
-import { useRealtime } from './hooks/useRealtime';
+import { SocketProvider } from './hooks/useRealtime';
 import { useNavigate } from 'react-router-dom';
 
 // Mobile top bar with burger button
@@ -91,8 +91,6 @@ function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
-
-  useRealtime();
 
   // Redirect to onboarding if profile is empty
   useEffect(() => {
@@ -224,11 +222,13 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          <ToastProvider>
-            <BrowserRouter>
-              <Layout />
-            </BrowserRouter>
-          </ToastProvider>
+          <SocketProvider>
+            <ToastProvider>
+              <BrowserRouter>
+                <Layout />
+              </BrowserRouter>
+            </ToastProvider>
+          </SocketProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

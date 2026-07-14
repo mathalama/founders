@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchWithAuth, API_BASE_URL } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../hooks/useRealtime';
 import EmptyState from '../components/EmptyState';
 import Avatar from '../components/ui/Avatar';
 import Badge from '../components/ui/Badge';
@@ -14,8 +15,12 @@ function MessagesPage() {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
+  const { sendJsonMessage } = useSocket();
   
   const [messageText, setMessageText] = useState('');
+  const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
+  const typingTimeoutRef = useRef(null);
+  const lastTypingSentRef = useRef(0);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -138,6 +143,40 @@ function MessagesPage() {
     window.addEventListener('new_message', handleNewMessage);
     return () => window.removeEventListener('new_message', handleNewMessage);
   }, [otherUserId, queryClient]);
+
+  useEffect(() => {
+    setIsOtherUserTyping(false);
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+    const handleTyping = (e) => {
+      if (e.detail.senderId === otherUserId) {
+        setIsOtherUserTyping(true);
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => {
+          setIsOtherUserTyping(false);
+        }, 4000);
+      }
+    };
+
+    window.addEventListener('user_typing', handleTyping);
+    return () => {
+      window.removeEventListener('user_typing', handleTyping);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    };
+  }, [otherUserId]);
+
+  const handleInputChange = (e) => {
+    setMessageText(e.target.value);
+    if (!otherUserId) return;
+    const now = Date.now();
+    if (now - lastTypingSentRef.current > 2000) {
+      lastTypingSentRef.current = now;
+      sendJsonMessage({
+        action: 'typing',
+        receiverId: otherUserId
+      });
+    }
+  };
 
   // Mobile layout: show only list OR chat
   const isMobile = window.innerWidth <= 768;
@@ -291,6 +330,29 @@ function MessagesPage() {
                     );
                   })
                 )}
+                {isOtherUserTyping && (
+                  <div style={{
+                    alignSelf: 'flex-start',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    color: 'var(--text-secondary)',
+                    fontSize: 'var(--text-xs)',
+                    padding: '0.5rem 1rem',
+                    background: 'var(--surface)',
+                    borderRadius: '1rem',
+                    borderBottomLeftRadius: 0,
+                    boxShadow: 'var(--shadow-sm)',
+                    animation: 'fadeIn 0.2s ease-out'
+                  }}>
+                    <div className="typing-dots">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                    <span>печатает...</span>
+                  </div>
+                )}
                 <div ref={messagesEndRef} />
               </div>
 
@@ -318,7 +380,7 @@ function MessagesPage() {
                     style={{ flex: 1, borderRadius: '2rem', paddingLeft: '1rem' }}
                     placeholder="Написать сообщение..."
                     value={messageText}
-                    onChange={e => setMessageText(e.target.value)}
+                    onChange={handleInputChange}
                   />
                   <button
                     type="submit"
