@@ -13,6 +13,8 @@ import Badge from '../components/ui/Badge';
 import { useAuth } from '../context/AuthContext';
 import PullToRefresh from '../components/ui/PullToRefresh';
 import Modal from '../components/ui/Modal';
+import ThreadsTab from '../components/ThreadsTab';
+import TalentTab from '../components/TalentTab';
 
 // Skeleton card component
 function SkeletonCard({ featured = false }) {
@@ -152,6 +154,7 @@ function ProjectCard({ project, featured = false, index = 0, hasApplied = false 
 
 function FeedPage() {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('projects'); // 'projects', 'threads', 'talents'
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filters, setFilters] = useState({ category: '', stage: '', city: '', role: '' });
@@ -239,209 +242,276 @@ function FeedPage() {
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Search + Filters bar */}
-      <div className="bento-card mobile-filters-card" style={{ marginBottom: '1.5rem', padding: '1.25rem' }}>
-        {/* Search */}
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-          <div className="input-search" style={{ flex: 1, marginBottom: 0 }}>
-            <FiSearch size={16} />
-            <input
-              className="input"
-              placeholder="Поиск проектов по названию или описанию..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              id="feed-search"
-            />
-          </div>
-          <button 
-            className="btn btn-outline filter-mobile" 
-            style={{ padding: '0 1rem' }} 
-            onClick={() => setIsFiltersModalOpen(true)}
-          >
-            <FiFilter size={18} />
-            {hasFilters && (
-              <div style={{ position: 'absolute', top: '-4px', right: '-4px', width: '12px', height: '12px', background: 'var(--primary)', borderRadius: '50%' }} />
-            )}
-          </button>
-        </div>
-
-        {/* Desktop Filters */}
-        <div className="filter-desktop" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <select name="category" className="select" style={{ flex: '1 1 140px' }} value={filters.category} onChange={updateFilter}>
-            <option value="">Все категории</option>
-            <option value="AI">AI</option>
-            <option value="SaaS">SaaS</option>
-            <option value="EdTech">EdTech</option>
-            <option value="FinTech">FinTech</option>
-            <option value="HealthTech">HealthTech</option>
-            <option value="E-commerce">E-commerce</option>
-          </select>
-          <select name="stage" className="select" style={{ flex: '1 1 140px' }} value={filters.stage} onChange={updateFilter}>
-            <option value="">Любая стадия</option>
-            <option value="Идея">Идея</option>
-            <option value="MVP">MVP</option>
-            <option value="Есть пользователи">Есть пользователи</option>
-            <option value="Есть выручка">Есть выручка</option>
-          </select>
-          <select name="city" className="select" style={{ flex: '1 1 140px' }} value={filters.city} onChange={updateFilter}>
-            <option value="">Все города</option>
-            <option value="Astana">Astana</option>
-            <option value="Almaty">Almaty</option>
-            <option value="Remote">Remote</option>
-          </select>
-          <div style={{ flex: '1 1 160px', position: 'relative' }}>
-            <input
-              list="role-filter-suggestions"
-              name="role"
-              className="select"
-              value={filters.role}
-              onChange={updateFilter}
-              placeholder="Роль (любая)"
-              autoComplete="off"
-              style={{ width: '100%' }}
-            />
-            <datalist id="role-filter-suggestions">
-              <option value="Frontend Developer" />
-              <option value="Backend Developer" />
-              <option value="Full Stack Developer" />
-              <option value="Mobile Developer" />
-              <option value="DevOps / SRE" />
-              <option value="Data Scientist" />
-              <option value="ML Engineer" />
-              <option value="UI/UX Designer" />
-              <option value="Product Manager" />
-              <option value="Marketing" />
-              <option value="QA Engineer" />
-            </datalist>
-          </div>
-        </div>
+      {/* Tabs */}
+      <div 
+        style={{ 
+          display: 'flex', 
+          gap: '0.375rem', 
+          marginBottom: '1.5rem', 
+          padding: '0.375rem', 
+          background: 'var(--surface-raised)', 
+          borderRadius: 'var(--radius-lg)',
+          border: '1px solid var(--border)' 
+        }}
+      >
+        <button
+          onClick={() => setActiveTab('projects')}
+          className="btn"
+          style={{
+            flex: 1,
+            background: activeTab === 'projects' ? 'var(--surface)' : 'transparent',
+            border: activeTab === 'projects' ? '1px solid var(--border)' : '1px solid transparent',
+            color: activeTab === 'projects' ? 'var(--text-primary)' : 'var(--text-secondary)',
+            boxShadow: activeTab === 'projects' ? 'var(--shadow-sm)' : 'none',
+            borderRadius: 'calc(var(--radius-lg) - 4px)',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          Проекты
+        </button>
+        <button
+          onClick={() => setActiveTab('threads')}
+          className="btn"
+          style={{
+            flex: 1,
+            background: activeTab === 'threads' ? 'var(--surface)' : 'transparent',
+            border: activeTab === 'threads' ? '1px solid var(--border)' : '1px solid transparent',
+            color: activeTab === 'threads' ? 'var(--text-primary)' : 'var(--text-secondary)',
+            boxShadow: activeTab === 'threads' ? 'var(--shadow-sm)' : 'none',
+            borderRadius: 'calc(var(--radius-lg) - 4px)',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          Обсуждения (Threads)
+        </button>
+        <button
+          onClick={() => setActiveTab('talents')}
+          className="btn"
+          style={{
+            flex: 1,
+            background: activeTab === 'talents' ? 'var(--surface)' : 'transparent',
+            border: activeTab === 'talents' ? '1px solid var(--border)' : '1px solid transparent',
+            color: activeTab === 'talents' ? 'var(--text-primary)' : 'var(--text-secondary)',
+            boxShadow: activeTab === 'talents' ? 'var(--shadow-sm)' : 'none',
+            borderRadius: 'calc(var(--radius-lg) - 4px)',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          Специалисты
+        </button>
       </div>
 
-      {/* Mobile Filters Modal */}
-      <Modal isOpen={isFiltersModalOpen} onClose={() => setIsFiltersModalOpen(false)}>
-        <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <FiFilter /> Фильтры
-        </h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Категория</label>
-            <select name="category" className="select" style={{ width: '100%' }} value={filters.category} onChange={updateFilter}>
-              <option value="">Все категории</option>
-              <option value="AI">AI</option>
-              <option value="SaaS">SaaS</option>
-              <option value="EdTech">EdTech</option>
-              <option value="FinTech">FinTech</option>
-              <option value="HealthTech">HealthTech</option>
-              <option value="E-commerce">E-commerce</option>
-            </select>
-          </div>
-          <div>
-            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Стадия проекта</label>
-            <select name="stage" className="select" style={{ width: '100%' }} value={filters.stage} onChange={updateFilter}>
-              <option value="">Любая стадия</option>
-              <option value="Идея">Идея</option>
-              <option value="MVP">MVP</option>
-              <option value="Есть пользователи">Есть пользователи</option>
-              <option value="Есть выручка">Есть выручка</option>
-            </select>
-          </div>
-          <div>
-            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Город</label>
-            <select name="city" className="select" style={{ width: '100%' }} value={filters.city} onChange={updateFilter}>
-              <option value="">Все города</option>
-              <option value="Astana">Astana</option>
-              <option value="Almaty">Almaty</option>
-              <option value="Remote">Remote</option>
-            </select>
-          </div>
-          <div>
-            <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Нужна роль</label>
-            <input
-              list="role-filter-suggestions-mobile"
-              name="role"
-              className="select"
-              value={filters.role}
-              onChange={updateFilter}
-              placeholder="Любая роль"
-              autoComplete="off"
-              style={{ width: '100%' }}
-            />
-            <datalist id="role-filter-suggestions-mobile">
-              <option value="Frontend Developer" />
-              <option value="Backend Developer" />
-              <option value="Full Stack Developer" />
-              <option value="Mobile Developer" />
-              <option value="DevOps / SRE" />
-              <option value="Data Scientist" />
-              <option value="ML Engineer" />
-              <option value="UI/UX Designer" />
-              <option value="Product Manager" />
-              <option value="Marketing" />
-              <option value="QA Engineer" />
-            </datalist>
-          </div>
-          <div style={{ marginTop: '1rem', display: 'flex', gap: '0.75rem' }}>
-            {hasFilters && (
-              <button 
-                className="btn btn-outline" 
-                onClick={() => { resetFilters(); setIsFiltersModalOpen(false); }} 
-                style={{ flex: 1 }}
-              >
-                Сбросить
-              </button>
-            )}
-            <button 
-              className="btn btn-primary" 
-              onClick={() => setIsFiltersModalOpen(false)} 
-              style={{ flex: 2 }}
-            >
-              Показать результаты
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Grid */}
-      <PullToRefresh onRefresh={refetch}>
-        <div className="bento-grid">
-        {isPending ? (
-          <>
-            <SkeletonCard featured />
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-          </>
-        ) : projects.length === 0 ? (
-          <EmptyState 
-            title={hasFilters ? 'Ничего не найдено' : 'Проекты появятся здесь'}
-            description={hasFilters ? 'Попробуйте изменить фильтры или поисковый запрос.' : 'Стань первым — создай проект и найди свою команду.'}
-            actionText={hasFilters ? 'Сбросить фильтры' : 'Создать проект'}
-            actionOnClick={hasFilters ? resetFilters : undefined}
-            actionTo={hasFilters ? undefined : '/new'}
-          />
-        ) : (
-          <>
-            {projects.map((p, i) => (
-              <div key={p.id} ref={i === projects.length - 1 ? lastProjectElementRef : null}>
-                <ProjectCard
-                  project={p}
-                  featured={i === 0 && !debouncedSearch && !Object.values(filters).some(v=>v)}
-                  index={i}
-                  hasApplied={appliedProjectIds.has(p.id)}
+      {activeTab === 'projects' && (
+        <>
+          {/* Search + Filters bar */}
+          <div className="bento-card mobile-filters-card" style={{ marginBottom: '1.5rem', padding: '1.25rem' }}>
+            {/* Search */}
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+              <div className="input-search" style={{ flex: 1, marginBottom: 0 }}>
+                <FiSearch size={16} />
+                <input
+                  className="input"
+                  placeholder="Поиск проектов по названию или описанию..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  id="feed-search"
                 />
               </div>
-            ))}
-            {isFetchingNextPage && (
+              <button 
+                className="btn btn-outline filter-mobile" 
+                style={{ padding: '0 1rem' }} 
+                onClick={() => setIsFiltersModalOpen(true)}
+              >
+                <FiFilter size={18} />
+                {hasFilters && (
+                  <div style={{ position: 'absolute', top: '-4px', right: '-4px', width: '12px', height: '12px', background: 'var(--primary)', borderRadius: '50%' }} />
+                )}
+              </button>
+            </div>
+
+            {/* Desktop Filters */}
+            <div className="filter-desktop" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <select name="category" className="select" style={{ flex: '1 1 140px' }} value={filters.category} onChange={updateFilter}>
+                <option value="">Все категории</option>
+                <option value="AI">AI</option>
+                <option value="SaaS">SaaS</option>
+                <option value="EdTech">EdTech</option>
+                <option value="FinTech">FinTech</option>
+                <option value="HealthTech">HealthTech</option>
+                <option value="E-commerce">E-commerce</option>
+              </select>
+              <select name="stage" className="select" style={{ flex: '1 1 140px' }} value={filters.stage} onChange={updateFilter}>
+                <option value="">Любая стадия</option>
+                <option value="Идея">Идея</option>
+                <option value="MVP">MVP</option>
+                <option value="Есть пользователи">Есть пользователи</option>
+                <option value="Есть выручка">Есть выручка</option>
+              </select>
+              <select name="city" className="select" style={{ flex: '1 1 140px' }} value={filters.city} onChange={updateFilter}>
+                <option value="">Все города</option>
+                <option value="Astana">Astana</option>
+                <option value="Almaty">Almaty</option>
+                <option value="Remote">Remote</option>
+              </select>
+              <div style={{ flex: '1 1 160px', position: 'relative' }}>
+                <input
+                  list="role-filter-suggestions"
+                  name="role"
+                  className="select"
+                  value={filters.role}
+                  onChange={updateFilter}
+                  placeholder="Роль (любая)"
+                  autoComplete="off"
+                  style={{ width: '100%' }}
+                />
+                <datalist id="role-filter-suggestions">
+                  <option value="Frontend Developer" />
+                  <option value="Backend Developer" />
+                  <option value="Full Stack Developer" />
+                  <option value="Mobile Developer" />
+                  <option value="DevOps / SRE" />
+                  <option value="Data Scientist" />
+                  <option value="ML Engineer" />
+                  <option value="UI/UX Designer" />
+                  <option value="Product Manager" />
+                  <option value="Marketing" />
+                  <option value="QA Engineer" />
+                </datalist>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Filters Modal */}
+          <Modal isOpen={isFiltersModalOpen} onClose={() => setIsFiltersModalOpen(false)}>
+            <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <FiFilter /> Фильтры
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Категория</label>
+                <select name="category" className="select" style={{ width: '100%' }} value={filters.category} onChange={updateFilter}>
+                  <option value="">Все категории</option>
+                  <option value="AI">AI</option>
+                  <option value="SaaS">SaaS</option>
+                  <option value="EdTech">EdTech</option>
+                  <option value="FinTech">FinTech</option>
+                  <option value="HealthTech">HealthTech</option>
+                  <option value="E-commerce">E-commerce</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Стадия проекта</label>
+                <select name="stage" className="select" style={{ width: '100%' }} value={filters.stage} onChange={updateFilter}>
+                  <option value="">Любая стадия</option>
+                  <option value="Идея">Идея</option>
+                  <option value="MVP">MVP</option>
+                  <option value="Есть пользователи">Есть пользователи</option>
+                  <option value="Есть выручка">Есть выручка</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Город</label>
+                <select name="city" className="select" style={{ width: '100%' }} value={filters.city} onChange={updateFilter}>
+                  <option value="">Все города</option>
+                  <option value="Astana">Astana</option>
+                  <option value="Almaty">Almaty</option>
+                  <option value="Remote">Remote</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Нужна роль</label>
+                <input
+                  list="role-filter-suggestions-mobile"
+                  name="role"
+                  className="select"
+                  value={filters.role}
+                  onChange={updateFilter}
+                  placeholder="Любая роль"
+                  autoComplete="off"
+                  style={{ width: '100%' }}
+                />
+                <datalist id="role-filter-suggestions-mobile">
+                  <option value="Frontend Developer" />
+                  <option value="Backend Developer" />
+                  <option value="Full Stack Developer" />
+                  <option value="Mobile Developer" />
+                  <option value="DevOps / SRE" />
+                  <option value="Data Scientist" />
+                  <option value="ML Engineer" />
+                  <option value="UI/UX Designer" />
+                  <option value="Product Manager" />
+                  <option value="Marketing" />
+                  <option value="QA Engineer" />
+                </datalist>
+              </div>
+              <div style={{ marginTop: '1rem', display: 'flex', gap: '0.75rem' }}>
+                {hasFilters && (
+                  <button 
+                    className="btn btn-outline" 
+                    onClick={() => { resetFilters(); setIsFiltersModalOpen(false); }} 
+                    style={{ flex: 1 }}
+                  >
+                    Сбросить
+                  </button>
+                )}
+                <button 
+                  className="btn btn-primary" 
+                  onClick={() => setIsFiltersModalOpen(false)} 
+                  style={{ flex: 2 }}
+                >
+                  Показать результаты
+                </button>
+              </div>
+            </div>
+          </Modal>
+
+          {/* Grid */}
+          <PullToRefresh onRefresh={refetch}>
+            <div className="bento-grid">
+            {isPending ? (
               <>
+                <SkeletonCard featured />
+                <SkeletonCard />
+                <SkeletonCard />
                 <SkeletonCard />
                 <SkeletonCard />
               </>
+            ) : projects.length === 0 ? (
+              <EmptyState 
+                title={hasFilters ? 'Ничего не найдено' : 'Проекты появятся здесь'}
+                description={hasFilters ? 'Попробуйте изменить фильтры или поисковый запрос.' : 'Стань первым — создай проект и найди свою команду.'}
+                actionText={hasFilters ? 'Сбросить фильтры' : 'Создать проект'}
+                actionOnClick={hasFilters ? resetFilters : undefined}
+                actionTo={hasFilters ? undefined : '/new'}
+              />
+            ) : (
+              <>
+                {projects.map((p, i) => (
+                  <div key={p.id} ref={i === projects.length - 1 ? lastProjectElementRef : null}>
+                    <ProjectCard
+                      project={p}
+                      featured={i === 0 && !debouncedSearch && !Object.values(filters).some(v=>v)}
+                      index={i}
+                      hasApplied={appliedProjectIds.has(p.id)}
+                    />
+                  </div>
+                ))}
+                {isFetchingNextPage && (
+                  <>
+                    <SkeletonCard />
+                    <SkeletonCard />
+                  </>
+                )}
+              </>
             )}
-          </>
-        )}
-        </div>
-      </PullToRefresh>
+            </div>
+          </PullToRefresh>
+        </>
+      )}
+
+      {activeTab === 'threads' && <ThreadsTab />}
+
+      {activeTab === 'talents' && <TalentTab />}
     </motion.div>
   );
 }

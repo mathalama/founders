@@ -14,12 +14,17 @@ function OnboardingPage() {
     roleTitle: '',
     skills: '',
     experience: '',
-    bio: ''
+    bio: '',
+    openToOffers: false
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, type, checked } = e.target;
+    setFormData({ 
+      ...formData, 
+      [name]: type === 'checkbox' ? checked : value 
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -36,6 +41,7 @@ function OnboardingPage() {
         skills: formData.skills.split(',').map(s => s.trim()).filter(s => s !== ''),
         experience: formData.experience,
         bio: formData.bio,
+        openToOffers: formData.openToOffers,
         // Preserve existing user fields that we aren't editing here
         emailNotifications: user?.emailNotifications ?? true,
         github: user?.github || '',
@@ -143,6 +149,20 @@ function OnboardingPage() {
               rows="3" 
               placeholder="Пару слов о том, чем вы занимаетесь и какие проекты ищете"
             ></textarea>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem', marginBottom: '0.5rem' }}>
+            <input 
+              type="checkbox" 
+              id="openToOffers" 
+              name="openToOffers" 
+              checked={formData.openToOffers} 
+              onChange={handleChange} 
+              style={{ width: '1.2rem', height: '1.2rem', accentColor: 'var(--primary)' }}
+            />
+            <label htmlFor="openToOffers" style={{ fontWeight: 500, cursor: 'pointer', fontSize: 'var(--text-sm)' }}>
+              Ищу команду / сооснователя (показывать меня в списке специалистов)
+            </label>
           </div>
 
           <button 

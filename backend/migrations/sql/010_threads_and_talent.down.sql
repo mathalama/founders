@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS posts;
+ALTER TABLE users DROP COLUMN IF EXISTS open_to_offers;

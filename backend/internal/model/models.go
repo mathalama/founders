@@ -18,8 +18,9 @@ type User struct {
 	Telegram   *string   `json:"telegram,omitempty"`
 	Bio        *string   `json:"bio,omitempty"`
 	IsAdmin    bool      `json:"isAdmin"`
-	IsBanned   bool      `json:"isBanned"`
-	CreatedAt  time.Time `json:"createdAt"`
+	IsBanned     bool      `json:"isBanned"`
+	CreatedAt    time.Time `json:"createdAt"`
+	OpenToOffers bool      `json:"openToOffers"`
 }
 
 type AdminUserDTO struct {
@@ -109,6 +110,15 @@ type PushSubscription struct {
 type Comment struct {
 	ID        string    `json:"id"`
 	ProjectID string    `json:"projectId"`
+	UserID    string    `json:"userId"`
+	ParentID  *string   `json:"parentId,omitempty"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"createdAt"`
+	User      *User     `json:"user,omitempty"`
+}
+
+type Post struct {
+	ID        string    `json:"id"`
 	UserID    string    `json:"userId"`
 	ParentID  *string   `json:"parentId,omitempty"`
 	Content   string    `json:"content"`

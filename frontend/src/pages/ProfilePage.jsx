@@ -7,7 +7,7 @@ function ProfilePage() {
   const { user, setUser } = useAuth();
   const { showToast } = useToast();
   const [formData, setFormData] = useState({
-    roleTitle: '', skills: '', experience: '', emailNotifications: true, github: '', telegram: '', bio: ''
+    roleTitle: '', skills: '', experience: '', emailNotifications: true, github: '', telegram: '', bio: '', openToOffers: false
   });
 
   useEffect(() => {
@@ -19,7 +19,8 @@ function ProfilePage() {
         emailNotifications: user.emailNotifications !== false, // default true
         github: user.github || '',
         telegram: user.telegram || '',
-        bio: user.bio || ''
+        bio: user.bio || '',
+        openToOffers: user.openToOffers === true
       });
     }
   }, [user]);
@@ -145,6 +146,20 @@ function ProfilePage() {
           />
           <label htmlFor="emailNotifications" style={{ fontWeight: 500, cursor: 'pointer' }}>
             Получать уведомления на почту (Email)
+          </label>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+          <input 
+            type="checkbox" 
+            id="openToOffers" 
+            name="openToOffers" 
+            checked={formData.openToOffers} 
+            onChange={handleChange} 
+            style={{ width: '1.2rem', height: '1.2rem', accentColor: 'var(--primary)' }}
+          />
+          <label htmlFor="openToOffers" style={{ fontWeight: 500, cursor: 'pointer' }}>
+            Ищу команду / сооснователя (показывать меня в списке специалистов)
           </label>
         </div>
 

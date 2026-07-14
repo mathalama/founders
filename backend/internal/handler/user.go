@@ -57,3 +57,18 @@ func (h *UserHandler) GetPublicProfile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
 }
+
+func (h *UserHandler) GetDirectoryUsers(w http.ResponseWriter, r *http.Request) {
+	users, err := h.userRepo.GetDirectoryUsers(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if users == nil {
+		users = []model.User{}
+	}
+	json.NewEncoder(w).Encode(users)
+}
+
