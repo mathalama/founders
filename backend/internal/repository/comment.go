@@ -28,7 +28,7 @@ func (r *CommentRepo) Create(ctx context.Context, c *model.Comment) error {
 
 	// Fetch author details to return a hydrated comment object
 	userQuery := `SELECT name, avatar_url FROM users WHERE id = $1`
-	var u model.User
+	var u model.PublicUserDTO
 	err = r.db.QueryRow(ctx, userQuery, c.UserID).Scan(&u.Name, &u.AvatarURL)
 	if err == nil {
 		c.User = &u
@@ -55,7 +55,7 @@ func (r *CommentRepo) GetByProjectID(ctx context.Context, projectID string) ([]m
 	var comments []model.Comment
 	for rows.Next() {
 		var c model.Comment
-		var u model.User
+		var u model.PublicUserDTO
 		err := rows.Scan(
 			&c.ID, &c.ProjectID, &c.UserID, &c.ParentID, &c.Content, &c.CreatedAt,
 			&u.Name, &u.AvatarURL,

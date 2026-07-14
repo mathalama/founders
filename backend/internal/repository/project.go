@@ -71,7 +71,7 @@ func (r *ProjectRepo) GetAll(ctx context.Context, category, stage, city, role, s
 	var projects []model.Project
 	for rows.Next() {
 		var p model.Project
-		var owner model.User
+		var owner model.PublicUserDTO
 		err := rows.Scan(
 			&p.ID, &p.OwnerID, &p.Title, &p.Description, &p.Category, &p.Stage, &p.City, &p.Website, &p.Github, &p.Telegram, &p.Status, &p.CreatedAt, &p.IsHidden,
 			&owner.Name, &owner.AvatarURL,
@@ -156,7 +156,7 @@ func (r *ProjectRepo) GetByID(ctx context.Context, id string) (*model.Project, e
 		WHERE p.id = $1
 	`
 	var p model.Project
-	var owner model.User
+	var owner model.PublicUserDTO
 	err := r.db.QueryRow(ctx, query, id).Scan(
 		&p.ID, &p.OwnerID, &p.Title, &p.Description, &p.Category, &p.Stage, &p.City, &p.Website, &p.Github, &p.Telegram, &p.Status, &p.CreatedAt, &p.IsHidden,
 		&owner.Name, &owner.AvatarURL, &p.ViewsCount,
@@ -367,7 +367,7 @@ func (r *ProjectRepo) GetAllAdmin(ctx context.Context) ([]model.Project, error) 
 	var projects []model.Project
 	for rows.Next() {
 		var p model.Project
-		var owner model.User
+		var owner model.PublicUserDTO
 		err := rows.Scan(
 			&p.ID, &p.OwnerID, &p.Title, &p.Description, &p.Category, &p.Stage, &p.City, &p.Website, &p.Github, &p.Telegram, &p.Status, &p.CreatedAt, &p.IsHidden,
 			&owner.Name, &owner.AvatarURL,

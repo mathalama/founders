@@ -48,7 +48,7 @@ type Project struct {
 	CreatedAt   time.Time `json:"createdAt"`
 	IsHidden    bool      `json:"isHidden"`
 	ViewsCount  int       `json:"viewsCount"`
-	Owner       *User     `json:"owner,omitempty"`
+	Owner       *PublicUserDTO `json:"owner,omitempty"`
 	Team        []TeamMember `json:"team,omitempty"`
 	Roles       []OpenRole   `json:"roles,omitempty"`
 	Roadmap     []RoadmapItem `json:"roadmap,omitempty"`
@@ -114,7 +114,7 @@ type Comment struct {
 	ParentID  *string   `json:"parentId,omitempty"`
 	Content   string    `json:"content"`
 	CreatedAt time.Time `json:"createdAt"`
-	User      *User     `json:"user,omitempty"`
+	User      *PublicUserDTO `json:"user,omitempty"`
 }
 
 type Post struct {
@@ -123,6 +123,20 @@ type Post struct {
 	ParentID  *string   `json:"parentId,omitempty"`
 	Content   string    `json:"content"`
 	CreatedAt time.Time `json:"createdAt"`
-	User      *User     `json:"user,omitempty"`
+	User      *PublicUserDTO `json:"user,omitempty"`
+}
+
+type PublicUserDTO struct {
+	ID           string   `json:"id"`
+	Name         string   `json:"name"`
+	AvatarURL    *string  `json:"avatarUrl,omitempty"`
+	RoleTitle    *string  `json:"roleTitle,omitempty"`
+	Skills       []string `json:"skills,omitempty"`
+	Experience   *string  `json:"experience,omitempty"`
+	Github       *string  `json:"github,omitempty"`
+	Telegram     *string  `json:"telegram,omitempty"`
+	Bio          *string  `json:"bio,omitempty"`
+	CreatedAt    time.Time `json:"createdAt"`
+	OpenToOffers bool     `json:"openToOffers"`
 }
 

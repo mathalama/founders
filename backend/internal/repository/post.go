@@ -29,7 +29,7 @@ func (r *PostRepo) Create(ctx context.Context, p *model.Post) error {
 
 	// Fetch author details to return a hydrated Post object
 	userQuery := `SELECT name, avatar_url, role_title FROM users WHERE id = $1`
-	var u model.User
+	var u model.PublicUserDTO
 	err = r.db.QueryRow(ctx, userQuery, p.UserID).Scan(&u.Name, &u.AvatarURL, &u.RoleTitle)
 	if err == nil {
 		p.User = &u
@@ -56,7 +56,7 @@ func (r *PostRepo) GetThreads(ctx context.Context) ([]model.Post, error) {
 	var posts []model.Post
 	for rows.Next() {
 		var p model.Post
-		var u model.User
+		var u model.PublicUserDTO
 		err := rows.Scan(
 			&p.ID, &p.UserID, &p.ParentID, &p.Content, &p.CreatedAt,
 			&u.Name, &u.AvatarURL, &u.RoleTitle,
@@ -93,7 +93,7 @@ func (r *PostRepo) GetReplies(ctx context.Context, parentID string) ([]model.Pos
 	var posts []model.Post
 	for rows.Next() {
 		var p model.Post
-		var u model.User
+		var u model.PublicUserDTO
 		err := rows.Scan(
 			&p.ID, &p.UserID, &p.ParentID, &p.Content, &p.CreatedAt,
 			&u.Name, &u.AvatarURL, &u.RoleTitle,
@@ -121,7 +121,7 @@ func (r *PostRepo) GetByID(ctx context.Context, id string) (*model.Post, error) 
 		WHERE p.id = $1
 	`
 	var p model.Post
-	var u model.User
+	var u model.PublicUserDTO
 	err := r.db.QueryRow(ctx, query, id).Scan(
 		&p.ID, &p.UserID, &p.ParentID, &p.Content, &p.CreatedAt,
 		&u.Name, &u.AvatarURL, &u.RoleTitle,

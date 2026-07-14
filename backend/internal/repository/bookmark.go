@@ -50,7 +50,7 @@ func (r *BookmarkRepo) GetMyBookmarks(ctx context.Context, userID string) ([]mod
 	var projects []model.Project
 	for rows.Next() {
 		var p model.Project
-		var owner model.User
+		var owner model.PublicUserDTO
 		err := rows.Scan(
 			&p.ID, &p.OwnerID, &p.Title, &p.Description, &p.Category, &p.Stage, &p.City, &p.Website, &p.Github, &p.Telegram, &p.CreatedAt,
 			&owner.Name, &owner.AvatarURL,

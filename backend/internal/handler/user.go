@@ -19,7 +19,7 @@ func NewUserHandler(userRepo *repository.UserRepo, projectRepo *repository.Proje
 }
 
 type UserProfileResponse struct {
-	*model.User
+	*model.PublicUserDTO
 	Projects []model.Project `json:"projects"`
 }
 
@@ -50,7 +50,19 @@ func (h *UserHandler) GetPublicProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := UserProfileResponse{
-		User:     user,
+		PublicUserDTO: &model.PublicUserDTO{
+			ID:           user.ID,
+			Name:         user.Name,
+			AvatarURL:    user.AvatarURL,
+			RoleTitle:    user.RoleTitle,
+			Skills:       user.Skills,
+			Experience:   user.Experience,
+			Github:       user.Github,
+			Telegram:     user.Telegram,
+			Bio:          user.Bio,
+			CreatedAt:    user.CreatedAt,
+			OpenToOffers: user.OpenToOffers,
+		},
 		Projects: projects,
 	}
 
@@ -65,10 +77,24 @@ func (h *UserHandler) GetDirectoryUsers(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if users == nil {
-		users = []model.User{}
+	dtos := make([]model.PublicUserDTO, 0, len(users))
+	for _, u := range users {
+		dtos = append(dtos, model.PublicUserDTO{
+			ID:           u.ID,
+			Name:         u.Name,
+			AvatarURL:    u.AvatarURL,
+			RoleTitle:    u.RoleTitle,
+			Skills:       u.Skills,
+			Experience:   u.Experience,
+			Github:       u.Github,
+			Telegram:     u.Telegram,
+			Bio:          u.Bio,
+			CreatedAt:    u.CreatedAt,
+			OpenToOffers: u.OpenToOffers,
+		})
 	}
-	json.NewEncoder(w).Encode(users)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(dtos)
 }
 
