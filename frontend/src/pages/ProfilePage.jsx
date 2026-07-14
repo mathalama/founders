@@ -149,19 +149,7 @@ function ProfilePage() {
           </label>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
-          <input 
-            type="checkbox" 
-            id="openToOffers" 
-            name="openToOffers" 
-            checked={formData.openToOffers} 
-            onChange={handleChange} 
-            style={{ width: '1.2rem', height: '1.2rem', accentColor: 'var(--primary)' }}
-          />
-          <label htmlFor="openToOffers" style={{ fontWeight: 500, cursor: 'pointer' }}>
-            Ищу команду / сооснователя (показывать меня в списке специалистов)
-          </label>
-        </div>
+
 
         <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem' }}>Сохранить</button>
       </form>

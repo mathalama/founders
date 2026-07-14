@@ -71,34 +71,6 @@ func (h *UserHandler) GetPublicProfile(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-func (h *UserHandler) GetDirectoryUsers(w http.ResponseWriter, r *http.Request) {
-	users, err := h.userRepo.GetDirectoryUsers(r.Context())
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	dtos := make([]model.PublicUserDTO, 0, len(users))
-	for _, u := range users {
-		dtos = append(dtos, model.PublicUserDTO{
-			ID:           u.ID,
-			Name:         u.Name,
-			AvatarURL:    u.AvatarURL,
-			RoleTitle:    u.RoleTitle,
-			Skills:       u.Skills,
-			Experience:   u.Experience,
-			Github:       u.Github,
-			Telegram:     u.Telegram,
-			Bio:          u.Bio,
-			CreatedAt:    u.CreatedAt,
-			OpenToOffers: u.OpenToOffers,
-		})
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(dtos)
-}
-
 func (h *UserHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
 	blockerID, ok := r.Context().Value(middleware.UserIDKey).(string)
 	if !ok || blockerID == "" {

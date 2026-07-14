@@ -90,35 +90,6 @@ func (r *UserRepo) GetAllUsers(ctx context.Context) ([]model.User, error) {
 	return users, nil
 }
 
-func (r *UserRepo) GetDirectoryUsers(ctx context.Context) ([]model.User, error) {
-	query := `
-		SELECT id, google_id, name, email, avatar_url, role_title, skills, experience, email_notifications, github, telegram, bio, is_admin, is_banned, created_at, open_to_offers
-		FROM users
-		WHERE open_to_offers = true AND is_banned = false
-		ORDER BY created_at DESC
-	`
-	rows, err := r.db.Query(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var users []model.User
-	for rows.Next() {
-		var u model.User
-		err := rows.Scan(
-			&u.ID, &u.GoogleID, &u.Name, &u.Email, &u.AvatarURL, &u.RoleTitle, &u.Skills, &u.Experience, &u.EmailNotifications, &u.Github, &u.Telegram, &u.Bio, &u.IsAdmin, &u.IsBanned, &u.CreatedAt, &u.OpenToOffers,
-		)
-		if err != nil {
-			return nil, err
-		}
-		users = append(users, u)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return users, nil
-}
 
 func (r *UserRepo) ToggleAdmin(ctx context.Context, id string) error {
 	// Flip the is_admin boolean

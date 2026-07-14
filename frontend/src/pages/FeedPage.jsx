@@ -14,7 +14,6 @@ import { useAuth } from '../context/AuthContext';
 import PullToRefresh from '../components/ui/PullToRefresh';
 import Modal from '../components/ui/Modal';
 import ThreadsTab from '../components/ThreadsTab';
-import TalentTab from '../components/TalentTab';
 
 // Skeleton card component
 function SkeletonCard({ featured = false }) {
@@ -284,21 +283,6 @@ function FeedPage() {
         >
           Обсуждения (Threads)
         </button>
-        <button
-          onClick={() => setActiveTab('talents')}
-          className="btn"
-          style={{
-            flex: 1,
-            background: activeTab === 'talents' ? 'var(--surface)' : 'transparent',
-            border: activeTab === 'talents' ? '1px solid var(--border)' : '1px solid transparent',
-            color: activeTab === 'talents' ? 'var(--text-primary)' : 'var(--text-secondary)',
-            boxShadow: activeTab === 'talents' ? 'var(--shadow-sm)' : 'none',
-            borderRadius: 'calc(var(--radius-lg) - 4px)',
-            transition: 'all 0.2s ease',
-          }}
-        >
-          Специалисты
-        </button>
       </div>
 
       {activeTab === 'projects' && (
@@ -510,8 +494,6 @@ function FeedPage() {
       )}
 
       {activeTab === 'threads' && <ThreadsTab />}
-
-      {activeTab === 'talents' && <TalentTab />}
     </motion.div>
   );
 }

@@ -167,7 +167,6 @@ func main() {
 	r.Get("/api/projects/{id}/comments", commentHandler.ListComments)
 	r.Get("/api/posts", postHandler.ListThreads)
 	r.Get("/api/posts/{id}", postHandler.GetThreadDetails)
-	r.Get("/api/users/directory", userHandler.GetDirectoryUsers)
 
 	port := os.Getenv("PORT")
 	if port == "" {
