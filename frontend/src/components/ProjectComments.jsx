@@ -28,6 +28,11 @@ export default function ProjectComments({ projectId }) {
   const [replyToId, setReplyToId] = useState(null); // ID of root comment being replied to
   const [replyContent, setReplyContent] = useState('');
 
+  const handleStartReply = (rootCommentId, replyToUserName) => {
+    setReplyToId(rootCommentId);
+    setReplyContent(replyToUserName ? `@${replyToUserName}, ` : '');
+  };
+
   // Fetch comments
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ['comments', projectId],
@@ -182,11 +187,10 @@ export default function ProjectComments({ projectId }) {
                       <div style={{ marginTop: '0.375rem' }}>
                         <button
                           onClick={() => {
-                            if (isReplyingThis) {
+                            if (isReplyingThis && !replyContent.startsWith('@')) {
                               setReplyToId(null);
                             } else {
-                              setReplyToId(comment.id);
-                              setReplyContent('');
+                              handleStartReply(comment.id);
                             }
                           }}
                           className="btn btn-ghost btn-sm"
@@ -226,6 +230,19 @@ export default function ProjectComments({ projectId }) {
                           >
                             {reply.content}
                           </div>
+
+                          {/* Actions for nested reply */}
+                          {user && (
+                            <div style={{ marginTop: '0.25rem' }}>
+                              <button
+                                onClick={() => handleStartReply(comment.id, reply.user?.name)}
+                                className="btn btn-ghost btn-sm"
+                                style={{ padding: '0', height: 'auto', fontSize: '11px', color: 'var(--accent)' }}
+                              >
+                                Ответить
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
