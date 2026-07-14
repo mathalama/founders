@@ -238,6 +238,7 @@ function FeedPage() {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.3 }}
+      style={{ maxWidth: '1200px', margin: '0 auto', width: '100%' }}
     >
       {/* Search + Filters bar */}
           <div className="bento-card mobile-filters-card" style={{ marginBottom: '1.5rem', padding: '1.25rem' }}>
