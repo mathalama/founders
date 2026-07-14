@@ -14,11 +14,12 @@ import (
 type MessageHandler struct {
 	repo      *repository.MessageRepo
 	notifRepo *repository.NotificationRepo
+	userRepo  *repository.UserRepo
 	pushSvc   *service.PushService
 }
 
-func NewMessageHandler(repo *repository.MessageRepo, notifRepo *repository.NotificationRepo, pushSvc *service.PushService) *MessageHandler {
-	return &MessageHandler{repo: repo, notifRepo: notifRepo, pushSvc: pushSvc}
+func NewMessageHandler(repo *repository.MessageRepo, notifRepo *repository.NotificationRepo, userRepo *repository.UserRepo, pushSvc *service.PushService) *MessageHandler {
+	return &MessageHandler{repo: repo, notifRepo: notifRepo, userRepo: userRepo, pushSvc: pushSvc}
 }
 
 func (h *MessageHandler) GetConversations(w http.ResponseWriter, r *http.Request) {
@@ -82,6 +83,28 @@ func (h *MessageHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 
 	if req.Content == "" {
 		http.Error(w, "Message content cannot be empty", http.StatusBadRequest)
+		return
+	}
+
+	// Check if receiver has blocked the sender
+	isBlocked, err := h.userRepo.IsBlocked(r.Context(), otherUserID, userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if isBlocked {
+		http.Error(w, "You cannot send messages to this user because they blocked you.", http.StatusForbidden)
+		return
+	}
+
+	// Check if sender has blocked the receiver
+	isBlocking, err := h.userRepo.IsBlocked(r.Context(), userID, otherUserID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if isBlocking {
+		http.Error(w, "You cannot send messages to this user because you blocked them.", http.StatusForbidden)
 		return
 	}
 

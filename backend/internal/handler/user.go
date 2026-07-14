@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/mathalama/nucla-backend/internal/middleware"
 	"github.com/mathalama/nucla-backend/internal/model"
 	"github.com/mathalama/nucla-backend/internal/repository"
 )
@@ -97,4 +98,104 @@ func (h *UserHandler) GetDirectoryUsers(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(dtos)
 }
+
+func (h *UserHandler) BlockUser(w http.ResponseWriter, r *http.Request) {
+	blockerID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || blockerID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	blockedID := chi.URLParam(r, "userId")
+
+	if blockedID == "" {
+		http.Error(w, "Missing user ID to block", http.StatusBadRequest)
+		return
+	}
+
+	if blockerID == blockedID {
+		http.Error(w, "You cannot block yourself", http.StatusBadRequest)
+		return
+	}
+
+	err := h.userRepo.BlockUser(r.Context(), blockerID, blockedID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"status":"success"}`))
+}
+
+func (h *UserHandler) UnblockUser(w http.ResponseWriter, r *http.Request) {
+	blockerID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || blockerID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	blockedID := chi.URLParam(r, "userId")
+
+	if blockedID == "" {
+		http.Error(w, "Missing user ID to unblock", http.StatusBadRequest)
+		return
+	}
+
+	err := h.userRepo.UnblockUser(r.Context(), blockerID, blockedID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"status":"success"}`))
+}
+
+func (h *UserHandler) GetBlockedUsers(w http.ResponseWriter, r *http.Request) {
+	blockerID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || blockerID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	users, err := h.userRepo.GetBlockedUsers(r.Context(), blockerID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(users)
+}
+
+func (h *UserHandler) GetBlockStatus(w http.ResponseWriter, r *http.Request) {
+	blockerID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || blockerID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	blockedID := chi.URLParam(r, "userId")
+	if blockedID == "" {
+		http.Error(w, "Missing user ID", http.StatusBadRequest)
+		return
+	}
+
+	blockedByMe, err := h.userRepo.IsBlocked(r.Context(), blockerID, blockedID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	blockedByThem, err := h.userRepo.IsBlocked(r.Context(), blockedID, blockerID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]bool{
+		"blockedByMe":   blockedByMe,
+		"blockedByThem": blockedByThem,
+	})
+}
+
 

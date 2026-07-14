@@ -68,7 +68,7 @@ func main() {
 	dashboardHandler := handler.NewDashboardHandler(dashboardRepo, notifRepo, pushSvc)
 	bookmarkHandler := handler.NewBookmarkHandler(bookmarkRepo)
 	notifHandler := handler.NewNotificationHandler(notifRepo)
-	messageHandler := handler.NewMessageHandler(messageRepo, notifRepo, pushSvc)
+	messageHandler := handler.NewMessageHandler(messageRepo, notifRepo, userRepo, pushSvc)
 	adminHandler := handler.NewAdminHandler(userRepo, projectRepo, emailSvc)
 	commentHandler := handler.NewCommentHandler(commentRepo)
 	postHandler := handler.NewPostHandler(postRepo)
@@ -134,6 +134,12 @@ func main() {
 		r.Get("/api/messages", messageHandler.GetConversations)
 		r.Get("/api/messages/{userId}", messageHandler.GetChatHistory)
 		r.Post("/api/messages/{userId}", messageHandler.SendMessage)
+
+		// Blocking routes
+		r.Post("/api/users/block/{userId}", userHandler.BlockUser)
+		r.Post("/api/users/unblock/{userId}", userHandler.UnblockUser)
+		r.Get("/api/users/blocked", userHandler.GetBlockedUsers)
+		r.Get("/api/users/block/status/{userId}", userHandler.GetBlockStatus)
 	})
 
 	// Admin routes

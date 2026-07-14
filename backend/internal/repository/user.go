@@ -198,3 +198,64 @@ func (r *UserRepo) GetAdminStats(ctx context.Context) (map[string]int, error) {
 
 	return stats, nil
 }
+
+func (r *UserRepo) BlockUser(ctx context.Context, blockerID, blockedID string) error {
+	query := `
+		INSERT INTO blocked_users (blocker_id, blocked_id)
+		VALUES ($1, $2)
+		ON CONFLICT (blocker_id, blocked_id) DO NOTHING
+	`
+	_, err := r.db.Exec(ctx, query, blockerID, blockedID)
+	return err
+}
+
+func (r *UserRepo) UnblockUser(ctx context.Context, blockerID, blockedID string) error {
+	query := `
+		DELETE FROM blocked_users
+		WHERE blocker_id = $1 AND blocked_id = $2
+	`
+	_, err := r.db.Exec(ctx, query, blockerID, blockedID)
+	return err
+}
+
+func (r *UserRepo) IsBlocked(ctx context.Context, blockerID, blockedID string) (bool, error) {
+	query := `
+		SELECT EXISTS(
+			SELECT 1 FROM blocked_users
+			WHERE blocker_id = $1 AND blocked_id = $2
+		)
+	`
+	var exists bool
+	err := r.db.QueryRow(ctx, query, blockerID, blockedID).Scan(&exists)
+	return exists, err
+}
+
+func (r *UserRepo) GetBlockedUsers(ctx context.Context, blockerID string) ([]model.PublicUserDTO, error) {
+	query := `
+		SELECT u.id, u.name, u.avatar_url, u.role_title
+		FROM blocked_users b
+		JOIN users u ON b.blocked_id = u.id
+		WHERE b.blocker_id = $1
+		ORDER BY b.created_at DESC
+	`
+	rows, err := r.db.Query(ctx, query, blockerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []model.PublicUserDTO
+	for rows.Next() {
+		var u model.PublicUserDTO
+		err := rows.Scan(&u.ID, &u.Name, &u.AvatarURL, &u.RoleTitle)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+	if users == nil {
+		users = []model.PublicUserDTO{}
+	}
+	return users, nil
+}
+

@@ -85,6 +85,39 @@ function MessagesPage() {
     sendMessageMutation.mutate(messageText);
   };
 
+  // Block status and mutations
+  const { data: blockStatus, refetch: refetchBlockStatus } = useQuery({
+    queryKey: ['blockStatus', otherUserId],
+    enabled: !!otherUserId,
+    queryFn: async () => {
+      const res = await fetchWithAuth(`/api/users/block/status/${otherUserId}`);
+      if (!res.ok) throw new Error('Failed to fetch block status');
+      return res.json();
+    }
+  });
+
+  const blockMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetchWithAuth(`/api/users/block/${otherUserId}`, { method: 'POST' });
+      if (!res.ok) throw new Error('Failed to block user');
+    },
+    onSuccess: () => {
+      refetchBlockStatus();
+      queryClient.invalidateQueries(['conversations']);
+    }
+  });
+
+  const unblockMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetchWithAuth(`/api/users/unblock/${otherUserId}`, { method: 'POST' });
+      if (!res.ok) throw new Error('Failed to unblock user');
+    },
+    onSuccess: () => {
+      refetchBlockStatus();
+      queryClient.invalidateQueries(['conversations']);
+    }
+  });
+
   useEffect(() => {
     const handleNewMessage = (e) => {
       const msg = e.detail;
@@ -177,19 +210,47 @@ function MessagesPage() {
           ) : (
             <>
               {/* Chat Header */}
-              <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                {isMobile && (
-                  <button className="btn btn-ghost btn-sm" onClick={() => navigate('/messages')} style={{ padding: '0.25rem' }}>
-                    <FiArrowLeft size={20} />
-                  </button>
-                )}
-                {otherUser && (
-                  <>
-                    <Avatar name={otherUser.name} url={otherUser.avatarUrl} size="sm" />
-                    <Link to={`/user/${otherUser.id}`} style={{ fontWeight: 600, color: 'var(--text-primary)', textDecoration: 'none' }}>
-                      {otherUser.name}
-                    </Link>
-                  </>
+              <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '1rem', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  {isMobile && (
+                    <button className="btn btn-ghost btn-sm" onClick={() => navigate('/messages')} style={{ padding: '0.25rem' }}>
+                      <FiArrowLeft size={20} />
+                    </button>
+                  )}
+                  {otherUser && (
+                    <>
+                      <Avatar name={otherUser.name} url={otherUser.avatarUrl} size="sm" />
+                      <Link to={`/user/${otherUser.id}`} style={{ fontWeight: 600, color: 'var(--text-primary)', textDecoration: 'none' }}>
+                        {otherUser.name}
+                      </Link>
+                    </>
+                  )}
+                </div>
+
+                {otherUser && blockStatus && (
+                  <div>
+                    {blockStatus.blockedByMe ? (
+                      <button
+                        onClick={() => unblockMutation.mutate()}
+                        className="btn btn-outline btn-sm"
+                        style={{ color: 'var(--success)', borderColor: 'var(--success)', padding: '0.25rem 0.75rem', fontSize: 'var(--text-xs)' }}
+                      >
+                        Разблокировать
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          if (window.confirm('Заблокировать этого пользователя? Вы больше не сможете обмениваться сообщениями.')) {
+                            blockMutation.mutate();
+                          }
+                        }}
+                        className="btn btn-outline btn-sm"
+                        style={{ color: 'var(--danger)', borderColor: 'var(--danger)', padding: '0.25rem 0.75rem', fontSize: 'var(--text-xs)' }}
+                      >
+                        Заблокировать
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -234,24 +295,41 @@ function MessagesPage() {
               </div>
 
               {/* Message Input */}
-              <form onSubmit={sendMessage} style={{ padding: '1rem', borderTop: '1px solid var(--border)', display: 'flex', gap: '0.5rem', background: 'var(--surface)' }}>
-                <input
-                  type="text"
-                  className="input"
-                  style={{ flex: 1, borderRadius: '2rem', paddingLeft: '1rem' }}
-                  placeholder="Написать сообщение..."
-                  value={messageText}
-                  onChange={e => setMessageText(e.target.value)}
-                />
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  style={{ borderRadius: '50%', width: '42px', height: '42px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  disabled={!messageText.trim() || sendMessageMutation.isPending}
+              {blockStatus?.blockedByMe || blockStatus?.blockedByThem ? (
+                <div 
+                  style={{ 
+                    padding: '1.25rem', 
+                    textAlign: 'center', 
+                    fontSize: 'var(--text-sm)', 
+                    color: 'var(--text-muted)', 
+                    background: 'var(--surface-raised)',
+                    borderTop: '1px solid var(--border)' 
+                  }}
                 >
-                  <FiSend size={18} style={{ marginLeft: '-2px' }} />
-                </button>
-              </form>
+                  {blockStatus.blockedByMe 
+                    ? 'Вы заблокировали этого пользователя. Разблокируйте его для продолжения общения.' 
+                    : 'Этот пользователь ограничил отправку сообщений.'}
+                </div>
+              ) : (
+                <form onSubmit={sendMessage} style={{ padding: '1rem', borderTop: '1px solid var(--border)', display: 'flex', gap: '0.5rem', background: 'var(--surface)' }}>
+                  <input
+                    type="text"
+                    className="input"
+                    style={{ flex: 1, borderRadius: '2rem', paddingLeft: '1rem' }}
+                    placeholder="Написать сообщение..."
+                    value={messageText}
+                    onChange={e => setMessageText(e.target.value)}
+                  />
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    style={{ borderRadius: '50%', width: '42px', height: '42px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    disabled={!messageText.trim() || sendMessageMutation.isPending}
+                  >
+                    <FiSend size={18} style={{ marginLeft: '-2px' }} />
+                  </button>
+                </form>
+              )}
             </>
           )}
         </div>
