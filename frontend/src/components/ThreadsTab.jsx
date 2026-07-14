@@ -88,6 +88,22 @@ function ThreadReplies({ threadId, isExpanded, onReplySuccess }) {
             <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginTop: '0.125rem', whiteSpace: 'pre-wrap' }}>
               {reply.content}
             </div>
+
+            {/* Actions for nested reply */}
+            {user && (
+              <div style={{ marginTop: '0.25rem' }}>
+                <button
+                  onClick={() => {
+                    setIsReplying(true);
+                    setReplyText(`@${reply.user?.name}, `);
+                  }}
+                  className="btn btn-ghost btn-sm"
+                  style={{ padding: '0', height: 'auto', fontSize: '11px', color: 'var(--accent)' }}
+                >
+                  Ответить
+                </button>
+              </div>
+            )}
           </div>
         </div>
       ))}
@@ -96,7 +112,10 @@ function ThreadReplies({ threadId, isExpanded, onReplySuccess }) {
       {user ? (
         !isReplying ? (
           <button
-            onClick={() => setIsReplying(true)}
+            onClick={() => {
+              setIsReplying(true);
+              setReplyText('');
+            }}
             className="btn btn-ghost btn-sm"
             style={{ fontSize: '11px', color: 'var(--accent)', alignSelf: 'flex-start', padding: '0.25rem 0.5rem' }}
           >
