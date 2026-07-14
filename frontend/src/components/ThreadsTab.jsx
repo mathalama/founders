@@ -20,6 +20,21 @@ function FormatDate({ dateString }) {
   }
 }
 
+function renderContentWithMentions(content) {
+  if (!content) return null;
+  const parts = content.split(/(@[^,\n]+,)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith('@')) {
+      return (
+        <span key={index} style={{ color: 'var(--accent)', fontWeight: 600 }}>
+          {part}
+        </span>
+      );
+    }
+    return part;
+  });
+}
+
 // Sub-component for individual thread replies to isolate queries
 function ThreadReplies({ threadId, isExpanded, onReplySuccess }) {
   const { user } = useAuth();
@@ -86,7 +101,7 @@ function ThreadReplies({ threadId, isExpanded, onReplySuccess }) {
               </span>
             </div>
             <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginTop: '0.125rem', whiteSpace: 'pre-wrap' }}>
-              {reply.content}
+              {renderContentWithMentions(reply.content)}
             </div>
 
             {/* Actions for nested reply */}
@@ -95,7 +110,11 @@ function ThreadReplies({ threadId, isExpanded, onReplySuccess }) {
                 <button
                   onClick={() => {
                     setIsReplying(true);
-                    setReplyText(`@${reply.user?.name}, `);
+                    const tag = `@${reply.user?.name}, `;
+                    setReplyText((prev) => {
+                      if (prev.includes(tag)) return prev;
+                      return tag + prev;
+                    });
                   }}
                   className="btn btn-ghost btn-sm"
                   style={{ padding: '0', height: 'auto', fontSize: '11px', color: 'var(--accent)' }}
@@ -308,7 +327,7 @@ export default function ThreadsTab() {
                         lineHeight: 1.5,
                       }}
                     >
-                      {thread.content}
+                      {renderContentWithMentions(thread.content)}
                     </div>
 
                     {/* Actions */}

@@ -20,6 +20,22 @@ function FormatDate({ dateString }) {
   }
 }
 
+function renderContentWithMentions(content) {
+  if (!content) return null;
+  const parts = content.split(/(@[^,\n]+,)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith('@')) {
+      return (
+        <span key={index} style={{ color: 'var(--accent)', fontWeight: 600 }}>
+          {part}
+        </span>
+      );
+    }
+    return part;
+  });
+}
+
+
 export default function ProjectComments({ projectId }) {
   const { user } = useAuth();
   const { showToast } = useToast();
@@ -30,7 +46,15 @@ export default function ProjectComments({ projectId }) {
 
   const handleStartReply = (rootCommentId, replyToUserName) => {
     setReplyToId(rootCommentId);
-    setReplyContent(replyToUserName ? `@${replyToUserName}, ` : '');
+    if (replyToUserName) {
+      const tag = `@${replyToUserName}, `;
+      setReplyContent((prev) => {
+        if (prev.includes(tag)) return prev;
+        return tag + prev;
+      });
+    } else {
+      setReplyContent('');
+    }
   };
 
   // Fetch comments
@@ -179,7 +203,7 @@ export default function ProjectComments({ projectId }) {
                         lineHeight: 1.5,
                       }}
                     >
-                      {comment.content}
+                      {renderContentWithMentions(comment.content)}
                     </div>
 
                     {/* Actions */}
@@ -228,7 +252,7 @@ export default function ProjectComments({ projectId }) {
                               lineHeight: 1.4,
                             }}
                           >
-                            {reply.content}
+                            {renderContentWithMentions(reply.content)}
                           </div>
 
                           {/* Actions for nested reply */}
