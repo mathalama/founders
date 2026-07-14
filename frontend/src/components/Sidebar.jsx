@@ -3,13 +3,15 @@ import { useAuth } from '../context/AuthContext';
 import {
   FiHome, FiLayout, FiPlusCircle, FiUser,
   FiBookmark, FiFileText, FiLogOut, FiLogIn,
-  FiMenu, FiX, FiMoon, FiSun, FiBell, FiMessageSquare
+  FiMenu, FiX, FiMoon, FiSun, FiBell, FiMessageSquare,
+  FiMessageCircle
 } from 'react-icons/fi';
 import { useTheme } from '../context/ThemeContext';
 import styles from './Sidebar.module.css';
 
 const NAV_ITEMS_GUEST = [
   { to: '/', icon: <FiHome size={18} />, label: 'Лента' },
+  { to: '/threads', icon: <FiMessageCircle size={18} />, label: 'Обсуждения' },
 ];
 
 import { fetchWithAuth } from '../api/client';
@@ -36,6 +38,7 @@ function Sidebar({ collapsed, mobileOpen, onToggle, onCloseMobile }) {
 
   const NAV_ITEMS_AUTH = [
     { to: '/',             icon: <FiHome size={18} />,       label: 'Лента' },
+    { to: '/threads',      icon: <FiMessageCircle size={18} />, label: 'Обсуждения' },
     { to: '/dashboard',   icon: <FiLayout size={18} />,     label: 'Мои проекты' },
     { to: '/applications',icon: <FiFileText size={18} />,   label: 'Мои отклики' },
     { to: '/messages',    icon: <FiMessageSquare size={18} />, label: 'Сообщения' },

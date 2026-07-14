@@ -13,7 +13,6 @@ import Badge from '../components/ui/Badge';
 import { useAuth } from '../context/AuthContext';
 import PullToRefresh from '../components/ui/PullToRefresh';
 import Modal from '../components/ui/Modal';
-import ThreadsTab from '../components/ThreadsTab';
 
 // Skeleton card component
 function SkeletonCard({ featured = false }) {
@@ -153,7 +152,6 @@ function ProjectCard({ project, featured = false, index = 0, hasApplied = false 
 
 function FeedPage() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('projects'); // 'projects', 'threads', 'talents'
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filters, setFilters] = useState({ category: '', stage: '', city: '', role: '' });
@@ -241,53 +239,7 @@ function FeedPage() {
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Tabs */}
-      <div 
-        style={{ 
-          display: 'flex', 
-          gap: '0.375rem', 
-          marginBottom: '1.5rem', 
-          padding: '0.375rem', 
-          background: 'var(--surface-raised)', 
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid var(--border)' 
-        }}
-      >
-        <button
-          onClick={() => setActiveTab('projects')}
-          className="btn"
-          style={{
-            flex: 1,
-            background: activeTab === 'projects' ? 'var(--surface)' : 'transparent',
-            border: activeTab === 'projects' ? '1px solid var(--border)' : '1px solid transparent',
-            color: activeTab === 'projects' ? 'var(--text-primary)' : 'var(--text-secondary)',
-            boxShadow: activeTab === 'projects' ? 'var(--shadow-sm)' : 'none',
-            borderRadius: 'calc(var(--radius-lg) - 4px)',
-            transition: 'all 0.2s ease',
-          }}
-        >
-          Проекты
-        </button>
-        <button
-          onClick={() => setActiveTab('threads')}
-          className="btn"
-          style={{
-            flex: 1,
-            background: activeTab === 'threads' ? 'var(--surface)' : 'transparent',
-            border: activeTab === 'threads' ? '1px solid var(--border)' : '1px solid transparent',
-            color: activeTab === 'threads' ? 'var(--text-primary)' : 'var(--text-secondary)',
-            boxShadow: activeTab === 'threads' ? 'var(--shadow-sm)' : 'none',
-            borderRadius: 'calc(var(--radius-lg) - 4px)',
-            transition: 'all 0.2s ease',
-          }}
-        >
-          Обсуждения (Threads)
-        </button>
-      </div>
-
-      {activeTab === 'projects' && (
-        <>
-          {/* Search + Filters bar */}
+      {/* Search + Filters bar */}
           <div className="bento-card mobile-filters-card" style={{ marginBottom: '1.5rem', padding: '1.25rem' }}>
             {/* Search */}
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
@@ -490,10 +442,6 @@ function FeedPage() {
             )}
             </div>
           </PullToRefresh>
-        </>
-      )}
-
-      {activeTab === 'threads' && <ThreadsTab />}
     </motion.div>
   );
 }

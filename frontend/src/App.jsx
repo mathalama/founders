@@ -31,6 +31,7 @@ const BookmarksPage = lazyWithRetry(() => import('./pages/BookmarksPage'));
 const NotificationsPage = lazyWithRetry(() => import('./pages/NotificationsPage'));
 const MessagesPage = lazyWithRetry(() => import('./pages/MessagesPage'));
 const AdminDashboard = lazyWithRetry(() => import('./pages/AdminDashboard'));
+const ThreadsPage = lazyWithRetry(() => import('./pages/ThreadsPage'));
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
@@ -47,6 +48,7 @@ function MobileTopBar({ onOpen }) {
   const { theme, toggleTheme } = useTheme();
   const titles = {
     '/': 'Лента',
+    '/threads': 'Обсуждения',
     '/dashboard': 'Мои проекты',
     '/applications': 'Мои отклики',
     '/bookmarks': 'Сохранённое',
@@ -161,6 +163,7 @@ function Layout() {
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<FeedPage />} />
+              <Route path="/threads" element={<ThreadsPage />} />
               <Route path="/project/:id" element={<ProjectPage />} />
               <Route path="/new" element={
                 <ProtectedRoute><NewProjectPage /></ProtectedRoute>
