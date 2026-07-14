@@ -9,6 +9,7 @@ function ThreadsPage() {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.3 }}
+      style={{ maxWidth: '680px', margin: '0 auto', width: '100%' }}
     >
       <ThreadsTab />
     </motion.div>

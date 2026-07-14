@@ -857,3 +857,108 @@ h4 { font-size: var(--text-lg);  font-weight: 500; line-height: 1.4; }
   flex: 1;
 }
 
+/* ============================================================
+   PREMIUM THREADS & DISCUSSION STYLES
+   ============================================================ */
+
+/* Post card overrides - non-interactive cards in feeds */
+.post-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  position: relative;
+}
+
+.post-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Post creator styling */
+.post-creator {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.post-creator:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.post-creator-textarea {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  resize: none;
+  outline: none;
+  padding: 0.25rem 0;
+}
+
+.post-creator-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.post-creator-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+/* Thread nested replies connector */
+.reply-connector {
+  position: relative;
+  padding-left: 2.25rem;
+}
+
+.reply-connector::before {
+  content: '';
+  position: absolute;
+  left: 0.875rem;
+  top: -1rem;
+  bottom: 1.25rem;
+  width: 2px;
+  background: var(--border);
+  border-radius: 99px;
+}
+
+.reply-item {
+  position: relative;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding-top: 0.5rem;
+}
+
+/* Subtle badge for roles */
+.role-badge-subtle {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-subtle);
+  padding: 0.125rem 0.4rem;
+  border-radius: var(--radius-xs);
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Post dot separator */
+.post-dot-separator {
+  color: var(--text-muted);
+  font-size: 9px;
+  user-select: none;
+  margin: 0 0.125rem;
+}
+

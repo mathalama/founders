@@ -97,20 +97,20 @@ function ThreadReplies({ threadId, isExpanded, onReplySuccess }) {
   const replies = data?.replies || [];
 
   return (
-    <div style={{ paddingLeft: '2.5rem', marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+    <div className="reply-connector" style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
       {/* List replies */}
       {replies.map((reply) => (
-        <div key={reply.id} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
-          <FiCornerDownRight size={14} style={{ color: 'var(--text-muted)', marginTop: '0.25rem' }} />
+        <div key={reply.id} className="reply-item">
           <Avatar name={reply.user?.name} url={reply.user?.avatarUrl} size="sm" />
-          <div style={{ flex: 1, background: 'var(--surface-raised)', padding: '0.625rem 0.875rem', borderRadius: 'var(--radius-md)' }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600 }}>{reply.user?.name}</span>
-              <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>
+          <div style={{ flex: 1, padding: '0.125rem 0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-primary)' }}>{reply.user?.name}</span>
+              <span className="post-dot-separator">•</span>
+              <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
                 <FormatDate dateString={reply.createdAt} />
               </span>
             </div>
-            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginTop: '0.125rem', whiteSpace: 'pre-wrap' }}>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginTop: '0.25rem', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
               {renderContentWithMentions(reply.content)}
             </div>
 
@@ -148,7 +148,7 @@ function ThreadReplies({ threadId, isExpanded, onReplySuccess }) {
               setCursorTrigger((c) => c + 1);
             }}
             className="btn btn-ghost btn-sm"
-            style={{ fontSize: '11px', color: 'var(--accent)', alignSelf: 'flex-start', padding: '0.25rem 0.5rem' }}
+            style={{ fontSize: '12px', color: 'var(--accent)', alignSelf: 'flex-start', padding: '0.25rem 0.5rem', background: 'var(--accent-subtle)', borderRadius: 'var(--radius-sm)', marginTop: '0.25rem' }}
           >
             Ответить...
           </button>
@@ -158,16 +158,16 @@ function ThreadReplies({ threadId, isExpanded, onReplySuccess }) {
               e.preventDefault();
               if (replyText.trim()) replyMutation.mutate(replyText);
             }}
-            style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start', width: '100%', marginTop: '0.25rem' }}
+            style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', width: '100%', marginTop: '0.5rem' }}
           >
             <textarea
               ref={textareaRef}
-              className="textarea"
+              className="input"
               placeholder="Напишите ответ..."
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
               rows={1}
-              style={{ minHeight: '38px', padding: '0.375rem 0.625rem', flex: 1 }}
+              style={{ minHeight: '38px', padding: '0.5rem 0.75rem', flex: 1, resize: 'none' }}
               autoFocus
             />
             <div style={{ display: 'flex', gap: '0.25rem' }}>
@@ -175,15 +175,15 @@ function ThreadReplies({ threadId, isExpanded, onReplySuccess }) {
                 type="button"
                 onClick={() => setIsReplying(false)}
                 className="btn btn-ghost btn-sm"
-                style={{ padding: '0.375rem' }}
+                style={{ padding: '0.5rem', borderRadius: 'var(--radius-sm)' }}
               >
                 <FiX size={14} />
               </button>
               <button
                 type="submit"
                 disabled={replyMutation.isPending || !replyText.trim()}
-                className="btn btn-primary btn-sm"
-                style={{ padding: '0.375rem' }}
+                className="btn btn-accent btn-sm"
+                style={{ padding: '0.5rem', borderRadius: 'var(--radius-sm)' }}
               >
                 <FiSend size={12} />
               </button>
@@ -266,38 +266,40 @@ export default function ThreadsTab() {
       {user ? (
         <form
           onSubmit={handlePostThread}
-          className="bento-card"
-          style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start', padding: '1.25rem' }}
+          className="post-creator"
+          style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}
         >
           <Avatar name={user.name} url={user.avatarUrl} />
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <textarea
-              className="textarea"
-              placeholder="Поделитесь мыслью, задайте вопрос стартап-сообществу или напишите кого ищете..."
+              className="post-creator-textarea"
+              placeholder="Поделитесь мыслью, задайте вопрос стартап-сообществу..."
               value={newThreadText}
               onChange={(e) => setNewThreadText(e.target.value)}
               rows={2}
-              style={{ minHeight: '60px', padding: '0.625rem 0.875rem' }}
             />
-            <button
-              type="submit"
-              disabled={createThreadMutation.isPending || !newThreadText.trim()}
-              className="btn btn-primary btn-sm"
-              style={{ alignSelf: 'flex-end', gap: '0.375rem' }}
-            >
-              <FiSend size={12} /> Опубликовать
-            </button>
+            <div className="post-creator-footer">
+              <button
+                type="submit"
+                disabled={createThreadMutation.isPending || !newThreadText.trim()}
+                className="btn btn-accent btn-sm"
+                style={{ gap: '0.375rem' }}
+              >
+                <FiSend size={12} /> Опубликовать
+              </button>
+            </div>
           </div>
         </form>
       ) : (
         <div
-          className="bento-card"
+          className="post-card"
           style={{
             padding: '1.25rem',
             textAlign: 'center',
             fontSize: 'var(--text-sm)',
             color: 'var(--text-secondary)',
             borderStyle: 'dashed',
+            borderWidth: '1px'
           }}
         >
           Хотите написать пост? Пожалуйста, <a href="/login" style={{ color: 'var(--accent)', fontWeight: 600 }}>войдите в систему</a>.
@@ -307,27 +309,28 @@ export default function ThreadsTab() {
       {/* Threads list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {threads.length === 0 ? (
-          <div className="bento-card" style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
+          <div className="post-card" style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
             Лента обсуждений пока пуста. Напишите первую публикацию!
           </div>
         ) : (
           threads.map((thread) => {
             const isExpanded = !!expandedThreads[thread.id];
             return (
-              <div key={thread.id} className="bento-card animate-fadeInUp" style={{ padding: '1.25rem' }}>
-                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+              <div key={thread.id} className="post-card animate-fadeInUp">
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
                   <Avatar name={thread.user?.name} url={thread.user?.avatarUrl} />
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-primary)' }}>
                         {thread.user?.name}
                       </span>
                       {thread.user?.roleTitle && (
-                        <span style={{ fontSize: '10px', color: 'var(--accent)', fontWeight: 500 }}>
+                        <span className="role-badge-subtle">
                           {thread.user.roleTitle}
                         </span>
                       )}
-                      <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                      <span className="post-dot-separator">•</span>
+                      <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
                         <FormatDate dateString={thread.createdAt} />
                       </span>
                     </div>
@@ -335,23 +338,28 @@ export default function ThreadsTab() {
                       style={{
                         fontSize: 'var(--text-sm)',
                         color: 'var(--text-primary)',
-                        marginTop: '0.375rem',
+                        marginTop: '0.5rem',
                         whiteSpace: 'pre-wrap',
-                        lineHeight: 1.5,
+                        lineHeight: 1.6,
                       }}
                     >
                       {renderContentWithMentions(thread.content)}
                     </div>
 
                     {/* Actions */}
-                    <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ marginTop: '0.875rem', display: 'flex', alignItems: 'center' }}>
                       <button
                         onClick={() => toggleExpand(thread.id)}
-                        className={`btn btn-sm ${isExpanded ? 'btn-primary' : 'btn-outline'}`}
-                        style={{ gap: '0.375rem', fontSize: '11px', padding: '0.25rem 0.625rem' }}
+                        className="btn btn-ghost btn-sm"
+                        style={{
+                          gap: '0.375rem',
+                          color: isExpanded ? 'var(--accent)' : 'var(--text-secondary)',
+                          background: isExpanded ? 'var(--accent-subtle)' : 'transparent',
+                          borderRadius: 'var(--radius-md)',
+                        }}
                       >
                         <FiMessageCircle size={14} />
-                        {isExpanded ? 'Скрыть ответы' : 'Ответы / Обсуждение'}
+                        <span>{isExpanded ? 'Скрыть ответы' : 'Обсудить'}</span>
                       </button>
                     </div>
                   </div>
