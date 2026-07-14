@@ -43,6 +43,7 @@ export default function ProjectComments({ projectId }) {
   const [newComment, setNewComment] = useState('');
   const [replyToId, setReplyToId] = useState(null); // ID of root comment being replied to
   const [replyContent, setReplyContent] = useState('');
+  const [cursorTrigger, setCursorTrigger] = useState(0);
   const replyTextareaRef = useRef(null);
 
   useEffect(() => {
@@ -51,7 +52,7 @@ export default function ProjectComments({ projectId }) {
       el.focus();
       el.setSelectionRange(el.value.length, el.value.length);
     }
-  }, [replyContent, replyToId]);
+  }, [cursorTrigger]);
 
   const handleStartReply = (rootCommentId, replyToUserName) => {
     setReplyToId(rootCommentId);
@@ -64,6 +65,7 @@ export default function ProjectComments({ projectId }) {
     } else {
       setReplyContent('');
     }
+    setCursorTrigger((c) => c + 1);
   };
 
   // Fetch comments

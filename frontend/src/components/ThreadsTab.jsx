@@ -42,6 +42,7 @@ function ThreadReplies({ threadId, isExpanded, onReplySuccess }) {
   const queryClient = useQueryClient();
   const [replyText, setReplyText] = useState('');
   const [isReplying, setIsReplying] = useState(false);
+  const [cursorTrigger, setCursorTrigger] = useState(0);
   const textareaRef = useRef(null);
 
   useEffect(() => {
@@ -50,7 +51,7 @@ function ThreadReplies({ threadId, isExpanded, onReplySuccess }) {
       el.focus();
       el.setSelectionRange(el.value.length, el.value.length);
     }
-  }, [replyText, isReplying]);
+  }, [cursorTrigger]);
 
   const { data, isLoading } = useQuery({
     queryKey: ['thread', threadId],
@@ -124,6 +125,7 @@ function ThreadReplies({ threadId, isExpanded, onReplySuccess }) {
                       if (prev.includes(tag)) return prev;
                       return tag + prev;
                     });
+                    setCursorTrigger((c) => c + 1);
                   }}
                   className="btn btn-ghost btn-sm"
                   style={{ padding: '0', height: 'auto', fontSize: '11px', color: 'var(--accent)' }}
@@ -143,6 +145,7 @@ function ThreadReplies({ threadId, isExpanded, onReplySuccess }) {
             onClick={() => {
               setIsReplying(true);
               setReplyText('');
+              setCursorTrigger((c) => c + 1);
             }}
             className="btn btn-ghost btn-sm"
             style={{ fontSize: '11px', color: 'var(--accent)', alignSelf: 'flex-start', padding: '0.25rem 0.5rem' }}
