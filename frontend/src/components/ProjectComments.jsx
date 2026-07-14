@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FiMessageSquare, FiCornerDownRight, FiSend, FiX } from 'react-icons/fi';
 import { API_BASE_URL, fetchWithAuth } from '../api/client';
@@ -43,6 +43,15 @@ export default function ProjectComments({ projectId }) {
   const [newComment, setNewComment] = useState('');
   const [replyToId, setReplyToId] = useState(null); // ID of root comment being replied to
   const [replyContent, setReplyContent] = useState('');
+  const replyTextareaRef = useRef(null);
+
+  useEffect(() => {
+    if (replyToId !== null && replyTextareaRef.current) {
+      const el = replyTextareaRef.current;
+      el.focus();
+      el.setSelectionRange(el.value.length, el.value.length);
+    }
+  }, [replyContent, replyToId]);
 
   const handleStartReply = (rootCommentId, replyToUserName) => {
     setReplyToId(rootCommentId);
@@ -289,6 +298,7 @@ export default function ProjectComments({ projectId }) {
                       }}
                     >
                       <textarea
+                        ref={replyTextareaRef}
                         className="textarea"
                         placeholder="Ваш ответ..."
                         value={replyContent}

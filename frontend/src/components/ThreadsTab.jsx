@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FiMessageCircle, FiSend, FiCornerDownRight, FiX, FiCheck } from 'react-icons/fi';
 import { API_BASE_URL, fetchWithAuth } from '../api/client';
@@ -42,6 +42,15 @@ function ThreadReplies({ threadId, isExpanded, onReplySuccess }) {
   const queryClient = useQueryClient();
   const [replyText, setReplyText] = useState('');
   const [isReplying, setIsReplying] = useState(false);
+  const textareaRef = useRef(null);
+
+  useEffect(() => {
+    if (isReplying && textareaRef.current) {
+      const el = textareaRef.current;
+      el.focus();
+      el.setSelectionRange(el.value.length, el.value.length);
+    }
+  }, [replyText, isReplying]);
 
   const { data, isLoading } = useQuery({
     queryKey: ['thread', threadId],
@@ -149,6 +158,7 @@ function ThreadReplies({ threadId, isExpanded, onReplySuccess }) {
             style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start', width: '100%', marginTop: '0.25rem' }}
           >
             <textarea
+              ref={textareaRef}
               className="textarea"
               placeholder="Напишите ответ..."
               value={replyText}
