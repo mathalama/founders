@@ -38,6 +38,7 @@ const ForgotPasswordPage = lazyWithRetry(() => import('./pages/ForgotPasswordPag
 const ResetPasswordPage = lazyWithRetry(() => import('./pages/ResetPasswordPage'));
 const TermsPage = lazyWithRetry(() => import('./pages/TermsPage'));
 const PrivacyPage = lazyWithRetry(() => import('./pages/PrivacyPage'));
+const NotFoundPage = lazyWithRetry(() => import('./pages/NotFoundPage'));
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
@@ -227,6 +228,7 @@ function Layout() {
                 <ProtectedRoute><OnboardingPage /></ProtectedRoute>
               } />
               <Route path="/api/auth/google/callback" element={<OAuthCallbackPage />} />
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </Suspense>
         </main>
