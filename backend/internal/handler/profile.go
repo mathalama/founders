@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/mathalama/nucla-backend/internal/middleware"
@@ -24,6 +25,12 @@ func (h *ProfileHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
+	}
+
+	if req.EmailNotifications != nil {
+		log.Printf("[DEBUG] UpdateProfile: userID=%s, emailNotifications=%v", userID, *req.EmailNotifications)
+	} else {
+		log.Printf("[DEBUG] UpdateProfile: userID=%s, emailNotifications=nil", userID)
 	}
 
 	req.ID = userID

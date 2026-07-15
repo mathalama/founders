@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -62,8 +63,18 @@ func (h *ApplicationHandler) ApplyToRole(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Send email in background if owner has email notifications enabled
-	if owner, _ := h.userRepo.GetByID(r.Context(), ownerID); owner != nil && (owner.EmailNotifications == nil || *owner.EmailNotifications) {
-		h.emailSvc.SendApplicationNotification(ownerEmail, projectName, roleTitle, applicant.Name, req.Message)
+	if owner, _ := h.userRepo.GetByID(r.Context(), ownerID); owner != nil {
+		if owner.EmailNotifications != nil {
+			log.Printf("[DEBUG] CreateApplication: ownerID=%s, emailNotifications=%v", ownerID, *owner.EmailNotifications)
+			if *owner.EmailNotifications {
+				h.emailSvc.SendApplicationNotification(ownerEmail, projectName, roleTitle, applicant.Name, req.Message)
+			}
+		} else {
+			log.Printf("[DEBUG] CreateApplication: ownerID=%s, emailNotifications=nil (default true)", ownerID)
+			h.emailSvc.SendApplicationNotification(ownerEmail, projectName, roleTitle, applicant.Name, req.Message)
+		}
+	} else {
+		log.Printf("[DEBUG] CreateApplication: owner not found, ownerID=%s", ownerID)
 	}
 
 	// Create In-App Notification for Project Owner
