@@ -121,11 +121,11 @@ function ProfilePage() {
             type="checkbox" 
             id="emailNotifications" 
             name="emailNotifications" 
-            checked={formData.emailNotifications} 
-            onChange={handleChange} 
-            style={{ width: '1.2rem', height: '1.2rem', accentColor: 'var(--primary)' }}
+            checked={!!formData.emailNotifications} 
+            onChange={(e) => setFormData(prev => ({ ...prev, emailNotifications: e.target.checked }))} 
+            style={{ width: '1.2rem', height: '1.2rem', accentColor: 'var(--primary)', cursor: 'pointer' }}
           />
-          <label htmlFor="emailNotifications" style={{ fontWeight: 500, cursor: 'pointer' }}>
+          <label htmlFor="emailNotifications" style={{ fontWeight: 500, cursor: 'pointer', userSelect: 'none' }}>
             Получать уведомления на почту (Email)
           </label>
         </div>
