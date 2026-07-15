@@ -11,9 +11,9 @@
   --primary: #0f172a;
   --primary-hover: #1e293b;
   --primary-content: #ffffff;
-  --accent: #6366f1;
-  --accent-hover: #4f46e5;
-  --accent-subtle: #eef2ff;
+  --accent: #4f46e5;
+  --accent-hover: #3730a3;
+  --accent-subtle: #f5f3ff;
   --success: #10b981;
   --success-bg: #ecfdf5;
   --warning: #f59e0b;
@@ -625,10 +625,12 @@ a.bento-card:hover {
 
 .animate-fadeInUp {
   animation: fadeInUp 0.4s ease both;
+  will-change: transform, opacity;
 }
 
 .animate-stagger > * {
   animation: fadeInUp 0.4s ease both;
+  will-change: transform, opacity;
 }
 .animate-stagger > *:nth-child(1) { animation-delay: 0ms; }
 .animate-stagger > *:nth-child(2) { animation-delay: 60ms; }
