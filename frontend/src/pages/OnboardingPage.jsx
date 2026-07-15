@@ -16,7 +16,6 @@ function OnboardingPage() {
   const [formData, setFormData] = useState({
     roleTitle: '',
     skills: [],
-    experience: '',
     bio: '',
     openToOffers: false
   });
@@ -42,7 +41,6 @@ function OnboardingPage() {
       const payload = {
         roleTitle: formData.roleTitle,
         skills: formData.skills,
-        experience: formData.experience,
         bio: formData.bio,
         openToOffers: formData.openToOffers,
         // Preserve existing user fields that we aren't editing here

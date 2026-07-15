@@ -57,7 +57,6 @@ func (h *UserHandler) GetPublicProfile(w http.ResponseWriter, r *http.Request) {
 			AvatarURL:    user.AvatarURL,
 			RoleTitle:    user.RoleTitle,
 			Skills:       user.Skills,
-			Experience:   user.Experience,
 			Github:       user.Github,
 			Telegram:     user.Telegram,
 			Bio:          user.Bio,

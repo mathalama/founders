@@ -12,7 +12,6 @@ type User struct {
 	AvatarURL  *string   `json:"avatarUrl,omitempty"`
 	RoleTitle  *string   `json:"roleTitle,omitempty"`
 	Skills     []string  `json:"skills,omitempty"`
-	Experience         *string   `json:"experience,omitempty"`
 	EmailNotifications *bool     `json:"emailNotifications,omitempty"`
 	Github             *string   `json:"github,omitempty"`
 	Telegram   *string   `json:"telegram,omitempty"`
@@ -138,7 +137,6 @@ type PublicUserDTO struct {
 	AvatarURL    *string  `json:"avatarUrl,omitempty"`
 	RoleTitle    *string  `json:"roleTitle,omitempty"`
 	Skills       []string `json:"skills,omitempty"`
-	Experience   *string  `json:"experience,omitempty"`
 	Github       *string  `json:"github,omitempty"`
 	Telegram     *string  `json:"telegram,omitempty"`
 	Bio          *string  `json:"bio,omitempty"`

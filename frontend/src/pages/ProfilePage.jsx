@@ -10,7 +10,7 @@ function ProfilePage() {
   const { user, setUser } = useAuth();
   const { showToast } = useToast();
   const [formData, setFormData] = useState({
-    roleTitle: '', skills: [], experience: '', emailNotifications: true, github: '', telegram: '', bio: '', openToOffers: false
+    roleTitle: '', skills: [], emailNotifications: true, github: '', telegram: '', bio: '', openToOffers: false
   });
 
   useEffect(() => {
@@ -18,7 +18,6 @@ function ProfilePage() {
       setFormData({
         roleTitle: user.roleTitle || '',
         skills: user.skills || [],
-        experience: user.experience || '',
         emailNotifications: user.emailNotifications !== false, // default true
         github: user.github || '',
         telegram: user.telegram || '',
@@ -42,7 +41,6 @@ function ProfilePage() {
       const payload = {
         ...formData,
         skills: formData.skills,
-        experience: formData.experience,
         emailNotifications: formData.emailNotifications
       };
 
