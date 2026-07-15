@@ -4,7 +4,7 @@ import { API_BASE_URL } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { FcGoogle } from 'react-icons/fc';
-import logoImg from '../assets/logo.png';
+import logoImg from '../assets/logo.webp';
 
 function LoginPage() {
   const navigate = useNavigate();

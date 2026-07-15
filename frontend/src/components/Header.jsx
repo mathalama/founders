@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import logoImg from '../assets/logo.png';
+import logoImg from '../assets/logo.webp';
 import styles from './Header.module.css';
 import { useAuth } from '../context/AuthContext';
 import { FiMenu, FiX, FiPlus, FiHome, FiFolder, FiFileText, FiBookmark, FiUser, FiLogOut } from 'react-icons/fi';

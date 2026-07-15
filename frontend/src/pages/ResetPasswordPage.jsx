@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { API_BASE_URL } from '../api/client';
 import { useToast } from '../context/ToastContext';
-import logoImg from '../assets/logo.png';
+import logoImg from '../assets/logo.webp';
 
 function ResetPasswordPage() {
   const navigate = useNavigate();

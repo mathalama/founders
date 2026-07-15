@@ -7,7 +7,7 @@ import {
   FiMessageCircle
 } from 'react-icons/fi';
 import { useTheme } from '../context/ThemeContext';
-import logoImg from '../assets/logo.png';
+import logoImg from '../assets/logo.webp';
 import styles from './Sidebar.module.css';
 
 const NAV_ITEMS_GUEST = [
