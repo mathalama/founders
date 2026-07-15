@@ -52,7 +52,7 @@ function Header() {
           </Link>
 
           {/* Desktop nav */}
-          <nav className={styles.desktopNav}>
+          <nav className={styles.desktopNav} aria-label="Основное меню">
             {user ? (
               <>
                 <Link to="/dashboard" className={styles.navLink}>Мои проекты</Link>
@@ -102,12 +102,12 @@ function Header() {
                 <img src={logoImg} alt="Nucla Logo" style={{ width: '28px', height: '28px', borderRadius: '6px' }} />
                 <span>Nucla</span>
               </Link>
-              <button className={styles.burgerBtn} onClick={() => setMenuOpen(false)}>
+              <button className={styles.burgerBtn} onClick={() => setMenuOpen(false)} aria-label="Закрыть меню">
                 <FiX size={22} />
               </button>
             </div>
 
-            <nav className={styles.drawerNav}>
+            <nav className={styles.drawerNav} aria-label="Мобильное меню">
               {user ? (
                 <>
                   <Link to="/" className={styles.drawerLink}><FiHome style={{marginRight: '8px'}} /> Лента</Link>

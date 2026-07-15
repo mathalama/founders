@@ -1,10 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
-import FeedPage from './pages/FeedPage';
 import LoginPage from './pages/LoginPage';
-import OnboardingPage from './pages/OnboardingPage';
-import OAuthCallbackPage from './pages/OAuthCallbackPage';
 
 // Lazy-load helper with auto-retry on chunk loading failure (e.g. after a new deployment)
 const lazyWithRetry = (componentImport) => {
@@ -20,6 +17,9 @@ const lazyWithRetry = (componentImport) => {
 };
 
 // Lazy-loaded pages
+const FeedPage = lazyWithRetry(() => import('./pages/FeedPage'));
+const OnboardingPage = lazyWithRetry(() => import('./pages/OnboardingPage'));
+const OAuthCallbackPage = lazyWithRetry(() => import('./pages/OAuthCallbackPage'));
 const ProjectPage = lazyWithRetry(() => import('./pages/ProjectPage'));
 const NewProjectPage = lazyWithRetry(() => import('./pages/NewProjectPage'));
 const EditProjectPage = lazyWithRetry(() => import('./pages/EditProjectPage'));
@@ -66,11 +66,11 @@ function MobileTopBar({ onOpen }) {
 
   return (
     <div className="mobile-topbar">
-      <button onClick={onOpen} className="mobile-topbar__btn">
+      <button onClick={onOpen} className="mobile-topbar__btn" aria-label="Открыть меню">
         <FiMenu size={22} />
       </button>
       <span className="mobile-topbar__title">{title}</span>
-      <button onClick={toggleTheme} className="mobile-topbar__btn">
+      <button onClick={toggleTheme} className="mobile-topbar__btn" aria-label="Переключить тему">
         {theme === 'light' ? <FiMoon size={22} /> : <FiSun size={22} />}
       </button>
     </div>

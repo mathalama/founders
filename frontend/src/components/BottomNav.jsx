@@ -12,7 +12,7 @@ function BottomNav() {
   if (!user) return null;
 
   return (
-    <nav className={styles.nav}>
+    <nav className={styles.nav} aria-label="Нижнее меню">
       <Link to="/" className={`${styles.item} ${isActive('/') ? styles.active : ''}`}>
         <FiHome size={20} />
         <span>Лента</span>

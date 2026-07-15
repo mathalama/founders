@@ -102,7 +102,7 @@ function Sidebar({ collapsed, mobileOpen, onToggle, onCloseMobile }) {
       )}
 
       {/* Nav */}
-      <nav className={styles.nav}>
+      <nav className={styles.nav} aria-label="Боковое меню">
         {navItems.map(item => (
           <NavLink
             key={item.to}
@@ -165,6 +165,7 @@ function Sidebar({ collapsed, mobileOpen, onToggle, onCloseMobile }) {
           className={`${styles.navItem} ${isEffectivelyCollapsed ? styles.navItemCollapsed : ''}`}
           onClick={toggleTheme}
           title={isEffectivelyCollapsed ? 'Сменить тему' : undefined}
+          aria-label="Сменить тему"
           style={{ marginTop: '0.5rem', background: 'var(--surface-raised)', border: '1px solid var(--border)' }}
         >
           <span className={styles.navIcon}>

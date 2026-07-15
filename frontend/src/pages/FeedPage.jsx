@@ -270,7 +270,7 @@ function FeedPage() {
 
             {/* Desktop Filters */}
             <div className="filter-desktop" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <select name="category" className="select" style={{ flex: '1 1 140px' }} value={filters.category} onChange={updateFilter}>
+              <select name="category" aria-label="Категория" className="select" style={{ flex: '1 1 140px' }} value={filters.category} onChange={updateFilter}>
                 <option value="">Все категории</option>
                 <option value="AI">AI</option>
                 <option value="SaaS">SaaS</option>
@@ -279,14 +279,14 @@ function FeedPage() {
                 <option value="HealthTech">HealthTech</option>
                 <option value="E-commerce">E-commerce</option>
               </select>
-              <select name="stage" className="select" style={{ flex: '1 1 140px' }} value={filters.stage} onChange={updateFilter}>
+              <select name="stage" aria-label="Стадия проекта" className="select" style={{ flex: '1 1 140px' }} value={filters.stage} onChange={updateFilter}>
                 <option value="">Любая стадия</option>
                 <option value="Идея">Идея</option>
                 <option value="MVP">MVP</option>
                 <option value="Есть пользователи">Есть пользователи</option>
                 <option value="Есть выручка">Есть выручка</option>
               </select>
-              <select name="city" className="select" style={{ flex: '1 1 140px' }} value={filters.city} onChange={updateFilter}>
+              <select name="city" aria-label="Город" className="select" style={{ flex: '1 1 140px' }} value={filters.city} onChange={updateFilter}>
                 <option value="">Все города</option>
                 <option value="Astana">Astana</option>
                 <option value="Almaty">Almaty</option>
@@ -312,8 +312,8 @@ function FeedPage() {
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
-                <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Категория</label>
-                <select name="category" className="select" style={{ width: '100%' }} value={filters.category} onChange={updateFilter}>
+                <label htmlFor="filter-mobile-category" style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Категория</label>
+                <select id="filter-mobile-category" name="category" className="select" style={{ width: '100%' }} value={filters.category} onChange={updateFilter}>
                   <option value="">Все категории</option>
                   <option value="AI">AI</option>
                   <option value="SaaS">SaaS</option>
@@ -324,8 +324,8 @@ function FeedPage() {
                 </select>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Стадия проекта</label>
-                <select name="stage" className="select" style={{ width: '100%' }} value={filters.stage} onChange={updateFilter}>
+                <label htmlFor="filter-mobile-stage" style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Стадия проекта</label>
+                <select id="filter-mobile-stage" name="stage" className="select" style={{ width: '100%' }} value={filters.stage} onChange={updateFilter}>
                   <option value="">Любая стадия</option>
                   <option value="Идея">Идея</option>
                   <option value="MVP">MVP</option>
@@ -334,8 +334,8 @@ function FeedPage() {
                 </select>
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Город</label>
-                <select name="city" className="select" style={{ width: '100%' }} value={filters.city} onChange={updateFilter}>
+                <label htmlFor="filter-mobile-city" style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Город</label>
+                <select id="filter-mobile-city" name="city" className="select" style={{ width: '100%' }} value={filters.city} onChange={updateFilter}>
                   <option value="">Все города</option>
                   <option value="Astana">Astana</option>
                   <option value="Almaty">Almaty</option>
