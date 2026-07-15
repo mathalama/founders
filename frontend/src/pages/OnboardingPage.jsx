@@ -112,16 +112,7 @@ function OnboardingPage() {
             />
           </div>
 
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Опыт работы</label>
-            <input 
-              name="experience" 
-              value={formData.experience} 
-              onChange={handleChange} 
-              className="input" 
-              placeholder="Например: 3 года, Junior, Middle..." 
-            />
-          </div>
+
 
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>О себе</label>

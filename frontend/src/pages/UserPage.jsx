@@ -83,11 +83,7 @@ function UserPage() {
                 <FaTelegramPlane size={14} style={{ marginRight: '4px' }} /> Telegram
               </a>
             )}
-            {experience && (
-              <span className="badge">
-                <FiStar size={14} style={{ marginRight: '4px' }} /> {experience}
-              </span>
-            )}
+
           </div>
 
           {bio && (

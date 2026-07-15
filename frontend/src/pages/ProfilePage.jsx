@@ -100,10 +100,7 @@ function ProfilePage() {
           <TagInput tags={formData.skills} onChange={(newSkills) => setFormData(prev => ({ ...prev, skills: newSkills }))} placeholder="Введите навык (например, React) и нажмите Enter..." />
         </div>
 
-        <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Опыт</label>
-          <input name="experience" type="text" value={formData.experience} onChange={handleChange} className="input" placeholder="Например: 3 года, Junior, Middle..." />
-        </div>
+
 
         <div style={{ display: 'flex', gap: '1rem' }}>
           <div style={{ flex: 1 }}>
