@@ -2,19 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { fetchWithAuth } from '../api/client';
 import { useToast } from '../context/ToastContext';
+import TagInput from '../components/ui/TagInput';
 
 function ProfilePage() {
   const { user, setUser } = useAuth();
   const { showToast } = useToast();
   const [formData, setFormData] = useState({
-    roleTitle: '', skills: '', experience: '', emailNotifications: true, github: '', telegram: '', bio: '', openToOffers: false
+    roleTitle: '', skills: [], experience: '', emailNotifications: true, github: '', telegram: '', bio: '', openToOffers: false
   });
 
   useEffect(() => {
     if (user) {
       setFormData({
         roleTitle: user.roleTitle || '',
-        skills: user.skills ? user.skills.join(', ') : '',
+        skills: user.skills || [],
         experience: user.experience || '',
         emailNotifications: user.emailNotifications !== false, // default true
         github: user.github || '',
@@ -38,7 +39,7 @@ function ProfilePage() {
     try {
       const payload = {
         ...formData,
-        skills: formData.skills.split(',').map(s => s.trim()).filter(s => s !== ''),
+        skills: formData.skills,
         experience: formData.experience,
         emailNotifications: formData.emailNotifications
       };
@@ -110,8 +111,8 @@ function ProfilePage() {
         </div>
 
         <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Навыки (через запятую)</label>
-          <input name="skills" value={formData.skills} onChange={handleChange} className="input" placeholder="React, TypeScript, Figma" />
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Навыки</label>
+          <TagInput tags={formData.skills} onChange={(newSkills) => setFormData(prev => ({ ...prev, skills: newSkills }))} placeholder="Введите навык (например, React) и нажмите Enter..." />
         </div>
 
         <div>

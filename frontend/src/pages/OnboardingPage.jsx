@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { fetchWithAuth } from '../api/client';
 import { useToast } from '../context/ToastContext';
+import TagInput from '../components/ui/TagInput';
 
 function OnboardingPage() {
   const { user, setUser } = useAuth();
@@ -12,7 +13,7 @@ function OnboardingPage() {
   
   const [formData, setFormData] = useState({
     roleTitle: '',
-    skills: '',
+    skills: [],
     experience: '',
     bio: '',
     openToOffers: false
@@ -38,7 +39,7 @@ function OnboardingPage() {
     try {
       const payload = {
         roleTitle: formData.roleTitle,
-        skills: formData.skills.split(',').map(s => s.trim()).filter(s => s !== ''),
+        skills: formData.skills,
         experience: formData.experience,
         bio: formData.bio,
         openToOffers: formData.openToOffers,
@@ -119,12 +120,10 @@ function OnboardingPage() {
 
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Навыки</label>
-            <input 
-              name="skills" 
-              value={formData.skills} 
-              onChange={handleChange} 
-              className="input" 
-              placeholder="React, Figma, Python (через запятую)" 
+            <TagInput 
+              tags={formData.skills} 
+              onChange={(newSkills) => setFormData(prev => ({ ...prev, skills: newSkills }))} 
+              placeholder="Введите навык (например, React) и нажмите Enter..." 
             />
           </div>
 
