@@ -116,7 +116,7 @@ function Header() {
                   <Link to="/new" className="btn btn-primary" style={{ justifyContent: 'center' }}>
                     <FiPlus size={14} /> Создать проект
                   </Link>
-                  <button onClick={handleLogout} className="btn btn-outline" style={{ justifyContent: 'center', width: '100%' }}>
+                  <button onClick={() => { setMenuOpen(false); setShowLogoutModal(true); }} className="btn btn-outline" style={{ justifyContent: 'center', width: '100%' }}>
                     Выйти
                   </button>
                 </>
