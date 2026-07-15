@@ -254,12 +254,14 @@ function FeedPage() {
                   value={searchQuery}
                   onChange={handleSearchChange}
                   id="feed-search"
+                  aria-label="Поиск проектов по названию или описанию"
                 />
               </div>
               <button 
                 className="btn btn-outline filter-mobile" 
                 style={{ padding: '0 1rem' }} 
                 onClick={() => setIsFiltersModalOpen(true)}
+                aria-label="Открыть фильтры"
               >
                 <FiFilter size={18} />
                 {hasFilters && (
