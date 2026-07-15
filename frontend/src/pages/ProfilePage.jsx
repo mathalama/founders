@@ -3,6 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { fetchWithAuth } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import TagInput from '../components/ui/TagInput';
+import AutocompleteInput from '../components/ui/AutocompleteInput';
+import { ROLE_SUGGESTIONS } from '../constants/suggestions';
 
 function ProfilePage() {
   const { user, setUser } = useAuth();
@@ -81,30 +83,13 @@ function ProfilePage() {
 
         <div>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Роль</label>
-          <input
-            list="role-suggestions"
+          <AutocompleteInput
             name="roleTitle"
             value={formData.roleTitle}
             onChange={handleChange}
-            className="input"
+            suggestions={ROLE_SUGGESTIONS}
             placeholder="Frontend, Backend, DevOps, Design..."
-            autoComplete="off"
           />
-          <datalist id="role-suggestions">
-            <option value="Frontend Developer" />
-            <option value="Backend Developer" />
-            <option value="Full Stack Developer" />
-            <option value="Mobile Developer" />
-            <option value="DevOps / SRE" />
-            <option value="Data Scientist" />
-            <option value="ML Engineer" />
-            <option value="UI/UX Designer" />
-            <option value="Product Manager" />
-            <option value="Marketing" />
-            <option value="Founder / CEO" />
-            <option value="Business Analyst" />
-            <option value="QA Engineer" />
-          </datalist>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: '0.375rem' }}>
             Введите свою роль или выберите из списка
           </div>

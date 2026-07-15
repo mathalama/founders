@@ -32,6 +32,12 @@ const NotificationsPage = lazyWithRetry(() => import('./pages/NotificationsPage'
 const MessagesPage = lazyWithRetry(() => import('./pages/MessagesPage'));
 const AdminDashboard = lazyWithRetry(() => import('./pages/AdminDashboard'));
 const ThreadsPage = lazyWithRetry(() => import('./pages/ThreadsPage'));
+const RegisterPage = lazyWithRetry(() => import('./pages/RegisterPage'));
+const VerifyPage = lazyWithRetry(() => import('./pages/VerifyPage'));
+const ForgotPasswordPage = lazyWithRetry(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazyWithRetry(() => import('./pages/ResetPasswordPage'));
+const TermsPage = lazyWithRetry(() => import('./pages/TermsPage'));
+const PrivacyPage = lazyWithRetry(() => import('./pages/PrivacyPage'));
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
@@ -116,6 +122,28 @@ function Layout() {
   }, []);
 
   const sidebarWidth = collapsed ? 64 : 240;
+
+  const isAuthRoute = ['/login', '/register', '/verify', '/forgot-password', '/reset-password', '/terms', '/privacy'].includes(location.pathname);
+
+  if (isAuthRoute) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
+        <main style={{ flex: 1, padding: 0 }}>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/verify" element={<VerifyPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/terms" element={<TermsPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
+            </Routes>
+          </Suspense>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>

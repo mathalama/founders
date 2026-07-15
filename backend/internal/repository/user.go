@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"time"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/mathalama/nucla-backend/internal/model"
@@ -17,15 +19,16 @@ func NewUserRepo(db *pgxpool.Pool) *UserRepo {
 
 func (r *UserRepo) UpsertByGoogleID(ctx context.Context, googleID, name, email string, isAdmin bool) (*model.User, error) {
 	query := `
-		INSERT INTO users (google_id, name, email, is_admin)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO users (google_id, name, email, is_admin, is_email_verified)
+		VALUES ($1, $2, $3, $4, TRUE)
 		ON CONFLICT (google_id) DO UPDATE
 		SET name = EXCLUDED.name, email = EXCLUDED.email, is_admin = users.is_admin OR EXCLUDED.is_admin
-		RETURNING id, google_id, name, email, avatar_url, role_title, skills, experience, email_notifications, github, telegram, bio, is_admin, is_banned, created_at, open_to_offers
+		RETURNING id, google_id, name, email, avatar_url, role_title, skills, experience, email_notifications, github, telegram, bio, is_admin, is_banned, created_at, open_to_offers, password_hash, is_email_verified, email_verification_pin, email_verification_expires, reset_token, reset_token_expires
 	`
 	var u model.User
 	err := r.db.QueryRow(ctx, query, googleID, name, email, isAdmin).Scan(
 		&u.ID, &u.GoogleID, &u.Name, &u.Email, &u.AvatarURL, &u.RoleTitle, &u.Skills, &u.Experience, &u.EmailNotifications, &u.Github, &u.Telegram, &u.Bio, &u.IsAdmin, &u.IsBanned, &u.CreatedAt, &u.OpenToOffers,
+		&u.PasswordHash, &u.IsEmailVerified, &u.EmailVerificationPin, &u.EmailVerificationExpires, &u.ResetToken, &u.ResetTokenExpires,
 	)
 	if err != nil {
 		return nil, err
@@ -35,12 +38,13 @@ func (r *UserRepo) UpsertByGoogleID(ctx context.Context, googleID, name, email s
 
 func (r *UserRepo) GetByID(ctx context.Context, id string) (*model.User, error) {
 	query := `
-		SELECT id, google_id, name, email, avatar_url, role_title, skills, experience, email_notifications, github, telegram, bio, is_admin, is_banned, created_at, open_to_offers
+		SELECT id, google_id, name, email, avatar_url, role_title, skills, experience, email_notifications, github, telegram, bio, is_admin, is_banned, created_at, open_to_offers, password_hash, is_email_verified, email_verification_pin, email_verification_expires, reset_token, reset_token_expires
 		FROM users WHERE id = $1
 	`
 	var u model.User
 	err := r.db.QueryRow(ctx, query, id).Scan(
 		&u.ID, &u.GoogleID, &u.Name, &u.Email, &u.AvatarURL, &u.RoleTitle, &u.Skills, &u.Experience, &u.EmailNotifications, &u.Github, &u.Telegram, &u.Bio, &u.IsAdmin, &u.IsBanned, &u.CreatedAt, &u.OpenToOffers,
+		&u.PasswordHash, &u.IsEmailVerified, &u.EmailVerificationPin, &u.EmailVerificationExpires, &u.ResetToken, &u.ResetTokenExpires,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -63,7 +67,7 @@ func (r *UserRepo) UpdateProfile(ctx context.Context, u *model.User) error {
 
 func (r *UserRepo) GetAllUsers(ctx context.Context) ([]model.User, error) {
 	query := `
-		SELECT id, google_id, name, email, avatar_url, role_title, skills, experience, email_notifications, github, telegram, bio, is_admin, is_banned, created_at, open_to_offers
+		SELECT id, google_id, name, email, avatar_url, role_title, skills, experience, email_notifications, github, telegram, bio, is_admin, is_banned, created_at, open_to_offers, password_hash, is_email_verified, email_verification_pin, email_verification_expires, reset_token, reset_token_expires
 		FROM users
 		ORDER BY created_at DESC
 	`
@@ -78,6 +82,7 @@ func (r *UserRepo) GetAllUsers(ctx context.Context) ([]model.User, error) {
 		var u model.User
 		err := rows.Scan(
 			&u.ID, &u.GoogleID, &u.Name, &u.Email, &u.AvatarURL, &u.RoleTitle, &u.Skills, &u.Experience, &u.EmailNotifications, &u.Github, &u.Telegram, &u.Bio, &u.IsAdmin, &u.IsBanned, &u.CreatedAt, &u.OpenToOffers,
+			&u.PasswordHash, &u.IsEmailVerified, &u.EmailVerificationPin, &u.EmailVerificationExpires, &u.ResetToken, &u.ResetTokenExpires,
 		)
 		if err != nil {
 			return nil, err
@@ -271,5 +276,81 @@ func (r *UserRepo) GetBlockedUsers(ctx context.Context, blockerID string) ([]mod
 		users = []model.PublicUserDTO{}
 	}
 	return users, nil
+}
+
+func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*model.User, error) {
+	query := `
+		SELECT id, google_id, name, email, avatar_url, role_title, skills, experience, email_notifications, github, telegram, bio, is_admin, is_banned, created_at, open_to_offers, password_hash, is_email_verified, email_verification_pin, email_verification_expires, reset_token, reset_token_expires
+		FROM users WHERE email = $1
+	`
+	var u model.User
+	err := r.db.QueryRow(ctx, query, email).Scan(
+		&u.ID, &u.GoogleID, &u.Name, &u.Email, &u.AvatarURL, &u.RoleTitle, &u.Skills, &u.Experience, &u.EmailNotifications, &u.Github, &u.Telegram, &u.Bio, &u.IsAdmin, &u.IsBanned, &u.CreatedAt, &u.OpenToOffers,
+		&u.PasswordHash, &u.IsEmailVerified, &u.EmailVerificationPin, &u.EmailVerificationExpires, &u.ResetToken, &u.ResetTokenExpires,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &u, nil
+}
+
+func (r *UserRepo) CreateLocalUser(ctx context.Context, name, email, passwordHash, pin string, pinExpires time.Time) (*model.User, error) {
+	query := `
+		INSERT INTO users (name, email, password_hash, email_verification_pin, email_verification_expires, is_email_verified)
+		VALUES ($1, $2, $3, $4, $5, FALSE)
+		RETURNING id, google_id, name, email, avatar_url, role_title, skills, experience, email_notifications, github, telegram, bio, is_admin, is_banned, created_at, open_to_offers, password_hash, is_email_verified, email_verification_pin, email_verification_expires, reset_token, reset_token_expires
+	`
+	var u model.User
+	err := r.db.QueryRow(ctx, query, name, email, passwordHash, pin, pinExpires).Scan(
+		&u.ID, &u.GoogleID, &u.Name, &u.Email, &u.AvatarURL, &u.RoleTitle, &u.Skills, &u.Experience, &u.EmailNotifications, &u.Github, &u.Telegram, &u.Bio, &u.IsAdmin, &u.IsBanned, &u.CreatedAt, &u.OpenToOffers,
+		&u.PasswordHash, &u.IsEmailVerified, &u.EmailVerificationPin, &u.EmailVerificationExpires, &u.ResetToken, &u.ResetTokenExpires,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &u, nil
+}
+
+func (r *UserRepo) VerifyEmail(ctx context.Context, id string) error {
+	query := `
+		UPDATE users
+		SET is_email_verified = TRUE, email_verification_pin = NULL, email_verification_expires = NULL
+		WHERE id = $1
+	`
+	_, err := r.db.Exec(ctx, query, id)
+	return err
+}
+
+func (r *UserRepo) UpdateVerificationPIN(ctx context.Context, email, pin string, pinExpires time.Time) error {
+	query := `
+		UPDATE users
+		SET email_verification_pin = $1, email_verification_expires = $2
+		WHERE email = $3
+	`
+	_, err := r.db.Exec(ctx, query, pin, pinExpires, email)
+	return err
+}
+
+func (r *UserRepo) UpdateResetToken(ctx context.Context, email, token string, expires time.Time) error {
+	query := `
+		UPDATE users
+		SET reset_token = $1, reset_token_expires = $2
+		WHERE email = $3
+	`
+	_, err := r.db.Exec(ctx, query, token, expires, email)
+	return err
+}
+
+func (r *UserRepo) ResetPassword(ctx context.Context, email, newPasswordHash string) error {
+	query := `
+		UPDATE users
+		SET password_hash = $1, reset_token = NULL, reset_token_expires = NULL
+		WHERE email = $2
+	`
+	_, err := r.db.Exec(ctx, query, newPasswordHash, email)
+	return err
 }
 

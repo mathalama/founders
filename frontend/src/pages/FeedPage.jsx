@@ -13,6 +13,8 @@ import Badge from '../components/ui/Badge';
 import { useAuth } from '../context/AuthContext';
 import PullToRefresh from '../components/ui/PullToRefresh';
 import Modal from '../components/ui/Modal';
+import AutocompleteInput from '../components/ui/AutocompleteInput';
+import { ROLE_SUGGESTIONS } from '../constants/suggestions';
 
 // Skeleton card component
 function SkeletonCard({ featured = false }) {
@@ -290,30 +292,15 @@ function FeedPage() {
                 <option value="Almaty">Almaty</option>
                 <option value="Remote">Remote</option>
               </select>
-              <div style={{ flex: '1 1 160px', position: 'relative' }}>
-                <input
-                  list="role-filter-suggestions"
+              <div style={{ flex: '1 1 160px' }}>
+                <AutocompleteInput
                   name="role"
                   className="select"
                   value={filters.role}
                   onChange={updateFilter}
                   placeholder="Роль (любая)"
-                  autoComplete="off"
-                  style={{ width: '100%' }}
+                  suggestions={ROLE_SUGGESTIONS}
                 />
-                <datalist id="role-filter-suggestions">
-                  <option value="Frontend Developer" />
-                  <option value="Backend Developer" />
-                  <option value="Full Stack Developer" />
-                  <option value="Mobile Developer" />
-                  <option value="DevOps / SRE" />
-                  <option value="Data Scientist" />
-                  <option value="ML Engineer" />
-                  <option value="UI/UX Designer" />
-                  <option value="Product Manager" />
-                  <option value="Marketing" />
-                  <option value="QA Engineer" />
-                </datalist>
               </div>
             </div>
           </div>
@@ -357,29 +344,14 @@ function FeedPage() {
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Нужна роль</label>
-                <input
-                  list="role-filter-suggestions-mobile"
+                <AutocompleteInput
                   name="role"
                   className="select"
                   value={filters.role}
                   onChange={updateFilter}
                   placeholder="Любая роль"
-                  autoComplete="off"
-                  style={{ width: '100%' }}
+                  suggestions={ROLE_SUGGESTIONS}
                 />
-                <datalist id="role-filter-suggestions-mobile">
-                  <option value="Frontend Developer" />
-                  <option value="Backend Developer" />
-                  <option value="Full Stack Developer" />
-                  <option value="Mobile Developer" />
-                  <option value="DevOps / SRE" />
-                  <option value="Data Scientist" />
-                  <option value="ML Engineer" />
-                  <option value="UI/UX Designer" />
-                  <option value="Product Manager" />
-                  <option value="Marketing" />
-                  <option value="QA Engineer" />
-                </datalist>
               </div>
               <div style={{ marginTop: '1rem', display: 'flex', gap: '0.75rem' }}>
                 {hasFilters && (

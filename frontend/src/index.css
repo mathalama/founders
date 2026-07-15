@@ -1074,7 +1074,7 @@ a.bento-card:hover {
   top: calc(100% + 4px);
   left: 0;
   right: 0;
-  background: var(--panel);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
@@ -1097,8 +1097,59 @@ a.bento-card:hover {
 
 .tag-suggestion-item:hover,
 .tag-suggestion-item.active {
-  background: var(--panel-soft);
+  background: var(--surface-raised);
   color: var(--accent);
 }
+
+/* Generic Suggestions Dropdown (Autocomplete) */
+.suggestions-dropdown-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.suggestions-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100;
+  list-style: none;
+  padding: 0.25rem 0;
+  margin: 0;
+  animation: slideInDown 0.15s ease-out;
+}
+
+.suggestion-item {
+  padding: 0.5rem 0.875rem;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.suggestion-item:hover,
+.suggestion-item.active {
+  background: var(--surface-raised);
+  color: var(--accent);
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
 
 

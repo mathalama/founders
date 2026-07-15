@@ -6,7 +6,7 @@ import (
 
 type User struct {
 	ID         string    `json:"id"`
-	GoogleID   string    `json:"-"`
+	GoogleID   *string   `json:"-"`
 	Name       string    `json:"name"`
 	Email      string    `json:"email"`
 	AvatarURL  *string   `json:"avatarUrl,omitempty"`
@@ -21,6 +21,12 @@ type User struct {
 	IsBanned     bool      `json:"isBanned"`
 	CreatedAt    time.Time `json:"createdAt"`
 	OpenToOffers bool      `json:"openToOffers"`
+	PasswordHash             *string    `json:"-"`
+	IsEmailVerified          bool       `json:"isEmailVerified"`
+	EmailVerificationPin     *string    `json:"-"`
+	EmailVerificationExpires *time.Time `json:"-"`
+	ResetToken               *string    `json:"-"`
+	ResetTokenExpires        *time.Time `json:"-"`
 }
 
 type AdminUserDTO struct {

@@ -61,7 +61,7 @@ func main() {
 	pushSvc := service.NewPushService(notifRepo)
 
 	// Init Handlers
-	authHandler := handler.NewAuthHandler(userRepo)
+	authHandler := handler.NewAuthHandler(userRepo, emailSvc)
 	userHandler := handler.NewUserHandler(userRepo, projectRepo)
 	projectHandler := handler.NewProjectHandler(projectRepo)
 	profileHandler := handler.NewProfileHandler(userRepo)
@@ -101,6 +101,12 @@ func main() {
 	r.Get("/api/auth/google/login", authHandler.GoogleLogin)
 	r.Get("/api/auth/google/callback", authHandler.GoogleCallback)
 	r.Post("/api/auth/logout", authHandler.Logout)
+	r.Post("/api/auth/register", authHandler.Register)
+	r.Post("/api/auth/verify-pin", authHandler.VerifyPIN)
+	r.Post("/api/auth/login", authHandler.Login)
+	r.Post("/api/auth/resend-pin", authHandler.ResendPIN)
+	r.Post("/api/auth/forgot-password", authHandler.ForgotPassword)
+	r.Post("/api/auth/reset-password", authHandler.ResetPassword)
 	
 	// Protected routes
 	r.Group(func(r chi.Router) {

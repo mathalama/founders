@@ -7,6 +7,13 @@ import {
   FiArrowLeft, FiPlus, FiTrash2, FiCheck, FiSave
 } from 'react-icons/fi';
 import RichTextEditor from '../components/RichTextEditor';
+import AutocompleteInput from '../components/ui/AutocompleteInput';
+import {
+  CATEGORY_SUGGESTIONS,
+  STAGE_SUGGESTIONS,
+  CITY_SUGGESTIONS,
+  ROLE_SUGGESTIONS
+} from '../constants/suggestions';
 
 function EditProjectPage() {
   const { id } = useParams();
@@ -143,76 +150,15 @@ function EditProjectPage() {
           <div style={{ display: 'flex', gap: '0.875rem', flexWrap: 'wrap' }}>
             <div style={{ flex: '1 1 160px' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: 'var(--text-sm)' }}>Категория</label>
-              <input list="category-suggestions" name="category" value={formData.category} onChange={handleChange} className="input" placeholder="Выберите или введите..." autoComplete="off" />
-              <datalist id="category-suggestions">
-                <option value="AI" />
-                <option value="SaaS" />
-                <option value="EdTech" />
-                <option value="FinTech" />
-                <option value="E-commerce" />
-                <option value="HealthTech" />
-                <option value="GameDev" />
-                <option value="Web3" />
-                <option value="Mobile" />
-                <option value="Marketplace" />
-                <option value="Social" />
-              </datalist>
+              <AutocompleteInput name="category" value={formData.category} onChange={handleChange} suggestions={CATEGORY_SUGGESTIONS} placeholder="Выберите или введите..." />
             </div>
             <div style={{ flex: '1 1 160px' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: 'var(--text-sm)' }}>Стадия</label>
-              <input list="stage-suggestions" name="stage" value={formData.stage} onChange={handleChange} className="input" placeholder="Выберите или введите..." autoComplete="off" />
-              <datalist id="stage-suggestions">
-                <option value="Идея" />
-                <option value="Прототип" />
-                <option value="MVP" />
-                <option value="Есть первые пользователи" />
-                <option value="Есть выручка" />
-                <option value="Масштабирование" />
-              </datalist>
+              <AutocompleteInput name="stage" value={formData.stage} onChange={handleChange} suggestions={STAGE_SUGGESTIONS} placeholder="Выберите или введите..." />
             </div>
             <div style={{ flex: '1 1 160px' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: 'var(--text-sm)' }}>Город</label>
-              <input list="city-suggestions" name="city" value={formData.city} onChange={handleChange} className="input" placeholder="Выберите или введите свой..." autoComplete="off" />
-              <datalist id="city-suggestions">
-                <option value="Remote" />
-                <option value="Astana" />
-                <option value="Almaty" />
-                <option value="Shymkent" />
-                <option value="Aktau" />
-                <option value="Aktobe" />
-                <option value="Atyrau" />
-                <option value="Karaganda" />
-                <option value="Kokshetau" />
-                <option value="Kostanay" />
-                <option value="Kyzylorda" />
-                <option value="Pavlodar" />
-                <option value="Petropavl" />
-                <option value="Semey" />
-                <option value="Taldykorgan" />
-                <option value="Taraz" />
-                <option value="Turkestan" />
-                <option value="Uralsk" />
-                <option value="Oskemen" />
-                <option value="Jezkazgan" />
-                <option value="Konaev" />
-                <option value="Abai Region" />
-                <option value="Akmola Region" />
-                <option value="Aktobe Region" />
-                <option value="Almaty Region" />
-                <option value="Atyrau Region" />
-                <option value="East Kazakhstan Region" />
-                <option value="Jambyl Region" />
-                <option value="Jetisu Region" />
-                <option value="Karaganda Region" />
-                <option value="Kostanay Region" />
-                <option value="Kyzylorda Region" />
-                <option value="Mangystau Region" />
-                <option value="North Kazakhstan Region" />
-                <option value="Pavlodar Region" />
-                <option value="Turkestan Region" />
-                <option value="Ulytau Region" />
-                <option value="West Kazakhstan Region" />
-              </datalist>
+              <AutocompleteInput name="city" value={formData.city} onChange={handleChange} suggestions={CITY_SUGGESTIONS} placeholder="Выберите или введите свой..." />
             </div>
           </div>
 
@@ -317,11 +263,12 @@ function EditProjectPage() {
             >
               <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                 <div style={{ flex: 1 }}>
-                  <input
-                    className="input"
+                  <AutocompleteInput
+                    name="title"
                     placeholder="Название роли (Frontend, Backend...)"
                     value={role.title}
                     onChange={e => updateRole(idx, 'title', e.target.value)}
+                    suggestions={ROLE_SUGGESTIONS}
                   />
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
