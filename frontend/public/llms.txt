@@ -3,9 +3,9 @@
 Nucla is a platform connecting startup founders with project team members, freelancers, and co-founders.
 
 ## Main Pages
-- [Feed Page](https://founders.astanahub.dev/) - Browse and filter open projects, search by role, category, city, and project stage.
-- [Project Page](https://founders.astanahub.dev/project/:id) - View project details, roadmap, open roles, and comments.
-- [New Project](https://founders.astanahub.dev/new) - Interface to create a new project.
-- [Dashboard](https://founders.astanahub.dev/dashboard) - Manage owned projects and applications.
-- [Profile](https://founders.astanahub.dev/profile) - User settings, skills, and bio.
-- [Messages](https://founders.astanahub.dev/messages) - Chat with other platform users.
+- [Feed Page](https://nucla.mathalama.dev/) - Browse and filter open projects, search by role, category, city, and project stage.
+- [Project Page](https://nucla.mathalama.dev/project/:id) - View project details, roadmap, open roles, and comments.
+- [New Project](https://nucla.mathalama.dev/new) - Interface to create a new project.
+- [Dashboard](https://nucla.mathalama.dev/dashboard) - Manage owned projects and applications.
+- [Profile](https://nucla.mathalama.dev/profile) - User settings, skills, and bio.
+- [Messages](https://nucla.mathalama.dev/messages) - Chat with other platform users.

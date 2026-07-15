@@ -25,6 +25,24 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://nucla.mathalama.dev/forgot-password</loc>
+    <lastmod>2026-07-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://nucla.mathalama.dev/reset-password</loc>
+    <lastmod>2026-07-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://nucla.mathalama.dev/verify</loc>
+    <lastmod>2026-07-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
     <loc>https://nucla.mathalama.dev/terms</loc>
     <lastmod>2026-07-15</lastmod>
     <changefreq>yearly</changefreq>
