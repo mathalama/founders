@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { API_BASE_URL } from '../api/client';
 import { useToast } from '../context/ToastContext';
+import logoImg from '../assets/logo.png';
 
 function RegisterPage() {
   const navigate = useNavigate();
@@ -72,6 +73,9 @@ function RegisterPage() {
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', padding: '1.5rem' }}>
       <div className="bento-card" style={{ width: '100%', maxWidth: '420px', padding: '2.5rem 2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
+          <img src={logoImg} alt="Nucla Logo" style={{ width: '48px', height: '48px', borderRadius: '10px' }} />
+        </div>
         <h1 style={{ marginBottom: '0.5rem', textAlign: 'center' }}>Регистрация</h1>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', textAlign: 'center', fontSize: 'var(--text-sm)' }}>
           Создайте аккаунт, чтобы начать поиск кофаундеров.

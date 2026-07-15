@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import logoImg from '../assets/logo.png';
 import styles from './Header.module.css';
 import { useAuth } from '../context/AuthContext';
 import { FiMenu, FiX, FiPlus, FiHome, FiFolder, FiFileText, FiBookmark, FiUser, FiLogOut } from 'react-icons/fi';
@@ -45,7 +46,8 @@ function Header() {
     <>
       <header className={styles.header}>
         <div className={`container ${styles.headerContent}`}>
-          <Link to="/" className={styles.logo}>
+          <Link to="/" className={styles.logo} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <img src={logoImg} alt="Nucla Logo" style={{ width: '28px', height: '28px', borderRadius: '6px' }} />
             <span>Nucla</span>
           </Link>
 
@@ -96,7 +98,8 @@ function Header() {
             onClick={e => e.stopPropagation()}
           >
             <div className={styles.drawerHeader}>
-              <Link to="/" className={styles.logo}>
+              <Link to="/" className={styles.logo} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <img src={logoImg} alt="Nucla Logo" style={{ width: '28px', height: '28px', borderRadius: '6px' }} />
                 <span>Nucla</span>
               </Link>
               <button className={styles.burgerBtn} onClick={() => setMenuOpen(false)}>

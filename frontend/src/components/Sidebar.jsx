@@ -7,6 +7,7 @@ import {
   FiMessageCircle
 } from 'react-icons/fi';
 import { useTheme } from '../context/ThemeContext';
+import logoImg from '../assets/logo.png';
 import styles from './Sidebar.module.css';
 
 const NAV_ITEMS_GUEST = [
@@ -37,13 +38,13 @@ function Sidebar({ collapsed, mobileOpen, onToggle, onCloseMobile }) {
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const NAV_ITEMS_AUTH = [
-    { to: '/',             icon: <FiHome size={18} />,       label: 'Лента' },
-    { to: '/threads',      icon: <FiMessageCircle size={18} />, label: 'Обсуждения' },
-    { to: '/dashboard',   icon: <FiLayout size={18} />,     label: 'Мои проекты' },
-    { to: '/applications',icon: <FiFileText size={18} />,   label: 'Мои отклики' },
-    { to: '/messages',    icon: <FiMessageSquare size={18} />, label: 'Сообщения' },
-    { to: '/bookmarks',   icon: <FiBookmark size={18} />,   label: 'Сохранённое' },
-    { to: '/notifications',icon: <div style={{position:'relative'}}><FiBell size={18} />{unreadCount > 0 && <span className="badge--count" style={{position:'absolute', top:'-6px', right:'-8px', fontSize:'9px', padding:'2px 4px'}}>{unreadCount}</span>}</div>, label: 'Уведомления' },
+    { to: '/', icon: <FiHome size={18} />, label: 'Лента' },
+    { to: '/threads', icon: <FiMessageCircle size={18} />, label: 'Обсуждения' },
+    { to: '/dashboard', icon: <FiLayout size={18} />, label: 'Мои проекты' },
+    { to: '/applications', icon: <FiFileText size={18} />, label: 'Мои отклики' },
+    { to: '/messages', icon: <FiMessageSquare size={18} />, label: 'Сообщения' },
+    { to: '/bookmarks', icon: <FiBookmark size={18} />, label: 'Сохранённое' },
+    { to: '/notifications', icon: <div style={{ position: 'relative' }}><FiBell size={18} />{unreadCount > 0 && <span className="badge--count" style={{ position: 'absolute', top: '-6px', right: '-8px', fontSize: '9px', padding: '2px 4px' }}>{unreadCount}</span>}</div>, label: 'Уведомления' },
   ];
 
   const navItems = user ? [
@@ -67,11 +68,10 @@ function Sidebar({ collapsed, mobileOpen, onToggle, onCloseMobile }) {
     ].join(' ')}>
       {/* Logo + toggle */}
       <div className={styles.header}>
-        {!isEffectivelyCollapsed && (
-          <Link to="/" className={styles.logo}>
-            <span className={styles.logoText}>Nucla</span>
-          </Link>
-        )}
+        <Link to="/" className={styles.logo} style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+          <img src={logoImg} alt="Nucla Logo" style={{ width: '28px', height: '28px', borderRadius: '6px', minWidth: '28px' }} />
+          {!isEffectivelyCollapsed && <span className={styles.logoText}>Nucla</span>}
+        </Link>
         {mobileOpen ? (
           <button
             className={styles.toggleBtn}
@@ -173,10 +173,10 @@ function Sidebar({ collapsed, mobileOpen, onToggle, onCloseMobile }) {
           {!isEffectivelyCollapsed && <span className={styles.navLabel}>{theme === 'light' ? 'Темная тема' : 'Светлая тема'}</span>}
         </button>
       </div>
-      <LogoutModal 
-        isOpen={showLogoutModal} 
-        onClose={() => setShowLogoutModal(false)} 
-        onConfirm={confirmLogout} 
+      <LogoutModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={confirmLogout}
       />
     </aside>
   );

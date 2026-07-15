@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { API_BASE_URL } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import logoImg from '../assets/logo.png';
 
 function VerifyPage() {
   const navigate = useNavigate();
@@ -88,6 +89,9 @@ function VerifyPage() {
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', padding: '1.5rem' }}>
       <div className="bento-card" style={{ width: '100%', maxWidth: '400px', padding: '2.5rem 2rem', textAlign: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
+          <img src={logoImg} alt="Nucla Logo" style={{ width: '48px', height: '48px', borderRadius: '10px' }} />
+        </div>
         <h1 style={{ marginBottom: '0.5rem' }}>Подтверждение почты</h1>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: 'var(--text-sm)' }}>
           Мы отправили 6-значный код подтверждения на <strong>{email || 'вашу почту'}</strong>.

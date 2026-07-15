@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { API_BASE_URL } from '../api/client';
 import { useToast } from '../context/ToastContext';
+import logoImg from '../assets/logo.png';
 
 function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -67,6 +68,9 @@ function ResetPasswordPage() {
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', padding: '1.5rem' }}>
       <div className="bento-card" style={{ width: '100%', maxWidth: '400px', padding: '2.5rem 2rem', textAlign: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
+          <img src={logoImg} alt="Nucla Logo" style={{ width: '48px', height: '48px', borderRadius: '10px' }} />
+        </div>
         <h1 style={{ marginBottom: '0.5rem' }}>Установка нового пароля</h1>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: 'var(--text-sm)' }}>
           Для аккаунта <strong>{email}</strong>
