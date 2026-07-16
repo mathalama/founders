@@ -176,8 +176,8 @@ func (r *UserRepo) Delete(ctx context.Context, id string) error {
 	return tx.Commit(ctx)
 }
 
-func (r *UserRepo) GetAdminStats(ctx context.Context) (map[string]int, error) {
-	stats := make(map[string]int)
+func (r *UserRepo) GetAdminStats(ctx context.Context) (map[string]interface{}, error) {
+	stats := make(map[string]interface{})
 
 	var totalUsers int
 	if err := r.db.QueryRow(ctx, `SELECT COUNT(*) FROM users`).Scan(&totalUsers); err != nil {
@@ -214,6 +214,80 @@ func (r *UserRepo) GetAdminStats(ctx context.Context) (map[string]int, error) {
 		return nil, err
 	}
 	stats["totalApplications"] = totalApplications
+
+	var totalEmails int
+	if err := r.db.QueryRow(ctx, `SELECT COUNT(*) FROM sent_emails_log`).Scan(&totalEmails); err != nil {
+		totalEmails = 0
+	}
+	stats["totalEmails"] = totalEmails
+
+	type DailyStat struct {
+		Date  string `json:"date"`
+		Count int    `json:"count"`
+	}
+
+	// 1. Daily signups
+	dailySignups := make([]DailyStat, 0)
+	signupQuery := `
+		SELECT TO_CHAR(d, 'YYYY-MM-DD') AS day, COUNT(u.id) AS count
+		FROM generate_series(CURRENT_DATE - INTERVAL '6 days', CURRENT_DATE, '1 day'::interval) d
+		LEFT JOIN users u ON DATE(u.created_at) = DATE(d)
+		GROUP BY d
+		ORDER BY d ASC
+	`
+	rows, err := r.db.Query(ctx, signupQuery)
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var ds DailyStat
+			if err := rows.Scan(&ds.Date, &ds.Count); err == nil {
+				dailySignups = append(dailySignups, ds)
+			}
+		}
+	}
+	stats["dailySignups"] = dailySignups
+
+	// 2. Daily projects
+	dailyProjects := make([]DailyStat, 0)
+	projectQuery := `
+		SELECT TO_CHAR(d, 'YYYY-MM-DD') AS day, COUNT(p.id) AS count
+		FROM generate_series(CURRENT_DATE - INTERVAL '6 days', CURRENT_DATE, '1 day'::interval) d
+		LEFT JOIN projects p ON DATE(p.created_at) = DATE(d)
+		GROUP BY d
+		ORDER BY d ASC
+	`
+	prows, err := r.db.Query(ctx, projectQuery)
+	if err == nil {
+		defer prows.Close()
+		for prows.Next() {
+			var ds DailyStat
+			if err := prows.Scan(&ds.Date, &ds.Count); err == nil {
+				dailyProjects = append(dailyProjects, ds)
+			}
+		}
+	}
+	stats["dailyProjects"] = dailyProjects
+
+	// 3. Daily emails
+	dailyEmails := make([]DailyStat, 0)
+	emailQuery := `
+		SELECT TO_CHAR(d, 'YYYY-MM-DD') AS day, COUNT(e.id) AS count
+		FROM generate_series(CURRENT_DATE - INTERVAL '6 days', CURRENT_DATE, '1 day'::interval) d
+		LEFT JOIN sent_emails_log e ON DATE(e.sent_at) = DATE(d)
+		GROUP BY d
+		ORDER BY d ASC
+	`
+	erows, err := r.db.Query(ctx, emailQuery)
+	if err == nil {
+		defer erows.Close()
+		for erows.Next() {
+			var ds DailyStat
+			if err := erows.Scan(&ds.Date, &ds.Count); err == nil {
+				dailyEmails = append(dailyEmails, ds)
+			}
+		}
+	}
+	stats["dailyEmails"] = dailyEmails
 
 	return stats, nil
 }

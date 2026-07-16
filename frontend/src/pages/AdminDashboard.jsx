@@ -4,6 +4,108 @@ import { fetchWithAuth } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import { FiUsers, FiFolder, FiTrash2, FiShield, FiSlash, FiEyeOff, FiPieChart, FiDownload, FiMail, FiMessageSquare } from 'react-icons/fi';
 
+const TrendChart = ({ title, data, color = '#6366f1' }) => {
+  if (!data || data.length === 0) return null;
+
+  const maxVal = Math.max(...data.map(d => d.count), 5);
+  const width = 500;
+  const height = 150;
+  const padding = 20;
+
+  const points = data.map((d, index) => {
+    const x = padding + (index * (width - padding * 2)) / (data.length - 1);
+    const y = height - padding - (d.count * (height - padding * 2)) / maxVal;
+    return `${x},${y}`;
+  }).join(' ');
+
+  const gradId = `grad-${title.replace(/\s+/g, '-').toLowerCase()}`;
+
+  return (
+    <div className="bg-[var(--surface)] border border-[var(--border)] p-5 rounded-xl flex flex-col gap-4">
+      <div className="flex justify-between items-center">
+        <h4 className="text-sm font-semibold text-[var(--text-secondary)]">{title}</h4>
+        <span className="text-xs text-[var(--text-muted)]">За 7 дней</span>
+      </div>
+      <div className="relative w-full h-[160px] flex items-center justify-center">
+        <svg viewBox={`0 0 ${width} ${height}`} width="100%" height="100%" className="overflow-visible">
+          <defs>
+            <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity="0.2"/>
+              <stop offset="100%" stopColor={color} stopOpacity="0"/>
+            </linearGradient>
+          </defs>
+
+          {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
+            const y = padding + ratio * (height - padding * 2);
+            return (
+              <line
+                key={i}
+                x1={padding}
+                y1={y}
+                x2={width - padding}
+                y2={y}
+                stroke="var(--border)"
+                strokeWidth="1"
+                strokeDasharray="4 4"
+                opacity="0.3"
+              />
+            );
+          })}
+
+          <path
+            d={`M ${padding},${height - padding} L ${points} L ${width - padding},${height - padding} Z`}
+            fill={`url(#${gradId})`}
+          />
+
+          <polyline
+            fill="none"
+            stroke={color}
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            points={points}
+          />
+
+          {data.map((d, index) => {
+            const x = padding + (index * (width - padding * 2)) / (data.length - 1);
+            const y = height - padding - (d.count * (height - padding * 2)) / maxVal;
+            return (
+              <g key={index} className="group cursor-pointer">
+                <circle
+                  cx={x}
+                  cy={y}
+                  r="4"
+                  fill="var(--surface)"
+                  stroke={color}
+                  strokeWidth="2.5"
+                />
+                <circle
+                  cx={x}
+                  cy={y}
+                  r="8"
+                  fill={color}
+                  opacity="0"
+                  style={{ transition: 'opacity 0.2s' }}
+                  className="hover:opacity-20"
+                />
+                <title>{`${d.date}: ${d.count}`}</title>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      <div className="flex justify-between px-2 text-[10px] text-[var(--text-muted)] font-medium">
+        {data.map((d, i) => {
+          const parts = d.date.split('-');
+          const label = parts.length === 3 ? `${parts[2]}.${parts[1]}` : d.date;
+          return <span key={i}>{label}</span>;
+        })}
+      </div>
+    </div>
+  );
+};
+
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('stats');
   const [newsletterSubject, setNewsletterSubject] = useState('');
@@ -192,25 +294,63 @@ const AdminDashboard = () => {
       </div>
 
       {activeTab === 'stats' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {statsLoading ? <div className="col-span-3 text-center py-8">Загрузка статистики...</div> : (
-            <>
-              <div className="bg-[var(--surface)] border border-[var(--border)] p-6 rounded-xl">
-                <div className="text-[var(--text-secondary)] text-sm mb-1">Всего пользователей</div>
-                <div className="text-3xl font-bold">{stats?.totalUsers || 0}</div>
-                <div className="text-green-500 text-sm mt-2">+{stats?.usersLast7 || 0} за неделю</div>
-              </div>
-              <div className="bg-[var(--surface)] border border-[var(--border)] p-6 rounded-xl">
-                <div className="text-[var(--text-secondary)] text-sm mb-1">Всего проектов</div>
-                <div className="text-3xl font-bold">{stats?.totalProjects || 0}</div>
-                <div className="text-green-500 text-sm mt-2">+{stats?.projectsLast7 || 0} за неделю</div>
-              </div>
-              <div className="bg-[var(--surface)] border border-[var(--border)] p-6 rounded-xl">
-                <div className="text-[var(--text-secondary)] text-sm mb-1">Открытых вакансий</div>
-                <div className="text-3xl font-bold">{stats?.openRoles || 0}</div>
-                <div className="text-[var(--text-secondary)] text-sm mt-2">{stats?.totalApplications || 0} откликов всего</div>
-              </div>
-            </>
+        <div className="flex flex-col gap-8 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {statsLoading ? (
+              <div className="col-span-4 text-center py-8 text-[var(--text-secondary)]">Загрузка сводки...</div>
+            ) : (
+              <>
+                <div className="bg-[var(--surface)] border border-[var(--border)] p-6 rounded-xl flex flex-col justify-between">
+                  <div>
+                    <div className="text-[var(--text-secondary)] text-sm mb-1 font-medium">Пользователи</div>
+                    <div className="text-3xl font-bold text-[var(--text-primary)]">{stats?.totalUsers || 0}</div>
+                  </div>
+                  <div className="text-green-500 text-xs mt-3 font-semibold flex items-center gap-1">
+                    <span>+{stats?.usersLast7 || 0}</span>
+                    <span className="text-[var(--text-muted)] font-normal">за неделю</span>
+                  </div>
+                </div>
+
+                <div className="bg-[var(--surface)] border border-[var(--border)] p-6 rounded-xl flex flex-col justify-between">
+                  <div>
+                    <div className="text-[var(--text-secondary)] text-sm mb-1 font-medium">Проекты</div>
+                    <div className="text-3xl font-bold text-[var(--text-primary)]">{stats?.totalProjects || 0}</div>
+                  </div>
+                  <div className="text-green-500 text-xs mt-3 font-semibold flex items-center gap-1">
+                    <span>+{stats?.projectsLast7 || 0}</span>
+                    <span className="text-[var(--text-muted)] font-normal">за неделю</span>
+                  </div>
+                </div>
+
+                <div className="bg-[var(--surface)] border border-[var(--border)] p-6 rounded-xl flex flex-col justify-between">
+                  <div>
+                    <div className="text-[var(--text-secondary)] text-sm mb-1 font-medium">Открытые роли</div>
+                    <div className="text-3xl font-bold text-[var(--text-primary)]">{stats?.openRoles || 0}</div>
+                  </div>
+                  <div className="text-[var(--text-muted)] text-xs mt-3">
+                    Всего откликов: <strong className="text-[var(--text-primary)] font-medium">{stats?.totalApplications || 0}</strong>
+                  </div>
+                </div>
+
+                <div className="bg-[var(--surface)] border border-[var(--border)] p-6 rounded-xl flex flex-col justify-between">
+                  <div>
+                    <div className="text-[var(--text-secondary)] text-sm mb-1 font-medium">Писем отправлено</div>
+                    <div className="text-3xl font-bold text-[var(--text-primary)]">{stats?.totalEmails || 0}</div>
+                  </div>
+                  <div className="text-[var(--text-muted)] text-xs mt-3">
+                    Транзакционные и рассылки
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {!statsLoading && stats && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <TrendChart title="Регистрации пользователей" data={stats.dailySignups} color="#6366f1" />
+              <TrendChart title="Создание проектов" data={stats.dailyProjects} color="#10b981" />
+              <TrendChart title="Отправлено писем" data={stats.dailyEmails} color="#f59e0b" />
+            </div>
           )}
         </div>
       )}

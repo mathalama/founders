@@ -57,7 +57,7 @@ func main() {
 	auditRepo := repository.NewAuditLogRepo(pool)
 	
 	// Init Services
-	emailSvc := service.NewEmailService()
+	emailSvc := service.NewEmailService(pool)
 	pushSvc := service.NewPushService(notifRepo)
 
 	// Init Handlers

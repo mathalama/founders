@@ -1,21 +1,25 @@
 package service
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"log"
 	"os"
 	"strconv"
+	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"gopkg.in/gomail.v2"
 )
 
 type EmailService struct {
 	dialer *gomail.Dialer
 	from   string
+	db     *pgxpool.Pool
 }
 
-func NewEmailService() *EmailService {
+func NewEmailService(db *pgxpool.Pool) *EmailService {
 	host := os.Getenv("SMTP_HOST")
 	portStr := os.Getenv("SMTP_PORT")
 	user := os.Getenv("SMTP_USER")
@@ -37,6 +41,7 @@ func NewEmailService() *EmailService {
 	return &EmailService{
 		dialer: d,
 		from:   from,
+		db:     db,
 	}
 }
 
@@ -60,6 +65,8 @@ func (s *EmailService) SendApplicationNotification(toEmail, projectName, roleNam
 
 		if err := s.dialer.DialAndSend(m); err != nil {
 			log.Printf("Failed to send email to %s: %v", toEmail, err)
+		} else {
+			s.logSentEmail("application_notification", toEmail)
 		}
 	}()
 }
@@ -71,11 +78,12 @@ func (s *EmailService) SendNewsletterEmail(toEmail, subject, bodyContent string)
 		m.SetHeader("To", toEmail)
 		m.SetHeader("Subject", subject)
 
-		// Since we expect HTML body from the admin
 		m.SetBody("text/html", bodyContent)
 
 		if err := s.dialer.DialAndSend(m); err != nil {
 			log.Printf("Failed to send newsletter email to %s: %v", toEmail, err)
+		} else {
+			s.logSentEmail("newsletter", toEmail)
 		}
 	}()
 }
@@ -102,6 +110,8 @@ func (s *EmailService) SendVerificationPIN(toEmail, pin string) {
 
 		if err := s.dialer.DialAndSend(m); err != nil {
 			log.Printf("Failed to send verification email to %s: %v", toEmail, err)
+		} else {
+			s.logSentEmail("verification_pin", toEmail)
 		}
 	}()
 }
@@ -129,6 +139,18 @@ func (s *EmailService) SendPasswordResetLink(toEmail, resetLink string) {
 
 		if err := s.dialer.DialAndSend(m); err != nil {
 			log.Printf("Failed to send password reset email to %s: %v", toEmail, err)
+		} else {
+			s.logSentEmail("password_reset", toEmail)
 		}
 	}()
+}
+
+func (s *EmailService) logSentEmail(emailType, recipient string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	query := `INSERT INTO sent_emails_log (email_type, recipient) VALUES ($1, $2)`
+	if _, err := s.db.Exec(ctx, query, emailType, recipient); err != nil {
+		log.Printf("Failed to log sent email to db: %v", err)
+	}
 }
