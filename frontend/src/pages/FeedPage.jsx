@@ -42,14 +42,34 @@ function SkeletonCard({ featured = false }) {
 // Project card
 function ProjectCard({ project, featured = false, index = 0, hasApplied = false }) {
   const p = project;
-  const initials = p.owner?.name
-    ? p.owner.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
-    : '?';
-
   const openRoles = p.roles?.filter(r => r.status !== 'closed') || [];
-  const roadmapTotal = p.roadmap?.length || 0;
-  const roadmapDone = p.roadmap?.filter(r => r.done).length || 0;
-  const roadmapPct = roadmapTotal > 0 ? Math.round((roadmapDone / roadmapTotal) * 100) : 0;
+
+  const renderStatusBadge = () => {
+    if (hasApplied) {
+      return (
+        <Badge type="success" style={{ fontSize: '10px' }}>
+          <FiCheckSquare size={10} /> Отклик сделан
+        </Badge>
+      );
+    }
+    if (p.status === 'closed') {
+      return (
+        <Badge style={{ fontSize: '10px', background: 'var(--border)' }}>
+          Набор закрыт
+        </Badge>
+      );
+    }
+    if (featured) {
+      return (
+        <Badge type="accent">
+          <FiStar size={12} /> Топ
+        </Badge>
+      );
+    }
+    return null;
+  };
+
+  const statusBadge = renderStatusBadge();
 
   return (
     <Link
@@ -59,43 +79,34 @@ function ProjectCard({ project, featured = false, index = 0, hasApplied = false 
         display: 'flex',
         flexDirection: 'column',
         animationDelay: `${index * 60}ms`,
+        height: '100%',
       }}
     >
       {/* Header row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-          <Avatar name={p.owner?.name} url={p.owner?.avatarUrl} />
-          <div>
-            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', fontWeight: 500 }}>
-              {p.owner?.name || 'Фаундер'}
-            </div>
-            <h2 style={{ fontSize: featured ? 'var(--text-xl)' : 'var(--text-lg)', fontWeight: 700, lineHeight: 1.2, marginTop: '1px' }}>
-              {p.title}
-            </h2>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.75rem' }}>
+        <Avatar name={p.owner?.name} url={p.owner?.avatarUrl} />
+        <div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', fontWeight: 500 }}>
+            {p.owner?.name || 'Фаундер'}
           </div>
-        </div>
-        <div style={{ display: 'flex', gap: '0.3rem', flexDirection: 'column', alignItems: 'flex-end' }}>
-          {p.status === 'closed' && (
-            <Badge style={{ fontSize: '10px', background: 'var(--border)' }}>
-              Набор закрыт
-            </Badge>
-          )}
-          {featured && (
-            <Badge type="accent"><FiStar size={12} style={{marginRight: '4px'}} /> Топ</Badge>
-          )}
-          {hasApplied && (
-            <Badge type="success" style={{ fontSize: '10px' }}>
-              <FiCheckSquare size={10} style={{marginRight: '4px'}} /> Отклик сделан
-            </Badge>
-          )}
+          <h2 style={{ fontSize: featured ? 'var(--text-xl)' : 'var(--text-lg)', fontWeight: 700, lineHeight: 1.2, marginTop: '1px', color: 'var(--text-primary)' }}>
+            {p.title}
+          </h2>
         </div>
       </div>
 
+      {/* Status Badge */}
+      {statusBadge && (
+        <div style={{ marginBottom: '0.75rem', display: 'flex' }}>
+          {statusBadge}
+        </div>
+      )}
+
       {/* Tags */}
       <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap', marginBottom: '0.875rem' }}>
-        <Badge><FiCpu size={11} style={{ marginRight: '2px' }} />{p.category}</Badge>
-        <Badge><FiMapPin size={11} style={{ marginRight: '2px' }} />{p.city}</Badge>
-        <Badge><FiTrendingUp size={11} style={{ marginRight: '2px' }} />{p.stage}</Badge>
+        <Badge><FiCpu size={11} />{p.category}</Badge>
+        <Badge><FiMapPin size={11} />{p.city}</Badge>
+        <Badge><FiTrendingUp size={11} />{p.stage}</Badge>
       </div>
 
       {/* Description */}
@@ -104,34 +115,17 @@ function ProjectCard({ project, featured = false, index = 0, hasApplied = false 
         color: 'var(--text-secondary)',
         fontSize: 'var(--text-sm)',
         lineHeight: 1.6,
-        marginBottom: '1rem',
+        marginBottom: '1.25rem',
         display: '-webkit-box',
-        WebkitLineClamp: featured ? 3 : 2,
+        WebkitLineClamp: 2,
         WebkitBoxOrient: 'vertical',
         overflow: 'hidden',
       }}>
         {p.description?.replace(/<[^>]+>/g, '')}
       </p>
 
-      {/* Roadmap progress */}
-      {roadmapTotal > 0 && (
-        <div style={{ marginBottom: '0.875rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.375rem' }}>
-            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <FiCheckSquare size={11} /> Роадмап
-            </span>
-            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', fontWeight: 600 }}>
-              {roadmapDone}/{roadmapTotal}
-            </span>
-          </div>
-          <div className="progress-bar">
-            <div className="progress-bar__fill" style={{ width: `${roadmapPct}%` }} />
-          </div>
-        </div>
-      )}
-
       {/* Open roles */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: 'auto' }}>
         <FiUsers size={13} style={{ color: 'var(--text-muted)' }} />
         {openRoles.length > 0 ? (
           <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
@@ -407,6 +401,24 @@ function FeedPage() {
                     />
                   </div>
                 ))}
+                {projects.length < 3 && !debouncedSearch && !Object.values(filters).some(v=>v) && (
+                  <div className="bento-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', border: '1px dashed var(--border)', background: 'transparent', minHeight: '220px', padding: '1.5rem' }}>
+                    <div style={{ color: 'var(--accent)', opacity: 0.8, marginBottom: '0.75rem' }}>
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="16"/>
+                        <line x1="8" y1="12" x2="16" y2="12"/>
+                      </svg>
+                    </div>
+                    <h3 style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>У вас есть идея?</h3>
+                    <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginBottom: '1.25rem', maxWidth: '240px', lineHeight: 1.5 }}>
+                      Создайте свой проект на Nucla и соберите команду мечты прямо сейчас!
+                    </p>
+                    <Link to="/new" className="btn btn-primary btn-sm">
+                      Создать проект
+                    </Link>
+                  </div>
+                )}
                 {isFetchingNextPage && (
                   <>
                     <SkeletonCard />

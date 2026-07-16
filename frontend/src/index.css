@@ -74,7 +74,7 @@
   --danger: #f87171;
   --danger-bg: rgba(239, 68, 68, 0.1);
   --text-primary: #ffffff;
-  --text-secondary: #a1a1aa;
+  --text-secondary: #d1d5db;
   --text-muted: #8b8b93;
   
   --shadow-sm: 0 1px 3px 0 rgba(0,0,0,0.3), 0 1px 2px -1px rgba(0,0,0,0.2);
@@ -146,6 +146,8 @@ h4 { font-size: var(--text-lg);  font-weight: 500; line-height: 1.4; }
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.25rem;
+  align-items: start;
+  align-content: start;
 }
 
 .bento-card {
@@ -368,7 +370,7 @@ a.bento-card:hover {
   align-items: center;
   gap: 0.25rem;
   padding: 0.25rem 0.625rem;
-  border-radius: 100px;
+  border-radius: 2px 8px 2px 8px;
   font-size: var(--text-xs);
   font-weight: 500;
   background: var(--surface-raised);

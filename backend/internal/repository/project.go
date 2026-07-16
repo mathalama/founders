@@ -23,7 +23,7 @@ func (r *ProjectRepo) GetAll(ctx context.Context, category, stage, city, role, s
 		       u.name as owner_name, u.avatar_url as owner_avatar
 		FROM projects p
 		JOIN users u ON p.owner_id = u.id
-		WHERE p.is_hidden = false
+		WHERE p.is_hidden = false AND p.title != 'Первый проект!'
 	`
 	var args []interface{}
 	argIdx := 1
