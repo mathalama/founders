@@ -1,10 +1,13 @@
 package handler
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt/v5"
@@ -84,6 +87,28 @@ func getOptionalUserID(r *http.Request) *string {
 	return &userID
 }
 
+func getClientFingerprint(r *http.Request) string {
+	ip := r.RemoteAddr
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		ips := strings.Split(xff, ",")
+		if len(ips) > 0 {
+			ip = strings.TrimSpace(ips[0])
+		}
+	} else if xri := r.Header.Get("X-Real-IP"); xri != "" {
+		ip = xri
+	} else {
+		if idx := strings.LastIndex(ip, ":"); idx != -1 {
+			ip = ip[:idx]
+		}
+	}
+
+	ua := r.Header.Get("User-Agent")
+	data := ip + "|" + ua
+	h := sha256.New()
+	h.Write([]byte(data))
+	return hex.EncodeToString(h.Sum(nil))
+}
+
 func (h *ProjectHandler) GetProject(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if id == "" {
@@ -106,7 +131,8 @@ func (h *ProjectHandler) GetProject(w http.ResponseWriter, r *http.Request) {
 	optUID := getOptionalUserID(r)
 	if optUID == nil || *optUID != project.OwnerID {
 		viewerID = optUID
-		_ = h.repo.RecordView(r.Context(), id, viewerID)
+		fingerprint := getClientFingerprint(r)
+		_ = h.repo.RecordView(r.Context(), id, viewerID, fingerprint)
 	}
 
 	w.Header().Set("Content-Type", "application/json")

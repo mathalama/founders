@@ -68,10 +68,12 @@ function Sidebar({ collapsed, mobileOpen, onToggle, onCloseMobile }) {
     ].join(' ')}>
       {/* Logo + toggle */}
       <div className={styles.header}>
-        <Link to="/" className={styles.logo} style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-          <img src={logoImg} alt="Nucla Logo" style={{ width: '28px', height: '28px', borderRadius: '6px', minWidth: '28px' }} />
-          {!isEffectivelyCollapsed && <span className={styles.logoText}>Nucla</span>}
-        </Link>
+        {!isEffectivelyCollapsed && (
+          <Link to="/" className={styles.logo} style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+            <img src={logoImg} alt="Nucla Logo" style={{ width: '28px', height: '28px', borderRadius: '6px', minWidth: '28px' }} />
+            <span className={styles.logoText}>Nucla</span>
+          </Link>
+        )}
         {mobileOpen ? (
           <button
             className={styles.toggleBtn}

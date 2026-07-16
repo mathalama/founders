@@ -118,7 +118,7 @@ function BookmarksPage() {
                 WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
               }}>
-                {p.description}
+                {p.description?.replace(/<[^>]+>/g, '')}
               </p>
 
               <Link to={`/project/${p.id}`} className="btn btn-primary btn-sm">

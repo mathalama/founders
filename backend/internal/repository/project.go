@@ -387,8 +387,26 @@ func (r *ProjectRepo) ToggleHide(ctx context.Context, id string) error {
 	return err
 }
 
-func (r *ProjectRepo) RecordView(ctx context.Context, projectID string, viewerID *string) error {
-	query := `INSERT INTO project_views (project_id, viewer_id) VALUES ($1, $2)`
-	_, err := r.db.Exec(ctx, query, projectID, viewerID)
+func (r *ProjectRepo) RecordView(ctx context.Context, projectID string, viewerID *string, ipHash string) error {
+	if viewerID != nil {
+		query := `
+			INSERT INTO project_views (project_id, viewer_id, ip_hash)
+			SELECT $1, $2, $3
+			WHERE NOT EXISTS (
+				SELECT 1 FROM project_views WHERE project_id = $1 AND viewer_id = $2
+			)
+		`
+		_, err := r.db.Exec(ctx, query, projectID, viewerID, ipHash)
+		return err
+	}
+
+	query := `
+		INSERT INTO project_views (project_id, viewer_id, ip_hash)
+		SELECT $1, NULL, $2
+		WHERE NOT EXISTS (
+			SELECT 1 FROM project_views WHERE project_id = $1 AND viewer_id IS NULL AND ip_hash = $2
+		)
+	`
+	_, err := r.db.Exec(ctx, query, projectID, ipHash)
 	return err
 }
