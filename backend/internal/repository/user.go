@@ -18,7 +18,62 @@ func NewUserRepo(db *pgxpool.Pool) *UserRepo {
 }
 
 func (r *UserRepo) UpsertByGoogleID(ctx context.Context, googleID, name, email string, isAdmin bool) (*model.User, error) {
-	query := `
+	// First, check if a user with the same email already exists
+	var existingUser model.User
+	queryCheck := `
+		SELECT id, google_id, name, email, avatar_url, role_title, skills, email_notifications, github, telegram, bio, is_admin, is_banned, created_at, open_to_offers, password_hash, is_email_verified, email_verification_pin, email_verification_expires, reset_token, reset_token_expires
+		FROM users WHERE email = $1
+	`
+	err := r.db.QueryRow(ctx, queryCheck, email).Scan(
+		&existingUser.ID, &existingUser.GoogleID, &existingUser.Name, &existingUser.Email, &existingUser.AvatarURL, &existingUser.RoleTitle, &existingUser.Skills, &existingUser.EmailNotifications, &existingUser.Github, &existingUser.Telegram, &existingUser.Bio, &existingUser.IsAdmin, &existingUser.IsBanned, &existingUser.CreatedAt, &existingUser.OpenToOffers,
+		&existingUser.PasswordHash, &existingUser.IsEmailVerified, &existingUser.EmailVerificationPin, &existingUser.EmailVerificationExpires, &existingUser.ResetToken, &existingUser.ResetTokenExpires,
+	)
+
+	if err == nil {
+		// User exists with this email!
+		// If google_id is NULL or empty, link it!
+		if existingUser.GoogleID == nil || *existingUser.GoogleID == "" {
+			updateQuery := `
+				UPDATE users
+				SET google_id = $1, is_email_verified = TRUE
+				WHERE id = $2
+				RETURNING id, google_id, name, email, avatar_url, role_title, skills, email_notifications, github, telegram, bio, is_admin, is_banned, created_at, open_to_offers, password_hash, is_email_verified, email_verification_pin, email_verification_expires, reset_token, reset_token_expires
+			`
+			var u model.User
+			err = r.db.QueryRow(ctx, updateQuery, googleID, existingUser.ID).Scan(
+				&u.ID, &u.GoogleID, &u.Name, &u.Email, &u.AvatarURL, &u.RoleTitle, &u.Skills, &u.EmailNotifications, &u.Github, &u.Telegram, &u.Bio, &u.IsAdmin, &u.IsBanned, &u.CreatedAt, &u.OpenToOffers,
+				&u.PasswordHash, &u.IsEmailVerified, &u.EmailVerificationPin, &u.EmailVerificationExpires, &u.ResetToken, &u.ResetTokenExpires,
+			)
+			if err != nil {
+				return nil, err
+			}
+			return &u, nil
+		}
+		// If google_id is already set and is different, update it to match the incoming googleID
+		if *existingUser.GoogleID != googleID {
+			updateQuery := `
+				UPDATE users
+				SET google_id = $1
+				WHERE id = $2
+				RETURNING id, google_id, name, email, avatar_url, role_title, skills, email_notifications, github, telegram, bio, is_admin, is_banned, created_at, open_to_offers, password_hash, is_email_verified, email_verification_pin, email_verification_expires, reset_token, reset_token_expires
+			`
+			var u model.User
+			err = r.db.QueryRow(ctx, updateQuery, googleID, existingUser.ID).Scan(
+				&u.ID, &u.GoogleID, &u.Name, &u.Email, &u.AvatarURL, &u.RoleTitle, &u.Skills, &u.EmailNotifications, &u.Github, &u.Telegram, &u.Bio, &u.IsAdmin, &u.IsBanned, &u.CreatedAt, &u.OpenToOffers,
+				&u.PasswordHash, &u.IsEmailVerified, &u.EmailVerificationPin, &u.EmailVerificationExpires, &u.ResetToken, &u.ResetTokenExpires,
+			)
+			if err != nil {
+				return nil, err
+			}
+			return &u, nil
+		}
+		return &existingUser, nil
+	} else if err != pgx.ErrNoRows {
+		return nil, err
+	}
+
+	// No user exists with this email, do a clean insert
+	insertQuery := `
 		INSERT INTO users (google_id, name, email, is_admin, is_email_verified)
 		VALUES ($1, $2, $3, $4, TRUE)
 		ON CONFLICT (google_id) DO UPDATE
@@ -26,7 +81,7 @@ func (r *UserRepo) UpsertByGoogleID(ctx context.Context, googleID, name, email s
 		RETURNING id, google_id, name, email, avatar_url, role_title, skills, email_notifications, github, telegram, bio, is_admin, is_banned, created_at, open_to_offers, password_hash, is_email_verified, email_verification_pin, email_verification_expires, reset_token, reset_token_expires
 	`
 	var u model.User
-	err := r.db.QueryRow(ctx, query, googleID, name, email, isAdmin).Scan(
+	err = r.db.QueryRow(ctx, insertQuery, googleID, name, email, isAdmin).Scan(
 		&u.ID, &u.GoogleID, &u.Name, &u.Email, &u.AvatarURL, &u.RoleTitle, &u.Skills, &u.EmailNotifications, &u.Github, &u.Telegram, &u.Bio, &u.IsAdmin, &u.IsBanned, &u.CreatedAt, &u.OpenToOffers,
 		&u.PasswordHash, &u.IsEmailVerified, &u.EmailVerificationPin, &u.EmailVerificationExpires, &u.ResetToken, &u.ResetTokenExpires,
 	)
@@ -58,10 +113,10 @@ func (r *UserRepo) GetByID(ctx context.Context, id string) (*model.User, error) 
 func (r *UserRepo) UpdateProfile(ctx context.Context, u *model.User) error {
 	query := `
 		UPDATE users
-		SET role_title = $1, skills = $2, email_notifications = $3, github = $4, telegram = $5, bio = $6, open_to_offers = $7
-		WHERE id = $8
+		SET role_title = $1, skills = $2, email_notifications = $3, github = $4, telegram = $5, bio = $6, open_to_offers = $7, name = $8
+		WHERE id = $9
 	`
-	_, err := r.db.Exec(ctx, query, u.RoleTitle, u.Skills, u.EmailNotifications, u.Github, u.Telegram, u.Bio, u.OpenToOffers, u.ID)
+	_, err := r.db.Exec(ctx, query, u.RoleTitle, u.Skills, u.EmailNotifications, u.Github, u.Telegram, u.Bio, u.OpenToOffers, u.Name, u.ID)
 	return err
 }
 

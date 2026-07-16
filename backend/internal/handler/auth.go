@@ -216,6 +216,10 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if existingUser != nil {
+		if existingUser.PasswordHash == nil || *existingUser.PasswordHash == "" {
+			http.Error(w, "Этот аккаунт зарегистрирован через Google. Используйте вход через Google.", http.StatusConflict)
+			return
+		}
 		http.Error(w, "Пользователь с такой почтой уже существует", http.StatusConflict)
 		return
 	}

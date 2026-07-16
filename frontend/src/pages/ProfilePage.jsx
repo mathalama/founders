@@ -10,12 +10,13 @@ function ProfilePage() {
   const { user, setUser } = useAuth();
   const { showToast } = useToast();
   const [formData, setFormData] = useState({
-    roleTitle: '', skills: [], emailNotifications: true, github: '', telegram: '', bio: '', openToOffers: false
+    name: '', roleTitle: '', skills: [], emailNotifications: true, github: '', telegram: '', bio: '', openToOffers: false
   });
 
   useEffect(() => {
     if (user) {
       setFormData({
+        name: user.name || '',
         roleTitle: user.roleTitle || '',
         skills: user.skills || [],
         emailNotifications: user.emailNotifications !== false, // default true
@@ -71,7 +72,7 @@ function ProfilePage() {
         
         <div>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Имя *</label>
-          <input disabled className="input" value={user.name} style={{ backgroundColor: 'var(--bg)' }} />
+          <input name="name" className="input" value={formData.name} onChange={handleChange} required />
         </div>
 
         <div>
