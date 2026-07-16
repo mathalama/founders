@@ -120,6 +120,8 @@ function ProjectCard({ project, featured = false, index = 0, hasApplied = false 
         WebkitLineClamp: 2,
         WebkitBoxOrient: 'vertical',
         overflow: 'hidden',
+        overflowWrap: 'anywhere',
+        wordBreak: 'break-word',
       }}>
         {p.description?.replace(/<[^>]+>/g, '')}
       </p>
