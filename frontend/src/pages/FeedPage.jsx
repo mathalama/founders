@@ -83,24 +83,24 @@ function ProjectCard({ project, featured = false, index = 0, hasApplied = false 
       }}
     >
       {/* Header row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.75rem' }}>
-        <Avatar name={p.owner?.name} url={p.owner?.avatarUrl} />
-        <div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', fontWeight: 500 }}>
-            {p.owner?.name || 'Фаундер'}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.875rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+          <Avatar name={p.owner?.name} url={p.owner?.avatarUrl} />
+          <div>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', fontWeight: 500 }}>
+              {p.owner?.name || 'Фаундер'}
+            </div>
+            <h2 style={{ fontSize: featured ? 'var(--text-xl)' : 'var(--text-lg)', fontWeight: 700, lineHeight: 1.2, marginTop: '1px', color: 'var(--text-primary)' }}>
+              {p.title}
+            </h2>
           </div>
-          <h2 style={{ fontSize: featured ? 'var(--text-xl)' : 'var(--text-lg)', fontWeight: 700, lineHeight: 1.2, marginTop: '1px', color: 'var(--text-primary)' }}>
-            {p.title}
-          </h2>
         </div>
+        {statusBadge && (
+          <div style={{ flexShrink: 0 }}>
+            {statusBadge}
+          </div>
+        )}
       </div>
-
-      {/* Status Badge */}
-      {statusBadge && (
-        <div style={{ marginBottom: '0.75rem', display: 'flex' }}>
-          {statusBadge}
-        </div>
-      )}
 
       {/* Tags */}
       <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap', marginBottom: '0.875rem' }}>
