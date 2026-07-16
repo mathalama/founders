@@ -127,21 +127,26 @@ function ProjectCard({ project, featured = false, index = 0, hasApplied = false 
       </p>
 
       {/* Open roles */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: 'auto' }}>
-        <FiUsers size={13} style={{ color: 'var(--text-muted)' }} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginTop: 'auto', flexWrap: 'wrap', fontSize: 'var(--text-xs)' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: 'var(--text-muted)' }}>
+          <FiUsers size={13} style={{ flexShrink: 0 }} />
+          <span>Ищут:</span>
+        </div>
         {openRoles.length > 0 ? (
-          <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
-            {openRoles.slice(0, 3).map(role => (
-              <Badge key={role.id} type="accent" style={{ fontSize: '10px' }}>
-                {role.title}
-              </Badge>
+          <div style={{ display: 'inline-flex', gap: '0.25rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            {openRoles.slice(0, 3).map((role, idx) => (
+              <span key={role.id} style={{ fontWeight: 500, color: 'var(--accent)' }}>
+                {role.title}{idx < Math.min(openRoles.length, 3) - 1 ? ',' : ''}
+              </span>
             ))}
             {openRoles.length > 3 && (
-              <Badge style={{ fontSize: '10px' }}>+{openRoles.length - 3}</Badge>
+              <span style={{ color: 'var(--text-muted)', marginLeft: '2px' }}>
+                и еще +{openRoles.length - 3}
+              </span>
             )}
           </div>
         ) : (
-          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>Нет открытых ролей</span>
+          <span style={{ color: 'var(--text-muted)' }}>нет открытых ролей</span>
         )}
       </div>
     </Link>
