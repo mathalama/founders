@@ -4,9 +4,9 @@ import { fetchWithAuth } from '../api/client';
 import { FiArrowRight, FiClock, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 
 function StatusIcon({ status }) {
-  if (status === 'accepted') return <FiCheckCircle size={16} color="var(--success)" />;
-  if (status === 'rejected') return <FiXCircle size={16} color="var(--danger)" />;
-  return <FiClock size={16} color="var(--warning)" />;
+  if (status === 'accepted') return <FiCheckCircle size={13} color="var(--success)" />;
+  if (status === 'rejected') return <FiXCircle size={13} color="var(--danger)" />;
+  return <FiClock size={13} color="var(--warning)" />;
 }
 
 function StatusLabel({ status }) {
@@ -75,53 +75,81 @@ function MyApplicationsPage() {
               key={app.id}
               className="bento-card"
               style={{
-                borderLeft: `3px solid ${
+                borderLeft: `4px solid ${
                   app.status === 'accepted' ? 'var(--success)'
                   : app.status === 'rejected' ? 'var(--border)'
                   : 'var(--warning)'
                 }`,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
-                  <h3 style={{ fontSize: 'var(--text-lg)', marginBottom: '0.25rem' }}>
-                    <Link to={`/project/${app.project_id}`} style={{ color: 'var(--text-primary)' }}>
+                  <h3 style={{ fontSize: 'var(--text-lg)', marginBottom: '0.375rem', fontWeight: 600 }}>
+                    <Link to={`/project/${app.project_id}`} style={{ color: 'var(--text-primary)', textDecoration: 'none' }}>
                       {app.project_title}
                     </Link>
                   </h3>
                   <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
-                    Роль: <strong>{app.role_title}</strong>
+                    Роль: <strong style={{ color: 'var(--text-primary)' }}>{app.role_title}</strong>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.375rem',
+                  padding: '0.3125rem 0.75rem',
+                  borderRadius: '99px',
+                  fontSize: 'var(--text-xs)',
+                  fontWeight: 600,
+                  background: app.status === 'accepted' ? 'var(--success-bg)'
+                    : app.status === 'rejected' ? 'var(--danger-bg)'
+                    : 'var(--warning-bg)',
+                  color: app.status === 'accepted' ? 'var(--success)'
+                    : app.status === 'rejected' ? 'var(--danger)'
+                    : 'var(--warning)',
+                  border: `1px solid ${
+                    app.status === 'accepted' ? 'rgba(16, 185, 129, 0.2)'
+                    : app.status === 'rejected' ? 'rgba(239, 68, 68, 0.2)'
+                    : 'rgba(245, 158, 11, 0.2)'
+                  }`,
+                }}>
                   <StatusIcon status={app.status} />
-                  <span style={{
-                    fontSize: 'var(--text-xs)',
-                    fontWeight: 600,
-                    color: app.status === 'accepted' ? 'var(--success)'
-                      : app.status === 'rejected' ? 'var(--text-muted)'
-                      : '#92400e',
-                  }}>
-                    <StatusLabel status={app.status} />
-                  </span>
+                  <StatusLabel status={app.status} />
                 </div>
               </div>
 
-              <div style={{
-                padding: '0.75rem',
-                background: 'var(--bg)',
-                borderRadius: 'var(--radius-md)',
-                fontSize: 'var(--text-sm)',
-                color: 'var(--text-secondary)',
-                lineHeight: 1.6,
-                marginBottom: '0.75rem',
-              }}>
-                {app.message}
-              </div>
+              {app.message && app.message.trim() && (
+                <div style={{
+                  padding: '0.875rem 1rem',
+                  background: 'var(--surface-raised)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-md)',
+                  fontSize: 'var(--text-sm)',
+                  lineHeight: 1.6,
+                }}>
+                  <div style={{
+                    fontSize: '10px',
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    color: 'var(--text-muted)',
+                    marginBottom: '0.375rem',
+                  }}>
+                    Сопроводительное письмо
+                  </div>
+                  <p style={{ margin: 0, color: 'var(--text-primary)', fontStyle: 'italic' }}>
+                    «{app.message}»
+                  </p>
+                </div>
+              )}
 
               <Link
                 to={`/project/${app.project_id}`}
-                className="btn btn-ghost btn-sm"
+                className="btn btn-outline btn-sm"
                 style={{ alignSelf: 'flex-start', gap: '0.25rem' }}
               >
                 Перейти к проекту <FiArrowRight size={13} />
