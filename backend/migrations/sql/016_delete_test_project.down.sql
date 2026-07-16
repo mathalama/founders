@@ -1,0 +1,1 @@
+-- No down migration required for test project deletion
