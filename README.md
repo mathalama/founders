@@ -55,6 +55,18 @@ The backend is built as a compiled Go binary optimized for speed and low resourc
 - **Router:** Routing is handled using the Chi router, providing a middleware-friendly REST handler chain.
 - **Database Access:** PostgreSQL is utilized via the `pgx` driver and `pgxpool` connection pool for concurrent safety and query optimization.
 - **Embedded Migrations:** Database migrations are stored as SQL files and compiled directly into the Go executable via `go:embed`. Migrations are checked and applied on server startup.
+
+#### Database Connection Pool Configuration
+The backend explicitly configures `pgxpool.MaxConns = 15` to prevent connection pool exhaustion on small VPS instances. This allows safe concurrent connections while respecting PostgreSQL's default `max_connections = 100` limit. For multi-backend deployments, reduce `MaxConns` proportionally in `backend/cmd/server/main.go` to avoid connection limit failures.
+
+#### Resource Limits
+All containers define explicit CPU and memory limits in `docker-compose.yml` to prevent OOM (Out of Memory) scenarios:
+- **PostgreSQL**: 512M memory limit, 256M reserved
+- **Backend**: 256M memory limit, 128M reserved
+- **Frontend**: 128M memory limit, 64M reserved
+- **Caddy (reverse proxy)**: 128M memory limit, 64M reserved
+
+See [DATABASE_POOL_CONFIG.md](DATABASE_POOL_CONFIG.md) for detailed scaling guidelines.
 - **Authentication:** Handled using JSON Web Tokens (JWT) stored in secure, HTTP-only cookies to protect sessions from cross-site scripting (XSS) attacks.
 - **Account Linking:** Supports automatic linking of Google OAuth 2.0 logins with existing email/password records if the email addresses match, avoiding unique constraint violations.
 

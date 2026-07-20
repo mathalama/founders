@@ -14,8 +14,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 
-	mymiddleware "github.com/mathalama/nucla-backend/internal/middleware"
 	"github.com/mathalama/nucla-backend/internal/handler"
+	mymiddleware "github.com/mathalama/nucla-backend/internal/middleware"
 	"github.com/mathalama/nucla-backend/internal/repository"
 	"github.com/mathalama/nucla-backend/internal/service"
 	"github.com/mathalama/nucla-backend/migrations"
@@ -38,7 +38,17 @@ func main() {
 
 	runMigrations(dbUrl)
 
-	pool, err := pgxpool.New(context.Background(), dbUrl)
+	// Explicit pool sizing: on a 1GB / 2vCPU box, 15 conns is the ceiling
+	// before connection overhead starts competing with the app for RAM.
+	// Postgres itself allows up to 100 (SHOW max_connections), so this is
+	// bounded by the host, not by Postgres.
+	config, err := pgxpool.ParseConfig(dbUrl)
+	if err != nil {
+		log.Fatalf("Unable to parse database config: %v\n", err)
+	}
+	config.MaxConns = 15
+
+	pool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
@@ -55,7 +65,7 @@ func main() {
 	commentRepo := repository.NewCommentRepo(pool)
 	postRepo := repository.NewPostRepo(pool)
 	auditRepo := repository.NewAuditLogRepo(pool)
-	
+
 	// Init Services
 	emailSvc := service.NewEmailService(pool)
 	pushSvc := service.NewPushService(notifRepo)
@@ -107,7 +117,7 @@ func main() {
 	r.Post("/api/auth/resend-pin", authHandler.ResendPIN)
 	r.Post("/api/auth/forgot-password", authHandler.ForgotPassword)
 	r.Post("/api/auth/reset-password", authHandler.ResetPassword)
-	
+
 	// Protected routes
 	r.Group(func(r chi.Router) {
 		r.Use(mymiddleware.RequireAuth)
@@ -120,13 +130,12 @@ func main() {
 		r.Post("/api/projects/{id}/roles/{roleId}/apply", applicationHandler.ApplyToRole)
 		r.Post("/api/projects/{id}/comments", commentHandler.CreateComment)
 		r.Post("/api/posts", postHandler.CreatePost)
-		
+
 		r.Get("/api/dashboard/projects", dashboardHandler.GetMyProjects)
 		r.Put("/api/dashboard/roles/{roleId}/status", dashboardHandler.UpdateRoleStatus)
 		r.Put("/api/dashboard/applications/{appId}/status", dashboardHandler.UpdateApplicationStatus)
 		r.Get("/api/applications/my", applicationHandler.GetMyApplications)
-		
-		
+
 		r.Get("/api/bookmarks", bookmarkHandler.GetMyBookmarks)
 		r.Post("/api/projects/{id}/bookmark", bookmarkHandler.ToggleBookmark)
 
@@ -159,7 +168,7 @@ func main() {
 		r.Put("/api/admin/users/{id}/admin", adminHandler.ToggleAdmin)
 		r.Get("/api/admin/stats", adminHandler.GetStats)
 		r.Post("/api/admin/newsletter", adminHandler.SendNewsletter)
-		
+
 		r.Get("/api/admin/projects", adminHandler.GetProjects)
 		r.Delete("/api/admin/projects/{id}", adminHandler.DeleteProject)
 		r.Put("/api/admin/projects/{id}/hide", adminHandler.ToggleHideProject)
@@ -192,10 +201,10 @@ func main() {
 
 func runMigrations(dbUrl string) {
 	log.Println("Running database migrations...")
-	
+
 	// Ensure we are using the postgres driver for golang-migrate
 	// Clean up dbUrl if necessary (usually pgxpool URLs work, but migrate expects 'postgres://' or 'postgresql://')
-	
+
 	d, err := iofs.New(migrations.FS, "sql")
 	if err != nil {
 		log.Fatalf("Failed to load embedded migrations: %v", err)
